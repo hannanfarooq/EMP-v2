@@ -17,6 +17,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
+      parentId: {
+        type: DataTypes.INTEGER,
+        allowNull: true, // Nullable for root messages (not replies)
+        references: {
+          model: "CompanyThread", // Self-referential
+          key: "id",
+        },
+      },
       heading: {
         type: DataTypes.STRING,
       },

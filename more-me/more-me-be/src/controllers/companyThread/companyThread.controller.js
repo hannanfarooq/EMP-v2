@@ -3,6 +3,7 @@ import { User, Company, CompanyThread, ThreadMessage } from "../../models"; // A
 
 export const createCompanyThread = async (req, res) => {
   try {
+    console.log(req.body);
     const companyThread = await CompanyThread.create(req.body);
     return successResponse(req, res, companyThread);
   } catch (error) {
@@ -44,18 +45,12 @@ export const getAllCompanyThreads = async (req, res) => {
 
     // Iterate through the retrieved CompanyThread records
     for (const companyThread of companyThreads) {
-      // Fetch associated ThreadMessages for each CompanyThread
-      const threadMessages = await ThreadMessage.findAll({
-        include: User,
-        where: {
-          companyThreadId: companyThread.id,
-        },
-      });
-
+     
+     
       // Create a new object with the CompanyThread data and associated ThreadMessages
       const resultObject = {
         companyThread,
-        threadMessages: threadMessages,
+       
       };
 
       // Add the resultObject to the results array

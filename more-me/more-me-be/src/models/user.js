@@ -360,6 +360,11 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: {},
         allowNull: true
       },
+      dailyQuestionsithOptions: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        allowNull: true
+      },
       gamification: {
         type: DataTypes.JSON,
         defaultValue: {},

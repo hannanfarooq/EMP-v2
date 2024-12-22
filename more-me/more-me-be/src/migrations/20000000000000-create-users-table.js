@@ -58,6 +58,11 @@ module.exports = {
         defaultValue: {},
         allowNull: true,
       },
+      dailyQuestionsithOptions: {
+        type: Sequelize.JSON,
+        defaultValue: {},
+        allowNull: true,
+      },
       // gamification: {
       //   type: Sequelize.JSON,
       //   defaultValue: {},

@@ -10,6 +10,7 @@ import * as functionController from "../controllers/function/function.controller
 import * as teamController from "../controllers/team/team.controller";
 import * as departmentController from "../controllers/department/department.controller";
 import { getCompanyPolicy } from "../controllers/companyPolicy/companyPolicy.controller";
+import { getCompanyAnnouncement } from "../controllers/companyAnnouncement/companyAnnouncement.controller"
 //import { postMessage, getConversations, getMessagesByConversationId, createConversation } from "../controllers/chat/chat.controller";
 import { createDailyQuestions } from "../controllers/question/dailyquestions.controller";
 import {createStartUpQuestions} from "../controllers/question/startupquestions";
@@ -32,6 +33,7 @@ router.post(
 );
 router.post("/inviteUsersCSV", userController.bulkInviteUsers);
 router.post("/getCompanyPolicy", getCompanyPolicy);
+router.post("/getCompanyAnnouncement", getCompanyAnnouncement);
 router.post("/updateUserPoints", userController.updateUserPoints);
 router.post("/updateUserQuestionnaire", userController.updateUserQuestionnaire);
 router.post("/updateStartUpQuestions", userController.updateStartUpQuestions);
@@ -123,5 +125,9 @@ router.post('/BlockUser',blockUsers);
 router.post('/unblockUser',unblockUsers);
 router.get('/getblockuser/:id',GetBlockUser);
 router.get('/blockedByUsers/:id', GetBlockedByUsers);
+
+//dail user question routes
+// getDailyQuestionsForCompany
+router.get("/getDailyQuestionsForCompany/:companyId", questionController.getDailyQuestionsForCompany);
 
 module.exports = router;

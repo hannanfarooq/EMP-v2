@@ -485,6 +485,9 @@ export const updateStartUpQuestions = async (req, res) => {
     if (data.contentPreferences) {
       data.contentPreferences = Array.isArray(data.contentPreferences) ? data.contentPreferences.join(',') : data.contentPreferences;
     }
+    if (data.lifePrincipleInspirations) {
+      data.lifePrincipleInspirations = Array.isArray(data.lifePrincipleInspirations) ? data.lifePrincipleInspirations.join(',') : data.lifePrincipleInspirations;
+    }
 
     console.log("Received data:", data);
     console.log("UserId:", userId, "CompanyId:", companyId);

@@ -1,6 +1,6 @@
 import { Sequelize } from "sequelize";
 import { errorResponse, successResponse } from "../../helpers";
-import { Question, QuestionCategory, Questionnaire, DynamicQuestionnaire, UserAttemptedQuestionnaire } from "../../models"; // Assuming you have your Sequelize instance initialized
+import { Question, QuestionCategory, Questionnaire, DynamicQuestionnaire, UserAttemptedQuestionnaire, DailyQuestionWithOptions } from "../../models"; // Assuming you have your Sequelize instance initialized
 
 export const createQuestions = async (req, res) => {
   const data = req.body;
@@ -479,5 +479,218 @@ export const handleUpdateQuestionnaireTitleAndDescription = async (req, res) => 
   } catch (error) {
     console.error("Error updating Questionnaire title and description:", error);
     return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Controller to create a daily questionnaire
+// export const createDailyQuestionnaire = async (req, res) => {
+//   const questions = req.body;  // Expecting an array of questions
+//   console.log("Received data:", questions);
+
+//   // Validate input data
+//   if (!Array.isArray(questions) || questions.length === 0) {
+//     return errorResponse(req, res, "No questions provided.");
+//   }
+
+//   try {
+//     for (const { questionText, options, type, companyId } of questions) {
+//       console.log('Processing question:', { questionText, options, type, companyId });
+
+//       // Validate each question
+//       if (!questionText || !type || !companyId) {
+//         return errorResponse(req, res, "Text, type, and companyId are required.");
+//       }
+
+//       if (type !== "textfield" && (!options || options.length === 0)) {
+//         return errorResponse(req, res, "Options are required for types other than 'textfield'.");
+//       }
+
+//       // Check if a similar question already exists (optional)
+//       const existingQuestion = await DailyQuestionWithOptions.findOne({ 
+//         where: {
+//           questionText: Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("questionText")), questionText.toLowerCase()),
+//           companyId,
+//         },
+//       });
+
+//       if (existingQuestion) {
+//         return errorResponse(req, res, "A similar question already exists for this company.");
+//       }
+
+//       // Create the daily question
+//       const newQuestion = await DailyQuestionWithOptions.create({
+//         questionText,
+//         type,
+//         companyId,
+//       });
+
+//       // Add options if applicable
+//       if (type !== "textfield" && options && options.length > 0) {
+//         const optionsData = options.map((option) => ({
+//           questionText: option,
+//           questionId: newQuestion.id,
+//         }));
+
+//         await QuestionOption.bulkCreate(optionsData);
+//       }
+//     }
+
+//     return successResponse(req, res, { message: "Daily questionnaires created successfully." });
+//   } catch (error) {
+//     console.error("Error creating daily questionnaire:", error);
+//     return errorResponse(req, res, "An error occurred while creating the daily questionnaire.");
+//   }
+// };
+// Assuming userId is available from authentication (e.g., from req.user or similar)
+export const createDailyQuestionnaire = async (req, res) => {
+  const questions = req.body;  // Expecting an array of questions
+  const userId = req.user.id;  // Replace this with your actual user ID extraction logic
+
+  console.log("Received data:", questions);
+
+  // Validate input data
+  if (!Array.isArray(questions) || questions.length === 0) {
+    return errorResponse(req, res, "No questions provided.");
+  }
+
+  try {
+    for (const { questionText, options, type, companyId } of questions) {
+      console.log('Processing question:', { questionText, options, type, companyId });
+
+      // Validate each question
+      if (!questionText || !type || !companyId || !userId) {
+        return errorResponse(req, res, "questionText, type, companyId, and userId are required.");
+      }
+
+      if (type !== "textfield" && (!options || options.length === 0)) {
+        return errorResponse(req, res, "Options are required for types other than 'textfield'.");
+      }
+
+      // Check if a similar question already exists (optional)
+      const existingQuestion = await DailyQuestionWithOptions.findOne({
+        where: {
+          questionText: Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("questionText")), questionText.toLowerCase()),
+          companyId,
+        },
+      });
+
+      if (existingQuestion) {
+        return errorResponse(req, res, "A similar question already exists for this company.");
+      }
+
+      // Create the daily question, including userId
+      const newQuestion = await DailyQuestionWithOptions.create({
+        questionText,   // Use questionText here
+        type,
+        companyId,
+        userId,         // Ensure the userId is included
+        options
+      });
+      return successResponse(req, res, newQuestion);
+
+    }
+
+  } catch (error) {
+    console.error("Error creating daily questionnaire:", error);
+    return errorResponse(req, res, "An error occurred while creating the daily questionnaire.");
+  }
+};
+
+//getDailyQuestionsForCompany
+export const getDailyQuestionsForCompany = async (req, res) => {
+  const { companyId } = req.params;
+  console.log(companyId);
+
+  try {
+    const questionnaire = await DailyQuestionWithOptions.findAll({
+      where: {
+        companyId: companyId,
+      },
+    });
+    //console.log("Questionnaire", questionnaire);
+    return successResponse(req, res, questionnaire);
+  } catch (error) {
+    console.error("Error fetching question categories:", error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+//fetchDailyQuestionsForCompany
+export const fetchDailyQuestionsForCompany = async (req, res) => {
+  const { companyId } = req.params;
+  console.log(companyId);
+
+  try {
+    const questionnaire = await DailyQuestionWithOptions.findAll({
+      where: {
+        companyId: companyId,
+      },
+    });
+    //console.log("Questionnaire", questionnaire);
+    return successResponse(req, res, questionnaire);
+  } catch (error) {
+    console.error("Error fetching question categories:", error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// updateDailyQuestionForCompany
+export const updateDailyQuestionForCompany = async (req, res) => {
+  const { questionText, options, type, companyId } = req.body.points; // Get the data from the request body
+  const {questionId} = req.body;
+console.log("compan details", req.body);
+//const {id} = gamification;
+console.log( questionText, options, type, questionId);
+  try {
+    // Ensure the user is authenticated (middleware check)
+    //const userId = req.user.id; // Assuming JWT is being used and the user ID is decoded from the token
+    //const companyId = req.user.companyId; // Assuming the user's company ID is available from the token
+
+    // Find the existing question in the database
+    const existingQuestion = await DailyQuestionWithOptions.findOne({
+      where: { id: questionId, companyId: companyId },
+    });
+
+    // If the question doesn't exist, return a 404 error
+    if (!existingQuestion) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    // Update the question with the new data
+    existingQuestion.questionText = questionText || existingQuestion.questionText;
+    existingQuestion.options = options || existingQuestion.options;
+    existingQuestion.type = type || existingQuestion.type; // Ensure you update the type if needed
+    existingQuestion.updatedAt = new Date(); // Set the updated timestamp
+
+    // Save the updated question to the database
+    await existingQuestion.save();
+
+    // Send the updated question back to the client
+    res.status(200).json({
+      message: "Question updated successfully",
+      data: existingQuestion,
+    });
+  } catch (error) {
+    console.error("Error updating question:", error);
+    res.status(500).json({ message: "Something went wrong, please try again later" });
+  }
+};
+//deleteDailyQuestionForCompany
+export const deleteDailyQuestionForCompany = async (req, res) => {
+  try {
+    console.log("req.bod", req.params);
+    const { id } = req.params;
+    console.log(id);
+    const questionId = id;
+    console.log("questionId", questionId);
+
+    const deletedQuestion = await DailyQuestionWithOptions.destroy({
+      where: { id: questionId },
+    });
+
+    return successResponse(req, res, deletedQuestion);
+  } catch (error) {
+    console.error("Error deleting company question:", error);
+    throw error;
   }
 };
