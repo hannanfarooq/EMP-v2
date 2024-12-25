@@ -11,20 +11,18 @@ module.exports = (sequelize, DataTypes) => {
     },
     
     content: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,  // Change this to TEXT to allow large content
       allowNull: false,
-      trim: true,
+      trim: true, // Ensure content is trimmed, though TEXT fields will handle larger content
     },
     chatId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-     
     },
     readBy: {
       type: DataTypes.ARRAY(DataTypes.INTEGER), 
       allowNull: true,
     },
-   
   }, {
     timestamps: true,
   });

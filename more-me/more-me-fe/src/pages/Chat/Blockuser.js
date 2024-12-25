@@ -63,8 +63,6 @@ export default function BLOCKUSER({ fetchGroupChats }) {
       await UnBlockUser( userId);
       toast.success("User unblocked successfully!");
 
-      // Remove the unblocked user from the state
-      setUsers(users.filter(user => user.id !== userId));
     } catch (error) {
       console.error("Error unblocking user:", error);
       toast.error("Error unblocking user. Please try again.");

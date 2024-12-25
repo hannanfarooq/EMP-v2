@@ -1,143 +1,118 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import "./Styles/AddComment.scss";
 import { useAuth } from "src/context/AuthContext";
 import { CreateThread } from "src/api";
 import Filter from "bad-words";
 import { uploadImageAndGetURL } from "src/utils/uploadImageAndGetURL";
+import { uploadPDFAndGetURL } from "src/utils/uploadPDFAndGetURL";
+import Microlink from '@microlink/react';
 
-const AddComment = ({ threadData,buttonValue, addComments, replyingTo }) => {
-  const replyingToUser = replyingTo ? `@${replyingTo}, ` : "";
+const AddComment = ({ threadData, buttonValue }) => {
   const [comment, setComment] = useState("");
-  const [images, setImage] = useState([]); // New state for storing the image
+  const [images, setImages] = useState([]);
+  const [pdfs, setPdfs] = useState([]);
+  const [links, setLinks] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const { userData } = useAuth();
   const filter = new Filter();
 
   const clickHandler = async () => {
-    if ((comment.trim() === "" || comment === " ") && !images) return;
+    if ((comment.trim() === "" || comment === " ") && !images.length && !pdfs.length && !links.length)
+      return;
 
     const filteredText = filter.clean(comment);
-
-    const newComment = {
-      id: Math.floor(Math.random() * 100) + 5,
-      content: replyingToUser + filteredText,
-      createdAt: new Date(),
-      score: 0,
-      username: "juliusomo",
-      currentUser: true,
-      replies: [],
-      images: images, // Attach the image to the comment
+    let data = {
+      userId: userData.user.id,
+      companyId: userData.company.id,
+      message: filteredText,
+      heading: "POST",
+      images,
+      pdfs,
+      links,
+      parentId: threadData ? threadData.companyThread.id : null,
     };
-    let data ;
-if(threadData!=null)
-{
-  data=  {
-    userId: userData.user.id,
-    companyId: userData.company.id,
-    message: filteredText,
-    heading: "POST",
-    images: images, 
-    parentId:threadData.companyThread.id?threadData.companyThread.id:null
-  };
-}
-else
-{
-   data = {
-    userId: userData.user.id,
-    companyId: userData.company.id,
-    message: filteredText,
-    heading: "POST",
-    images: images, 
-   
-  };
-}
 
-   
-
+    console.log("UPLOAD DATA", data);
     const resp = await CreateThread(data);
-    addComments(newComment);
     setComment("");
-    setImage([]); // Clear the image after posting the comment
+    setImages([]);
+    setPdfs([]);
+    setLinks([]);
   };
 
-  const handleImageChange = async (e) => {
-    const selectedImage = e.target.files[0];
+  const handleImageUpload = async (e) => {
     setIsUploading(true);
-    const upload = await uploadImageAndGetURL(selectedImage);
+    const uploadUrl = await uploadImageAndGetURL(e.target.files[0]);
+    setImages([...images, uploadUrl]);
     setIsUploading(false);
-    setImage([...images, upload]);
   };
-  const removeImage = (indexToRemove) => {
-    setImage((prevImages) =>
-      prevImages.filter((_, index) => index !== indexToRemove)
-    );
+
+  const handlePDFUpload = async (e) => {
+    setIsUploading(true);
+    const uploadUrl = await uploadPDFAndGetURL(e.target.files[0]);
+    setPdfs([...pdfs, uploadUrl]);
+    setIsUploading(false);
+  };
+
+  const handleLinkAdd = (e) => {
+    if (e.key === "Enter" && e.target.value.trim()) {
+      setLinks([...links, e.target.value.trim()]);
+      e.target.value = '';
+    }
+  };
+
+  const removeAttachment = (index, type) => {
+    if (type === "image") {
+      setImages(images.filter((_, idx) => idx !== index));
+    } else if (type === "pdf") {
+      setPdfs(pdfs.filter((_, idx) => idx !== index));
+    } else if (type === "link") {
+      setLinks(links.filter((_, idx) => idx !== index));
+    }
   };
 
   return (
     <>
       <div className="add-comment">
-        <div className="profile-pic"></div>
         <textarea
           className="comment-input"
           placeholder="Share your thoughts..."
-          value={replyingToUser + comment}
-          onChange={(e) => {
-            setComment(
-              e.target.value.replace(replyingTo ? `@${replyingTo}, ` : "", "")
-            );
-          }}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
         />
-        {/* <label className="camera-icon" htmlFor="image-upload">
-          📷
-        </label>
-        {isUploading && <p>Loading...</p>}
-        <input
-          type="file"
-          id="image-upload"
-          accept="image/*"
-          onChange={handleImageChange}
-          style={{ display: "none" }}
-        /> */}
-
-        <div className="send-btn-container">
-          <div className="profile-pic"></div>
-          <button className="add-btn" onClick={clickHandler}>
-            {buttonValue}
-          </button>
+        <div className="file-inputs">
+          <label htmlFor="image-upload">📷
+            <input type="file" id="image-upload" accept="image/*" onChange={handleImageUpload} style={{ display: "none" }} />
+          </label>
+          <label htmlFor="pdf-upload">📄
+            <input type="file" id="pdf-upload" accept="application/pdf" onChange={handlePDFUpload} style={{ display: "none" }} />
+          </label>
+          <input type="text" placeholder="Add a link..." onKeyPress={handleLinkAdd} />
         </div>
+        {isUploading && <p>Uploading...</p>}
+        <button className="add-btn" onClick={clickHandler}>{buttonValue}</button>
       </div>
-      {images && images.length > 0 && <div>Attachments</div>}
 
-      {images.length > 0 &&
-        images.map((img, index) => (
-          <div
-            key={index}
-            className="image-container"
-            style={{ position: "relative" }}
-          >
-            {/* Render image */}
-            <img
-              src={img}
-              alt={`Image ${index}`}
-              width={100}
-              height={100}
-              style={{ borderRadius: "1px", resize: "cover" }}
-            />
-            {/* Cross sign to remove the image */}
-            <button
-              className="remove-image"
-              style={{
-                position: "absolute",
-                top: "0px",
-                right: "0px",
-                zIndex: 100,
-              }}
-              onClick={() => removeImage(index)}
-            >
-              &#10006;
-            </button>
+      <div className="attachments">
+        {images.map((img, index) => (
+          <div key={index}>
+            <img src={img} alt={`Attachment ${index}`} />
+            <button onClick={() => removeAttachment(index, 'image')}>Remove</button>
           </div>
         ))}
+        {pdfs.map((pdf, index) => (
+          <div key={index}>
+            <a href={pdf} target="_blank" rel="noopener noreferrer">PDF {index + 1}</a>
+            <button onClick={() => window.open(pdf, '_blank')}>View PDF</button>
+          </div>
+        ))}
+        {links.map((link, index) => (
+          <div key={index}>
+            <Microlink url={link} size="large" />
+            <button onClick={() => removeAttachment(index, 'link')}>Remove</button>
+          </div>
+        ))}
+      </div>
     </>
   );
 };

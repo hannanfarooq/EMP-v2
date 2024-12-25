@@ -1,9 +1,12 @@
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { NavLink as RouterLink } from 'react-router-dom';
 // @mui
-import { Box, List, ListItemText } from '@mui/material';
+import { Box, List, ListItemText, Badge } from '@mui/material';
 //
 import { StyledNavItem, StyledNavItemIcon } from './styles';
+
+import { getUnviewedThreadsCount } from "../../api/index";
 
 // ----------------------------------------------------------------------
 
@@ -12,11 +15,37 @@ NavSection.propTypes = {
 };
 
 export default function NavSection({ data = [], ...other }) {
+  
+  const [unviewedThreadsCount, setUnviewedThreadsCount] = useState(0);
+
+  // Fetch unviewed threads count when the component is mounted
+  useEffect(() => {
+    const fetchUnviewedThreadsCount = async () => {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      const count = await getUnviewedThreadsCount(currentUser.user.id, currentUser.company.id);
+      setUnviewedThreadsCount(count);
+      console.log("COUNTSSSSSSSSSSS:", count);
+    };
+
+    // Fetch initially on mount
+    fetchUnviewedThreadsCount();
+
+    // Set interval to fetch every 3 seconds
+    const intervalId = setInterval(fetchUnviewedThreadsCount, 3000); // 3000 ms = 3 seconds
+
+    // Cleanup the interval on component unmount
+    return () => clearInterval(intervalId);
+  }, []); // Empty array means this effect runs once on mount
+
   return (
     <Box {...other}>
       <List disablePadding sx={{ p: 1 }}>
         {data.map((item) => (
-          <NavItem key={item.title} item={item} />
+          <NavItem
+            key={item.title}
+            item={item}
+            unviewedThreadsCount={item.title === 'Connects' ? unviewedThreadsCount : 0}
+          />
         ))}
       </List>
     </Box>
@@ -27,11 +56,12 @@ export default function NavSection({ data = [], ...other }) {
 
 NavItem.propTypes = {
   item: PropTypes.object,
+  unviewedThreadsCount: PropTypes.number,
 };
 
-function NavItem({ item }) {
+function NavItem({ item, unviewedThreadsCount }) {
   const { title, path, icon, info } = item;
-
+  
   return (
     <StyledNavItem
       component={RouterLink}
@@ -42,11 +72,28 @@ function NavItem({ item }) {
           bgcolor: 'action.selected',
           fontWeight: 'fontWeightBold',
         },
+        position: 'relative',  // Add position relative to enable positioning of Badge
       }}
     >
-      <StyledNavItemIcon>{icon && icon}</StyledNavItemIcon>
+      <StyledNavItemIcon>
+        {icon && icon}
+        {title === 'Connects' && unviewedThreadsCount.unviewedThreadsCount > 0 && (
+          <Badge
+            badgeContent={unviewedThreadsCount.unviewedThreadsCount}
+            color="error"
+            sx={{
+              position: 'absolute',
+              top: 25,  // Adjust as needed
+              right: 50,  // Adjust as needed
+              zIndex: 1,  // Ensure the badge appears on top
+            }}
+          >
+            <span className="icon-new-threads" /> {/* You can replace this with your own icon */}
+          </Badge>
+        )}
+      </StyledNavItemIcon>
 
-      <ListItemText disableTypography primary={title} />
+      <ListItemText disableTypography primary={(title)} />
 
       {info && info}
     </StyledNavItem>

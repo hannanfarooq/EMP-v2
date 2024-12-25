@@ -3,18 +3,19 @@ import { useState } from "react";
 import { useQuery } from "react-query";
 import { getConversations, readmessage } from "src/api";
 import { green } from '@mui/material/colors';
-import { formatDistanceStrict } from 'date-fns';
+import { format  } from 'date-fns';
 
 const getChatList = async () => await getConversations();
 
 function CustomChatItem({ chat, onClick }) {
-  const timeAgo = formatDistanceStrict(new Date(chat.date), new Date(), { addSuffix: true });
+  // Format the timestamp as a readable time (hh:mm AM/PM)
+  const formattedTime = format(new Date(chat.date), "hh:mm a");
+
+  // Trim the subtitle to a maximum of 30 characters (you can adjust this value)
+  const trimmedSubtitle = chat.subtitle.length > 30 ? chat.subtitle.slice(0, 30) + "..." : chat.subtitle;
 
   return (
-    <div
-      onClick={() => onClick(chat)}
-      className="chat-item"
-    >
+    <div onClick={() => onClick(chat)} className="chat-item">
       {
         chat.unread ? (
           <Badge
@@ -24,20 +25,19 @@ function CustomChatItem({ chat, onClick }) {
           >
             <Avatar src={chat.avatar} alt={chat.alt} />
           </Badge>
+        ) : (
+          <Avatar src={chat.avatar} alt={chat.alt} />
         )
-        :
-        (<Avatar src={chat.avatar} alt={chat.alt} />)
       }
 
       <div className="chat-info">
         <div className="chat-title">{chat.title}</div>
-        <div className="chat-subtitle">{chat.subtitle}</div>
+        <div className="chat-subtitle">{trimmedSubtitle}</div> {/* Display trimmed subtitle */}
       </div>
-      <div className="chat-time">{timeAgo}</div>
+      <div className="chat-time">{formattedTime}</div> {/* Display the exact time */}
     </div>
   );
 }
-
 export default function ChatListComponent({ setCurrentConversation }) {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,7 +77,7 @@ export default function ChatListComponent({ setCurrentConversation }) {
         });
       }
 
-      let messagesender = "ok";
+      let messagesender = "";
       let unread;
       if (chat && chat.latestMessageSender) {
         const currentUserFullName = `${currentUser.user.firstName} ${currentUser.user.lastName}`;
@@ -97,7 +97,7 @@ export default function ChatListComponent({ setCurrentConversation }) {
         title: `${chat?.chatName}`,
         subtitle: `${messagesender}: ${recentMessage}`,
         date: new Date(chat.updatedAt),
-        text: `${messagesender}: ${recentMessage}`,
+        text: messagesender===""?"":`${messagesender}  ${recentMessage}`,
         unread: parseInt(unread),
         user1Id: chat.groupAdminId,
         user2Id: chat.users,
@@ -128,7 +128,11 @@ export default function ChatListComponent({ setCurrentConversation }) {
       {filteredChatList.length > 0 ? (
         <div className="chat-list">
           {filteredChatList.map(chat => (
-            <CustomChatItem key={chat.id} chat={chat} onClick={handleChatClick} />
+           <>
+           <CustomChatItem key={chat.id} chat={chat} onClick={handleChatClick} />
+           {/* Divider or Additional Element After Each Chat Item */}
+           <div style={{ height: '1px', backgroundColor: '#e0e0e0', margin: '10px 0' }}></div>
+         </>
           ))}
         </div>
       ) : (

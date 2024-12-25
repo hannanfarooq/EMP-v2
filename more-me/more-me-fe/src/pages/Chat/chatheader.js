@@ -21,12 +21,12 @@ import {
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { removememberfromgroup, addmembertogroup, BlockUser } from 'src/api'; // Assuming you have these API functions
+import { removememberfromgroup, addmembertogroup, BlockUser, UnBlockUser, getblockuser } from 'src/api'; // Assuming you have these API functions
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Chat } from '@mui/icons-material';
 
-const ChatHeader = ({ conversation, isGroup, isAdmin, fetchGroupChats }) => {
+const ChatHeader = ({ conversation, isGroup, isAdmin, fetchGroupChats,blockeduser ,handleloaduser }) => {
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [groupName, setGroupName] = useState(conversation.title);
@@ -41,7 +41,20 @@ const ChatHeader = ({ conversation, isGroup, isAdmin, fetchGroupChats }) => {
   const [alt, setAlt] = useState(conversation.alt);
 
   const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
+  let isBlocked = false;
 
+// Ensure blockeduser and its blockedId are properly defined
+if (blockeduser && blockeduser.blockedId && Array.isArray(blockeduser.blockedId)) {
+  // Check for blocked user in conversation.user2Id
+  if (!conversation.isGroupChat && conversation.user2Id && Array.isArray(conversation.user2Id)) {
+    isBlocked = conversation.user2Id.some(userId => blockeduser.blockedId.includes(userId));
+  }
+  
+  // If not already blocked, check for blocked user in conversation.user1Id
+  if (!isBlocked && conversation.user1Id) {
+    isBlocked = blockeduser.blockedId.includes(conversation.user1Id);
+  }
+}
   useEffect(() => {
     const loadUsers = async () => {
       try {
@@ -112,7 +125,40 @@ const ChatHeader = ({ conversation, isGroup, isAdmin, fetchGroupChats }) => {
     newMembers[index][field] = value;
     setTempMembers(newMembers);
   };
+  const handleUnblock = async () => {
+    try {
+      // Iterate over each blocked user ID and check if it's in the conversation
+      let userToUnblock = null;
 
+      // Check if any blocked ID matches user1Id or any ID in user2Id
+      for (let blockedUserId of blockeduser.blockedId) {
+        if (conversation.user1Id === blockedUserId) {
+          userToUnblock = conversation.user1Id;
+          break;
+        } else if (Array.isArray(conversation.user2Id) && conversation.user2Id.includes(blockedUserId)) {
+          userToUnblock = blockedUserId; // match with any user in user2Id array
+          break;
+        } else if (conversation.user2Id === blockedUserId) {
+          userToUnblock = blockedUserId; // match with user2Id if it's a single ID
+          break;
+        }
+      }
+
+      // If a blocked user is found, unblock them
+      if (userToUnblock) {
+        await UnBlockUser(userToUnblock); // API call to unblock
+        toast.success("User unblocked successfully!");
+        handleloaduser(); // Toggle loading state
+      } else {
+        toast.error("User is not blocked in this conversation.");
+        handleloaduser(); // Toggle loading state
+      }
+    } catch (error) {
+      console.error("Error unblocking user:", error);
+      toast.error("Error unblocking user. Please try again.");
+      handleloaduser(); // Toggle loading state
+    }
+  };
   const handleMemberRemove = (index) => {
     const newMembers = [...tempMembers];
     newMembers[index].markedForRemoval = !newMembers[index].markedForRemoval;
@@ -172,7 +218,7 @@ const ChatHeader = ({ conversation, isGroup, isAdmin, fetchGroupChats }) => {
     )
     BlockUser(id).then(() => {
       toast.success("User Blocked ");
-      handleLeaveGroup();
+    
       window.location.reload();
 
     }, 3000)
@@ -242,16 +288,7 @@ console.log("REMAINGING USER AFTER LEAVING GROUP : ",remainingMemberIds);
                     style={{ marginRight: 10 }}
                     disabled={true}
                   />
-                  {isAdmin && member.id != conversation.user1Id && (
-                    <IconButton
-                      edge="end"
-                      color="inherit"
-                      onClick={() => handleMemberRemove(index)}
-                      style={{ color: member.markedForRemoval ? 'red' : 'inherit' }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  )}
+                 
                 </ListItem>
               ))
             ) : (
@@ -305,21 +342,31 @@ console.log("REMAINGING USER AFTER LEAVING GROUP : ",remainingMemberIds);
               </Button>
             )
           )}
-          {!isGroup && (
-            <Button variant="contained" color="secondary" onClick={handleBlockUser} style={{ marginTop: 10 }}>
-              Block User
-            </Button>
-            
-          )
-          }
-          {
-            !isGroup && (
-              <Button variant="contained" color="secondary" onClick={handleLeaveGroup} style={{ marginTop: 10,marginLeft:10 }}>
-              Delete Chat
-            </Button>
-              
-            )
-          }
+         {
+  !isGroup && (
+    isBlocked ? (
+      <Button 
+        variant="contained" 
+        color="primary" 
+        onClick={handleUnblock} 
+        style={{ marginTop: 10 }}
+      >
+        Unblock User
+      </Button>
+    ) : (
+      <Button 
+        variant="contained" 
+        color="secondary" 
+        onClick={handleBlockUser} 
+        style={{ marginTop: 10 }}
+      >
+        Block User
+      </Button>
+    )
+  )
+}
+
+         
           {isGroup && !isAdmin && (
             <Button variant="contained" color="secondary" onClick={handleLeaveGroup} style={{ marginTop: 10 }}>
               Leave Group

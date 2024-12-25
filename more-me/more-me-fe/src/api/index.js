@@ -2304,7 +2304,87 @@ export const GetCompaniesAllThread = async () => {
   });
   return res.json();
 };
+export const toggleLike = async (threadId) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/pub/threads/${threadId}/like`;
+  const data ={
+    id:currentUser.user.id
+  }
+  const response = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": currentUser.token,
+      
+    },
+    body: JSON.stringify(data),
+  });
 
+ 
+
+  return response.json();
+};
+
+export const toggleDislike = async (threadId) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/pub/threads/${threadId}/dislike`;
+  const data ={
+    id:currentUser.user.id
+  }
+  const response = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": currentUser.token,
+    },
+    body: JSON.stringify(data),
+  });
+
+ 
+  return response.json();
+};
+export const markAllThreadsAsViewed = async () => {
+
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/pub/threads/update-view`;
+  const data ={
+    userId:currentUser.user.id,
+    companyId:currentUser.company.id
+  }
+  const response = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": currentUser.token,
+    },
+    body: JSON.stringify(data),
+  });
+
+ 
+  return response.json();
+
+
+};
+export const getUnviewedThreadsCount = async (userId, companyId) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = '/pub/threads/unviewed-count';
+  const data ={
+    userId:currentUser.user.id,
+    companyId:currentUser.company.id
+  }
+  const response = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": currentUser.token,
+    },
+    body: JSON.stringify(data),
+  });
+
+ 
+  return response.json();
+ 
+};
 export const deleteQuestion = async (questionId) => {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const apiUrl = "/api/deleteCompanyQuestion";
