@@ -5,7 +5,7 @@ import AddComment from "./Components/AddComment";
 import { Divider, Stack, Typography } from "@mui/material";
 import PostsSort from "./Components/PostsSort";
 import { GetCompaniesAllThread, markAllThreadsAsViewed } from "src/api";
-
+import { socket } from "src/App";
 const ThreadPage = () => {
   const [companyThread, setCompanyThread] = useState([]);
   const [groupedThreads, setGroupedThreads] = useState([]);
@@ -31,13 +31,26 @@ const ThreadPage = () => {
   useEffect(() => {
   
     getCompanyThread(); // Initial fetch
-    const intervalId = setInterval(() => {
-      getCompanyThread();
-      markAllThreadsAsViewed();
-    }, 5000); // Adjust interval as needed (e.g., 5000 ms)
+   
+    
+    socket.on('fetchthreads', (data) => {
+         if (data) {
+       
+         
+          getCompanyThread();
+       
+         }
+       });
+  
+  
 
-    return () => clearInterval(intervalId); // Cleanup interval on unmount
+  
   }, []);
+
+  useEffect(()=>
+    {
+      markAllThreadsAsViewed();
+    },[companyThread])
 
   const groupThreadsByParentId = (threads) => {
     const getLatestActivity = (thread) => {

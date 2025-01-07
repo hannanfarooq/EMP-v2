@@ -55,7 +55,8 @@
     "os": "^0.1.1",
     "pg": "^8.11.2",
     "sequelize": "^6.37.5",
-    "sequelize-cli": "^5.4.0"
+    "sequelize-cli": "^5.4.0",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.0.2",

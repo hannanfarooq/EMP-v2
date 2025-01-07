@@ -1,12 +1,27 @@
+import { getIO } from "../../../socket";
 import { errorResponse, successResponse } from "../../helpers";
 import { User, Company, CompanyThread, ThreadMessage } from "../../models"; // Assuming you have your Sequelize instance initialized
 import { Op } from 'sequelize';
+
+
+
+
+
 export const createCompanyThread = async (req, res) => {
   try {
-    // console.log(req.body);
+    console.log(req.body);
     const companyThread = await CompanyThread.create(req.body);
+    console.log("CREATED");
+const {userId,companyId}= req.body
+    const io = getIO();
+ 
+    io.emit("fetchthreads",true);
+    
+  
+  io.emit('getcount',true);
     return successResponse(req, res, companyThread);
   } catch (error) {
+    console.log(error);
     return errorResponse(req, res, error);
   }
 };
@@ -32,71 +47,65 @@ export const getAllCompanyThreads = async (req, res) => {
   try {
     const { companyId } = req.params;
 
-    // Fetch all company threads along with associated user information (firstName, lastName)
+    // Fetch all company threads
     let companyThreads = await CompanyThread.findAll({
-      include: 
-         User,
-        
-   
       where: {
         companyId: companyId,
       },
-      order: [
-        ['createdAt', 'DESC'],
-      ],
+      order: [['createdAt', 'DESC']],
     });
 
-    const results = [];
+    // Collect all unique user IDs from likes and dislikes
+    const uniqueUserIds = new Set();
 
-    // Iterate through the retrieved CompanyThread records
-    for (const companyThread of companyThreads) {
+    companyThreads.forEach((thread) => {
+      const threadLikes = thread.likes || [];
+      const threadDislikes = thread.dislikes || [];
+
+      // Add userIds to the unique set
+      threadLikes.forEach((userId) => uniqueUserIds.add(userId));
+      threadDislikes.forEach((userId) => uniqueUserIds.add(userId));
+    });
+
+    // Fetch user details for all the unique userIds in one query
+    const users = await User.findAll({
+      where: {
+        id: Array.from(uniqueUserIds),
+      },
+      attributes: ['id', 'firstName', 'lastName'], // Fetch only required fields
+    });
+
+    // Create a map of userId to full name
+    const userMap = users.reduce((map, user) => {
+      map[user.id] = `${user.firstName} ${user.lastName}`;
+      return map;
+    }, {});
+    const results = [];
+    // Map the likes and dislikes to user names for each thread
+    companyThreads = companyThreads.map((companyThread) => {
       const threadLikes = companyThread.likes || [];
       const threadDislikes = companyThread.dislikes || [];
 
-      // Function to map user IDs to their full names (firstName + lastName)
-      const mapUserIdsToNames = async (userIds) => {
-        const userNames = {};
-
-        // Query the User model to find users by their IDs
-        const users = await User.findAll({
-          where: {
-            id: userIds,
-          },
-          attributes: ['id', 'firstName', 'lastName'], // Select only the required fields
-        });
-
-        // Map the user data to a userNames object where key is userId and value is full name
-        users.forEach(user => {
-          userNames[user.id] = `${user.firstName} ${user.lastName}`;
-        });
-
-        return userNames; // Return the map of user IDs to names
-      };
-
-      // Map the likes and dislikes user IDs to their names
-      const mappedLikes = await mapUserIdsToNames(threadLikes);
-      const mappedDislikes = await mapUserIdsToNames(threadDislikes);
-
-      // Update the companyThread object with the mapped likes and dislikes
-      companyThread.likes = mappedLikes;
+      // Map userIds to full names
+      const mappedLikes = threadLikes.map((userId) => userMap[userId] || userId); // Default to userId if not found
+      const mappedDislikes = threadDislikes.map((userId) => userMap[userId] || userId);
+      companyThread.likes =mappedLikes;
       companyThread.dislikes = mappedDislikes;
-
-      // Create the result object with the updated likes and dislikes
+      // Update the companyThread object with mapped likes and dislikes
       const resultObject = {
         companyThread,
       };
-
-      // Add the resultObject to the results array
       results.push(resultObject);
-    }
+    });
 
-    // Return the updated results array with likes and dislikes mapped to user names
+    // Return the updated companyThreads array with likes and dislikes mapped to user names
     return res.status(200).json(results);
   } catch (error) {
     console.log('error', error);
-    return res.status(500).json({ error });
+    return res.status(500).json({ error: 'An error occurred while fetching threads' });
   }
 };
+
 
 export const  toggleLike = async (req, res) => {
   const threadId = req.params.id;
@@ -122,6 +131,9 @@ export const  toggleLike = async (req, res) => {
       }
       thread.likes = Array.from(likes);
       await thread.save();
+      const io = getIO();
+ 
+      io.emit("fetchthreads",true);
 
       res.send({ likes: thread.likes, dislikes: thread.dislikes });
   } catch (error) {
@@ -153,6 +165,9 @@ export const toggleDislike = async (req, res) => {
       }
       thread.dislikes = Array.from(dislikes);
       await thread.save();
+      const io = getIO();
+ 
+      io.emit("fetchthreads",true);
 
       res.send({ likes: thread.likes, dislikes: thread.dislikes });
   } catch (error) {
@@ -160,27 +175,73 @@ export const toggleDislike = async (req, res) => {
   }
 };
 
-// Controller to update the viewedBy field in all threads for the current user
+
+
 export const updateView = async (req, res) => {
   try {
     const { userId, companyId } = req.body; // Get the userId and companyId from the request body
-    // console.log("User view update request", req.body);
 
-    // Find all company threads by companyId
+    // Log query start
+    console.log("COMPANY THREAD Query RUNNING");
+
+    // Fetch threads that don't already have the userId in the 'viewedBy' array
     const companyThreads = await CompanyThread.findAll({
       where: {
         companyId: companyId,
       },
     });
 
-    for (let thread of companyThreads) {
-      // If the user has not viewed the thread, add them to the viewedBy array
-      if (!thread.viewedBy.includes(userId)) {
-        // Explicitly set the updated array to ensure Sequelize saves it properly
-        thread.viewedBy = [...thread.viewedBy, userId];  // Spread the array and add the userId
-        await thread.save(); // Save the updated thread
-      }
+    // Log query end
+    console.log("COMPANY THREAD Query Completed");
+
+    // If no threads need to be updated, early return
+    if (companyThreads.length === 0) {
+      return res.status(200).json({ message: "No threads to update for this user" });
     }
+
+    // Prepare the update for the 'viewedBy' field
+    const updates = [];
+
+    // Collect threads that need an update (where userId is not already in 'viewedBy')
+    companyThreads.forEach((thread) => {
+      let updatedViewedBy = Array.isArray(thread.viewedBy)
+        ? thread.viewedBy // Already an array
+        : []; // Fallback to empty array if not
+
+      // Check if the userId is not already in the 'viewedBy' array
+      if (!updatedViewedBy.includes(userId)) {
+        updatedViewedBy.push(userId); // Add the userId to the 'viewedBy' array
+        updates.push({
+          id: thread.id,  // The thread's ID
+          viewedBy: updatedViewedBy, // Updated 'viewedBy' array
+        });
+      }
+    });
+
+    // If no updates are needed, return early
+    if (updates.length === 0) {
+      return res.status(200).json({ message: "No new threads to update for this user" });
+    }
+let count=0;
+    // Perform bulk updates for only those threads where updates are needed
+    await Promise.all(
+      updates.map(async (update) => {
+        ++count;
+        await CompanyThread.update(
+          { viewedBy: update.viewedBy }, // Update the 'viewedBy' array
+          {
+            where: {
+              id: update.id, // Ensure we're updating the correct thread
+            },
+          }
+        );
+      })
+    );
+    console.log("TOTAL QUERY ",count);
+
+    // Emit the event once after all updates are done
+    const io = getIO();
+    io.emit('getcount', true);
 
     console.log("User view updated for all threads in the company");
     return res.status(200).json({ message: "User view updated for all threads in the company" });
@@ -191,12 +252,10 @@ export const updateView = async (req, res) => {
 };
 
 
-
-
 export const getUnviewedThreadsCount = async (req, res) => {
   try {
     const { userId, companyId } = req.body; // Get the userId and companyId from the request body
-    // console.log("getUnviewedThreadsCount", req.body);
+  
 
     // Retrieve all threads for the specified companyId
     const companyThreads = await CompanyThread.findAll({
@@ -210,8 +269,6 @@ export const getUnviewedThreadsCount = async (req, res) => {
       // Check if the userId is NOT in the viewedBy array
       return !thread.viewedBy.includes(userId);
     }).length;
-
-    // console.log("getUnviewedThreadsCount", unviewedThreadsCount);
 
     return res.status(200).json({ unviewedThreadsCount });
   } catch (error) {
