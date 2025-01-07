@@ -2,9 +2,9 @@ import { AttachMoneyOutlined, FitnessCenterOutlined, TagFacesOutlined, Man3Outli
 
 //export const baseURL = 'http://18.206.90.216:3004';
 // for local host
-  export const baseURL = 'http://localhost:3004';
+export const baseURL = 'http://localhost:3004';
 // for aws server
-//export const baseURL = process.env.REACT_APP_SERVER_URL || 'http://18.213.181.237:5000';
+// export const baseURL = process.env.REACT_APP_SERVER_URL || 'http://18.213.181.237:5000';
 
 export const QUESTIONS_ANSWERED = 'questionsAnswered';
 

@@ -59,7 +59,7 @@ export const deleteDepartment = async (req, res) => {
     try {
         const { id } = req.body;
         const departmentData = await Department.findByPk(id);
-        console.log('DEPARTMENT delete DATA:', departmentData);
+        // console.log('DEPARTMENT delete DATA:', departmentData);
 
         if (!departmentData) {
             throw new Error("Department not found");

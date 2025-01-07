@@ -1,24 +1,10 @@
 import {
-  Card,
-  Table,
   Stack,
-  Paper,
-  Avatar,
-  Button,
-  Popover,
-  Checkbox,
-  TableRow,
-  MenuItem,
-  TableBody,
-  TableCell,
   Container,
   Typography,
-  IconButton,
-  TableContainer,
-  TablePagination,
-  Modal,
-  Box,
 } from "@mui/material";
+import KanbanBoard from '../components/Task-Management-Components/KanbanBoard.js';
+
 
 export default function TaskManagement() {
   return (
@@ -33,6 +19,9 @@ export default function TaskManagement() {
           Task Management
         </Typography>
       </Stack>
+      <div>
+          <KanbanBoard />
+        </div>
     </Container>
   );
 }

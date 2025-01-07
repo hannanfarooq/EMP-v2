@@ -6,7 +6,7 @@ import { where } from "sequelize";
 
 export const createGamifications = async (req, res) => {
   const data = req.body;
-  console.log("data of game", data);
+  // console.log("data of game", data);
 
   try {
     const gamificationData = await data.map((question) =>
@@ -69,7 +69,7 @@ export const GetUserGamification = async (req, res) => {
 export const GetUserGamificationbyCompany = async (req, res) => {
   try {
 
-    console.log("PARAMS : ", req.params);
+    // console.log("PARAMS : ", req.params);
     const { companyId } = req.params;
     const user = await User.findAll({
       where: {
@@ -94,7 +94,7 @@ export const updateUserGamification = async (req, res) => {
     // Destructure required fields from the request body
     const { gamification, id, points } = req.body;
 
-    console.log("------------------------------GAMIFICATIONS1", req.body);
+    // console.log("------------------------------GAMIFICATIONS1", req.body);
 
     // Find the user by their ID
     const user = await User.findByPk(id);
@@ -122,7 +122,7 @@ export const updateUserGamification = async (req, res) => {
       }
 
       user.points = points;
-      console.log("UPDATED USER", user);
+      // console.log("UPDATED USER", user);
     }
 
     user.changed('gamification', true);

@@ -17,7 +17,7 @@ export const getConversationsForUser = async (req, res) => {
       },
       
     });
-    console.log(conversations);
+    // console.log("---------------CONVO",conversations);
 if(conversations)
   {
     return successResponse(req,res,conversations)
@@ -29,7 +29,7 @@ if(conversations)
   }
  
   } catch (error) {
-    console.log(error.message);
+    // console.log(error.message);
     res.status(500).json({ error: error.message });
   }
 };
@@ -39,6 +39,33 @@ export const createConversation = async (req, res) => {
   try {
     const { chatName, isGroupChat, userIds, groupAdminId } = req.body;
 
+    // If it's a one-to-one chat, check if a conversation already exists
+    if (!isGroupChat) {
+      const existingConversation = await Conversation.findOne({
+        where: {
+          isGroupChat: false,
+          [Op.or]: [
+            {
+              groupAdminId: groupAdminId,
+              users: {
+                [Op.contains]: userIds, // Check if userIds are in the users array
+              }
+            },
+            {
+              groupAdminId: userIds[0], // Reverse the check, i.e., check if the user is the admin
+              users: {
+                [Op.contains]: [groupAdminId], // Check if groupAdminId is in the users array
+              }
+            }
+          ]
+        }
+      });
+
+      if (existingConversation) {
+        return res.status(400).json({ status:400, message: "Conversation already exists." });
+      }
+    }
+
     // Create the conversation
     const conversation = await Conversation.create({
       chatName,
@@ -46,29 +73,29 @@ export const createConversation = async (req, res) => {
       users: userIds,
       groupAdminId
     });
-console.log("---------------------------------------------",userIds);
+    // console.log("---------------------------------------------", userIds);
+
     // Prepare the invitation message
     const admin = await User.findByPk(groupAdminId); // Assuming you have a User model
     const messageText = isGroupChat 
-      ? `${admin.firstName+ " "+admin.lastName} invited you to join the group chat: ${chatName}`
-      : `${admin.firstName+ " "+admin.lastName} invited you to a one-to-one chat`;
+      ? `${admin.firstName + " " + admin.lastName} invited you to join the group chat: ${chatName}`
+      : `${admin.firstName + " " + admin.lastName} invited you to a one-to-one chat`;
 
     // Send the invitation message and create an invitation record for each user
     for (const userId of userIds) {
       try {
-        console.log(`Creating message for user ${userId}`);
+        // console.log(`Creating message for user ${userId}`);
         
         const mess = await Message.create({
           senderId: groupAdminId,
-          content: messageText,
+          content: "",
           chatId: conversation.id,
-          readBy:[],
+          readBy: [],
         });
         await conversation.update({
-          latestMessageId:mess.id,
-         
+          latestMessageId: mess.id,
         });
-        console.log(`Message created: ${mess.id}`);
+        // console.log(`Message created: ${mess.id}`);
         const user = await User.findByPk(userId);
         let sender_email = `ahmadawais00786@gmail.com`;
         let receiver_email = user.email; 
@@ -81,9 +108,7 @@ console.log("---------------------------------------------",userIds);
         });
         sendEMail(sender_email, receiver_email, email_subject, email_body);
 
-      
-
-        console.log(`Invitation created: ${inv.id}`);
+        // console.log(`Invitation created: ${inv.id}`);
       } catch (error) {
         console.error(`Error processing user ${userId}:`, error.message);
       }
@@ -94,6 +119,7 @@ console.log("---------------------------------------------",userIds);
     return errorResponse(req, res, error.message);
   }
 };
+
 
 
 
@@ -170,7 +196,9 @@ export const getConversationById = async (req, res) => {
       try {
         let latestMessageContent = null;
         let latestMessageSender = null;
-let message;
+        let message;
+
+        // Check if there is a latest message and fetch its content
         if (conversation.latestMessageId) {
           message = await Message.findOne({
             where: { id: conversation.latestMessageId }
@@ -182,13 +210,19 @@ let message;
           }
         }
 
+        // If no message is found, set default values
+        if (!latestMessageContent) {
+          latestMessageContent = null; // Default message when no messages exist
+          latestMessageSender = null;
+        }
+
         // Determine chatName based on whether it's a group chat or direct chat
         let chatName;
         if (conversation.isGroupChat) {
           chatName = conversation.chatName;
         } else {
           const otherUserId = conversation.users.find(userId => userId !== parseInt(id));
-          chatName = userMap[otherUserId]?.fullName || 'Unknown';
+          chatName = userMap[otherUserId]?.fullName || '';
         }
 
         // Filter userMap to include only users relevant to the current conversation
@@ -213,7 +247,7 @@ let message;
           userMap: filteredUserMap,
           latestMessage: latestMessageContent,
           latestMessageSender: latestMessageSender,
-          readBy:message.readBy,
+          readBy: message?.readBy || [], // Handle readBy field properly
           updatedAt: conversation.updatedAt,  // Include updatedAt for sorting
           avatar: userMap[conversation.groupAdminId]?.profilePic || 'https://example.com/default-avatar.jpg',
         };
@@ -226,7 +260,7 @@ let message;
     // Sort conversations by updatedAt in descending order
     conversations.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
-    console.log('Conversations:', conversations);
+    // console.log('Conversations:', conversations);
 
     return res.json({ conversations });
   } catch (error) {
@@ -303,7 +337,7 @@ export const removeUserFromConversation = async (req, res) => {
   try {
     const { id } = req.params;
     const { userId } = req.body;
-console.log('------------------ OBJECT',userId);
+// console.log('------------------ OBJECT',userId);
     const conversation = await Conversation.findByPk(id);
 
     if (!conversation) {
@@ -315,7 +349,7 @@ console.log('------------------ OBJECT',userId);
 
 	return successResponse(req,res,{conversation});
   } catch (error) {
-    console.log("----------------------------",error.message)
+    // console.log("----------------------------",error.message)
     res.status(500).json({ error: error.message });
   }
 };

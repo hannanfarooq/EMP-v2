@@ -127,7 +127,7 @@ export const getDynamicQuestions = async (req, res) => {
 export const getUserAttemptedQuestionnaireToAdmin = async (req, res) => {
   // Extracting the parameters from req.query, as it is a GET request
   const { questionnaireId, companyId } = req.query; 
-  console.log("getUserAttemptedQuestionnaireToAdmin be controller", questionnaireId, companyId);
+  // console.log("getUserAttemptedQuestionnaireToAdmin be controller", questionnaireId, companyId);
 
   try {
     const questions = await UserAttemptedQuestionnaire.findAll({
@@ -139,7 +139,7 @@ export const getUserAttemptedQuestionnaireToAdmin = async (req, res) => {
 
     return successResponse(req, res, { questions });
   } catch (error) {
-    console.log("error in getUserAttemptedQuestionnaireToAdmin");
+    // console.log("error in getUserAttemptedQuestionnaireToAdmin");
     return errorResponse(req, res, error.message);
   }
 };
@@ -236,7 +236,7 @@ export const deleteDynamicQuestion = async (req, res) => {
   try {
     const { questionId } = req.body; // Destructure questionId from the request body
     const { companyId } = req.body; // Destructure questionId from the request body
-    console.log("questionId", questionId);
+    // console.log("questionId", questionId);
 
     // Find the dynamic questionnaire by primary key (ID)
     const dynamicQuestion = await DynamicQuestionnaire.findOne({
@@ -546,7 +546,7 @@ export const createDailyQuestionnaire = async (req, res) => {
   const questions = req.body;  // Expecting an array of questions
   const userId = req.user.id;  // Replace this with your actual user ID extraction logic
 
-  console.log("Received data:", questions);
+  // console.log("Received data:", questions);
 
   // Validate input data
   if (!Array.isArray(questions) || questions.length === 0) {
@@ -555,7 +555,7 @@ export const createDailyQuestionnaire = async (req, res) => {
 
   try {
     for (const { questionText, options, type, companyId } of questions) {
-      console.log('Processing question:', { questionText, options, type, companyId });
+      // console.log('Processing question:', { questionText, options, type, companyId });
 
       // Validate each question
       if (!questionText || !type || !companyId || !userId) {
@@ -599,7 +599,7 @@ export const createDailyQuestionnaire = async (req, res) => {
 //getDailyQuestionsForCompany
 export const getDailyQuestionsForCompany = async (req, res) => {
   const { companyId } = req.params;
-  console.log(companyId);
+  // console.log(companyId);
 
   try {
     const questionnaire = await DailyQuestionWithOptions.findAll({
@@ -618,7 +618,7 @@ export const getDailyQuestionsForCompany = async (req, res) => {
 //fetchDailyQuestionsForCompany
 export const fetchDailyQuestionsForCompany = async (req, res) => {
   const { companyId } = req.params;
-  console.log(companyId);
+  // console.log(companyId);
 
   try {
     const questionnaire = await DailyQuestionWithOptions.findAll({
@@ -638,9 +638,9 @@ export const fetchDailyQuestionsForCompany = async (req, res) => {
 export const updateDailyQuestionForCompany = async (req, res) => {
   const { questionText, options, type, companyId } = req.body.points; // Get the data from the request body
   const {questionId} = req.body;
-console.log("compan details", req.body);
+// console.log("compan details", req.body);
 //const {id} = gamification;
-console.log( questionText, options, type, questionId);
+// console.log( questionText, options, type, questionId);
   try {
     // Ensure the user is authenticated (middleware check)
     //const userId = req.user.id; // Assuming JWT is being used and the user ID is decoded from the token
@@ -678,11 +678,11 @@ console.log( questionText, options, type, questionId);
 //deleteDailyQuestionForCompany
 export const deleteDailyQuestionForCompany = async (req, res) => {
   try {
-    console.log("req.bod", req.params);
+    // console.log("req.bod", req.params);
     const { id } = req.params;
-    console.log(id);
+    // console.log(id);
     const questionId = id;
-    console.log("questionId", questionId);
+    // console.log("questionId", questionId);
 
     const deletedQuestion = await DailyQuestionWithOptions.destroy({
       where: { id: questionId },

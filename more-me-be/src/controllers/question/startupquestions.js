@@ -3,7 +3,7 @@ import db from "../../models"; // Import from the central models file
 
 const { StartUpQuestions } = db;
 
-console.log("StartUpQuestions Model:", StartUpQuestions); // Log the model
+// console.log("StartUpQuestions Model:", StartUpQuestions); // Log the model
 
 export const createStartUpQuestions = async (req, res) => {
   const {
@@ -21,7 +21,7 @@ export const createStartUpQuestions = async (req, res) => {
     contentPreferences
   } = req.body;
 
-  console.log("Received data:", req.body);
+  // console.log("Received data:", req.body);
 
   if (!userId || !companyId) {
     return errorResponse(req, res, "userId and companyId are required.");
@@ -43,7 +43,7 @@ export const createStartUpQuestions = async (req, res) => {
       relaxationActivities: relaxationActivities ? relaxationActivities.join(',') : null,
     };
 
-    console.log("Data being passed to create method:", dataToCreate);
+    // console.log("Data being passed to create method:", dataToCreate);
 
     const startUpQuestion = await StartUpQuestions.create(dataToCreate);
     return successResponse(req, res, startUpQuestion);

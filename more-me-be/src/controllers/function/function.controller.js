@@ -142,7 +142,7 @@ export const createFunction = async (req, res) => {
 export const getCompanyFunctions = async (req, res) => {
     try {
         const { companyId } = req.body;
-        console.log('COMPANY ID:', companyId);
+        // console.log('COMPANY ID:', companyId);
         const functions = await Function.findAll({
             where: { companyId },
             include: "Head",

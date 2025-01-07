@@ -24,7 +24,7 @@ export const createTeam = async (req, res) => {
 export const getDepartmentTeams = async (req, res) => {
   try {
     const { departmentId } = req.body;
-    console.log("DEPARTMENT ID:", departmentId);
+    // console.log("DEPARTMENT ID:", departmentId);
     const teams = await Team.findAll({
       where: { departmentId },
       include: "Lead",
@@ -38,7 +38,7 @@ export const getDepartmentTeams = async (req, res) => {
 
 export const updateTeam = async (req, res) => {
   try {
-    console.log("updateTeam", req.body);
+    // console.log("updateTeam", req.body);
     const { team, id } = req.body;
     const teamData = await Team.findByPk(id);
 

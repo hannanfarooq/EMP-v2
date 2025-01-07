@@ -67,6 +67,8 @@ export default function AccouncmentsPage() {
   const [selectedAnnouncement, setSelectedAnnouncement] = React.useState(null);
   const [data, setData] = React.useState(null);
   const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
+  const [showAddAnnouncement, setShowAddAnnouncement] = React.useState(false);
+
 
   const handleDelete = async (id) => {
     await handleDeleteCompanyAnnouncement(id, storedUserData.token);
@@ -107,6 +109,10 @@ export default function AccouncmentsPage() {
   const handleOpen = () => setOpenTransiton(true);
   const handleClose = () => setOpenTransiton(false);
 
+  const handleAddAnnouncementClose = () => {
+    setShowAddAnnouncement(false); // Close the AddAnnouncement component
+  };
+
   return (
     <>
     <Helmet>
@@ -140,10 +146,12 @@ export default function AccouncmentsPage() {
           <TransitionsModal
             open={openTransition}
             handleClose={handleClose}
-            handleOpen={handleOpen}
+            handleOpen={handleOpen} 
             title={"Add New Announcement"}
             component={
-              <AddAnnouncement fetchCompanyAnnouncements={fetchCompanyAnnouncements} />
+              <AddAnnouncement fetchCompanyAnnouncements={fetchCompanyAnnouncements}
+              onClose={handleAddAnnouncementClose} // Pass the onClose prop
+              />
             }
           />
         </Stack>

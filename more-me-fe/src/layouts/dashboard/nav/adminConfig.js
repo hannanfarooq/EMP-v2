@@ -3,6 +3,7 @@ import SvgColor from "../../../components/svg-color";
 import PolicyIcon from "@mui/icons-material/PolicyOutlined";
 import CoPresentIcon from "@mui/icons-material/CoPresentOutlined";
 import BadgeIcon from "@mui/icons-material/Badge";
+import TaskIcon from "@mui/icons-material/AssignmentOutlined"; // For task management
 import BusinessIcon from "@mui/icons-material/BusinessOutlined";
 import QuestionAnswerOutlinedIcon from "@mui/icons-material/QuestionAnswerOutlined";
 
@@ -43,6 +44,11 @@ const adminConfig = [
     title: "Employee Management",
     path: "/dashboard/company-employee-management",
     icon: <BadgeIcon />,
+  },
+  {
+    title: "Task Management",
+    path: "/dashboard/task-management",
+    icon: <TaskIcon />,
   },
   {
     title: "policy",

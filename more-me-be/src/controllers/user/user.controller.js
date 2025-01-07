@@ -72,7 +72,7 @@ export const sendEmail = async (req, res) => {
 };
 
 export const createUser = async (email, role, firstName, lastName, companyId) => {
-  console.log("companyId: ", companyId);
+  // console.log("companyId: ", companyId);
   try {
     const existingUser = await User.findOne({ where: { email: email } });
     if (existingUser) {
@@ -94,13 +94,13 @@ export const createUser = async (email, role, firstName, lastName, companyId) =>
       lastName: lastName,
       companyId: companyId,
     });
-    console.log("Company user data", email, companyId);
+    // console.log("Company user data", email, companyId);
 
     let sender_email = `hannanfarooq8195@gmail.com`;
     let receiver_email = email;
     let email_subject = "Invitation to Join!";
     let email_body = `Your email to login is ${email} and password is ${randomPassword}`;
-    console.log("EMAIL BODY", email_body);
+    // console.log("EMAIL BODY", email_body);
     sendEMail(sender_email, receiver_email, email_subject, email_body);
 
     return { data: user, isCreated: true };
@@ -112,8 +112,8 @@ export const createUser = async (email, role, firstName, lastName, companyId) =>
 
 export const bulkInviteUsers = async (req, res) => {
   const builkInvite = req.body;
-  console.log("builkInvite",builkInvite);
-  console.log(">>>>>>>  ", JSON.stringify(builkInvite.companyId));
+  // console.log("builkInvite",builkInvite);
+  // console.log(">>>>>>>  ", JSON.stringify(builkInvite.companyId));
 
   // return successResponse(req, res, {});
 
@@ -138,7 +138,7 @@ export const bulkInviteUsers = async (req, res) => {
       builkInvite.companyId
     )
   );
-  console.log("data from csv", data);
+  // console.log("data from csv", data);
   return successResponse(req, res, {});
 };
 
@@ -194,7 +194,7 @@ export const login = async (req, res) => {
       where: { email: req.body.email },
     });
 
-    console.log("---------", user);
+    // console.log("---------", user);
 
     if (!user) {
       throw new Error("Incorrect Email Id/Password");
@@ -279,7 +279,7 @@ export const profile = async (req, res) => {
 };
 
 export const changePassword = async (req, res) => {
-  console.log("in change password")
+  // console.log("in change password")
   try {
     const { userId } = req.user;
     const user = await User.scope("withSecretColumns").findOne({
@@ -291,7 +291,7 @@ export const changePassword = async (req, res) => {
       .update(req.body.oldPassword)
       .digest("hex");
     if (reqPass !== user.password) {
-      console.log("hello this is invalid ")
+      // console.log("hello this is invalid ")
    return   errorResponse(req, res,"Old password is incorrect")
       throw new Error("Old password is incorrect");
     }
@@ -369,7 +369,7 @@ export const UpdateUserFromStartUpQuestions = async (req, res) => {
     data.ageRange = data.ageRange.replace(/\s+/g, ''); // Clean enum value
     data.dateOfBirth = validateDate(data.dateOfBirth); // Validate date
     data.spouseDOB = validateDate(data.spouseDOB); // Validate date
-    console.log("data.userd========", data);
+    // console.log("data.userd========", data);
     // Update user
     const user = await User.findByPk(data.userId);
     if (!user) {
@@ -423,14 +423,14 @@ export const updateUserPoints = async (req, res) => {
 
     // Update the readPolicies data (assuming readPolicies is an array)
     if (req.body.userPolicyId) {
-      console.log("is trye");
+      // console.log("is trye");
       let userpolicy = [];
       userpolicy = user.readPolicies ? user.readPolicies : [];
       userpolicy.push(req.body.userPolicyId);
       user.readPolicies = userpolicy;
     }
 
-    console.log(user.readPolicies);
+    // console.log(user.readPolicies);
     // Save the changes to the database
     const resp = await user.save();
     return successResponse(req, res, resp);
@@ -443,7 +443,7 @@ export const updateUserPoints = async (req, res) => {
 export const updateUserQuestionnaire = async (req, res) => {
   try {
     // Find the user by their ID
-    console.log(req.body);
+    // console.log(req.body);
     const { questionare, id } = req.body;
     const user = await User.findByPk(id);
 
@@ -489,8 +489,8 @@ export const updateStartUpQuestions = async (req, res) => {
       data.lifePrincipleInspirations = Array.isArray(data.lifePrincipleInspirations) ? data.lifePrincipleInspirations.join(',') : data.lifePrincipleInspirations;
     }
 
-    console.log("Received data:", data);
-    console.log("UserId:", userId, "CompanyId:", companyId);
+    // console.log("Received data:", data);
+    // console.log("UserId:", userId, "CompanyId:", companyId);
 
     // Find the user's record based on userId and companyId
     const userRecord = await StartUpQuestions.findOne({
@@ -504,12 +504,12 @@ export const updateStartUpQuestions = async (req, res) => {
       throw new Error("User not found");
     }
 
-    console.log("User record found, updating...");
+    // console.log("User record found, updating...");
 
     // Update the user's data
     const updated = await userRecord.update(data);
 
-    console.log("User record updated:", updated);
+    // console.log("User record updated:", updated);
 
     return successResponse(req, res, updated);
   } catch (error) {

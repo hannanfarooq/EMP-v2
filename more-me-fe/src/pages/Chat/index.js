@@ -142,7 +142,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "react-query";
 import { ProductCartWidget } from "src/sections/@dashboard/products";
 import { ChatDivContainer, Container, LeftContainer, RightContainer, StyledButton, Wrapper } from "./App.styles";
-import { getConversationMessages, getSellingItems, getChatRequests, acceptChatRequest, rejectChatRequest } from "src/api";
+import { getConversationMessages, getSellingItems, getChatRequests, acceptChatRequest, rejectChatRequest, getblockuser } from "src/api";
 import { MessageBox } from "react-chat-elements";
 import "react-chat-elements/dist/main.css";
 import ChatListComponent from "./ChatList";
@@ -172,6 +172,7 @@ export default function ChatPage() {
   const [openTransitionuser, setOpenTransitonuser] = useState(false);
   const [openTransitionrequest, setOpenTransitonrequest] = useState(false);
   const [openTransitionBlock, setOpenTransitionBlock] = useState(false);
+  const [loaduser, setloaduser] = useState(false);
   const queryClient = useQueryClient();
   const { data: chatRequests, isLoading: chatRequestsLoading } = useQuery('chatRequests', () => getChatRequests(currentUser.token));
 
@@ -183,7 +184,44 @@ export default function ChatPage() {
   const handlecloserequest = () => setOpenTransitonrequest(false);
   const handleopenBlock = () => setOpenTransitionBlock(true);
   const handlecloseBlock = () => setOpenTransitionBlock(false);
+
+  const [isLoadingUser, setLoadingUser] = useState(false); // State for loading status
+
+  // Function to toggle the loading state
+  const handleloaduser = () => {
+    setLoadingUser(prev => !prev); // Toggle loading state between true and false
+  };
+
+  const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
+  const [users, setUsers] = useState([]);
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const loadBlockedUsers = async () => {
+      try {
+     
+        const response2 = await getblockuser();  // Get users that the current user has blocked
+    
+        const blockedUsersData = response2.data;  // This is an object containing blockerId and blockedId array
+    
+        console.log("-----------BLOCKED USER", blockedUsersData);
+       
+       
+
+        // Transform the blocked users data
+       
+
+        
+        setUsers(blockedUsersData);
+        
+      } catch (error) {
+        console.error("Error fetching blocked users:", error);
+        toast.error("Error fetching blocked users. Please try again.");
+      }
+    };
+
+    loadBlockedUsers();
+    setloaduser(false);
+  }, [storedUserData.token,isLoadingUser]);
 
   useEffect(() => {}, [currentConversation]);
   const isAdmin = currentConversation?.user1Id === currentUser.user.id ? true : false;
@@ -212,7 +250,7 @@ export default function ChatPage() {
                     open={openTransitiongroup}
                     handleClose={handleClosegroup}
                     handleOpen={handleOpengroup}
-                    component={<CreateGroupChat fetchGroupChats={getAllCompanyUser} />}
+                    component={<CreateGroupChat fetchGroupChats={getAllCompanyUser} handleClosegroup={handleClosegroup}/>}
                   />
                 </Tooltip>
               </Grid>
@@ -223,7 +261,7 @@ export default function ChatPage() {
                     open={openTransitionuser}
                     handleClose={handleCloseuser}
                     handleOpen={handleOpenuser}
-                    component={<SingleUserChat fetchGroupChats={getAllCompanyUser} />}
+                    component={<SingleUserChat fetchGroupChats={getAllCompanyUser}  handleCloseuser={handleCloseuser}/>}
                   />
                 </Tooltip>
               </Grid>
@@ -262,10 +300,10 @@ export default function ChatPage() {
           <RightContainer>
             {currentConversation ? (
               <>
-                <ChatHeader conversation={currentConversation} isGroup={isGroup} isAdmin={isAdmin} fetchGroupChats={getAllCompanyUser} />
-                <MessageListComponent conversation={currentConversation} />
+                <ChatHeader conversation={currentConversation} isGroup={isGroup} isAdmin={isAdmin} fetchGroupChats={getAllCompanyUser} blockeduser={users} handleloaduser={handleloaduser} />
+                <MessageListComponent conversation={currentConversation} blockeduser={users} />
                 <Divider />
-                <MessageInputComponent conversation={currentConversation} />
+                <MessageInputComponent conversation={currentConversation} blockeduser={users} handleloaduser={handleloaduser} />
               </>
             ) : (
               <img

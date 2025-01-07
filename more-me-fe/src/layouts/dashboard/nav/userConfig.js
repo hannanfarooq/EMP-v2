@@ -6,6 +6,7 @@ import BusinessIcon from "@mui/icons-material/BusinessOutlined";
 import QuestionAnswerOutlinedIcon from "@mui/icons-material/QuestionAnswerOutlined";
 import ChatIcon from '@mui/icons-material/Chat';
 import BadgeIcon from "@mui/icons-material/Badge";
+import TaskIcon from "@mui/icons-material/AssignmentOutlined"; // For task management
 
 const icon = (name) => (
   <SvgColor
@@ -30,11 +31,11 @@ const userConfig = [
     path: "/dashboard/announcements",
     icon: icon("ic_announcements"),
   },
-  // {
-  //   title: "Task Management",
-  //   path: "/dashboard/task-management",
-  //   icon: <BadgeIcon />,
-  // },
+  {
+    title: "Task Management",
+    path: "/dashboard/task-management",
+    icon: <TaskIcon />,
+  },
   {
     title: "Connects",
     path: "/dashboard/thread",

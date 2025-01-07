@@ -3,7 +3,7 @@ import { CompanyAnnouncement } from "../../models"; // Assuming you have your Se
 
 export const createCompanyAnnouncement = async (req, res) => {
   const data = req.body;
-  console.log(data);
+  // console.log(data);
   try {
     const company = await CompanyAnnouncement.create(req.body);
     return successResponse(req, res, company);
@@ -16,7 +16,7 @@ export const createCompanyAnnouncement = async (req, res) => {
 export const getCompanyAnnouncement = async (req, res) => {
   try {
     const { companyId } = req.body;
-    console.log("companyId in be controller", companyId)
+    // console.log("companyId in be controller", companyId)
     const companies = await CompanyAnnouncement.findAll({ where: { companyId } });
     return successResponse(req, res, companies);
   } catch (error) {

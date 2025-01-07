@@ -23,14 +23,14 @@ function validateForm(name, description, members) {
   }
 
   
-  if (members.length < 1) {
-    errors.members = "Add at least 1 members ";
+  if (members.length < 2) {
+    errors.members = "Add at least 2 members ";
   }
 
   return errors;
 }
 
-export default function CreateGroupChat({ fetchGroupChats }) {
+export default function CreateGroupChat({ fetchGroupChats ,handleClosegroup}) {
   const [formData, setFormData] = useState({
     name: "",
    
@@ -129,7 +129,7 @@ export default function CreateGroupChat({ fetchGroupChats }) {
         
         setSubmitting(false);
         toast.success("Group chat created successfully!");
-
+        handleClosegroup();
         // Reset form after 3 seconds
         setTimeout(() => {
           setFormData({

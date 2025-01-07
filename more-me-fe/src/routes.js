@@ -70,14 +70,12 @@ export default function Router() {
       path: isAdmin ? "announcements" : undefined,
       element: isAdmin ? <Announcements /> : <Navigate to="/login" />,
     },
-    {
-      path: "task-management",
-      element: <TaskManagement />,
-    },
+    { path: "task-management", element: <TaskManagement /> },
     { path: "user", element: <UserPage /> },
     { path: "products", element: <ProductsPage /> },
     { path: "articles", element: <BlogPage /> },
     { path: "thread", element: <ThreadPage /> },
+    
     {
       path: "questionnaire",
       element: isAuthenticated && !isSuperAdmin ? <QuestionnairePage /> : <Navigate to="/login" />,
@@ -107,6 +105,7 @@ export default function Router() {
     { path: "AllQuestions", element: <AllQuestion /> },
     { path: "Announcements", element: <UserAnnouncementPage />},
     { path: "editProfilePage", element: <EditProfilePage /> },
+    { path: "task-management", element: <TaskManagement /> },
   ];
 
   const routes = useRoutes([

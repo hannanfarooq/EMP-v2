@@ -15,7 +15,7 @@ export const createCompanyPolicy = async (req, res) => {
 export const getCompanyPolicy = async (req, res) => {
   try {
     const { companyId } = req.body;
-    console.log("companyId in be controller", companyId)
+    // console.log("companyId in be controller", companyId)
     const companies = await CompanyPolicy.findAll({ where: { companyId } });
     return successResponse(req, res, companies);
   } catch (error) {

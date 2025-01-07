@@ -5,31 +5,31 @@ export const blockUsers = async (req, res) => {
     const { blockerId, blockedIds } = req.body;
   
     try {
-      console.log('Request Body:', req.body);
+      // console.log('Request Body:', req.body);
       const parsedBlockerId = parseInt(blockerId, 10);
   
       // Create or update blocked users
-      console.log('Finding BlockedUser with blockedId:', parsedBlockerId);
+      // console.log('Finding BlockedUser with blockedId:', parsedBlockerId);
       let blockedUser = await BlockedUser.findOne({ where: { blockerId: parsedBlockerId } });
   
-      console.log('Search Result:', blockedUser);
+      // console.log('Search Result:', blockedUser);
   
       if (blockedUser) {
         // Update the blockedIds array, ensuring uniqueness
         if (!blockedUser.blockedId.includes(blockedIds)) {
           blockedUser.blockedId.push(blockedIds);
         }
-        console.log('The Blocked User After:', blockedUser);
+        // console.log('The Blocked User After:', blockedUser);
         blockedUser.changed('blockedId', true);
         await blockedUser.save();
       } else {
-        console.log('Creating New Blocked User Entry');
+        // console.log('Creating New Blocked User Entry');
         blockedUser = await BlockedUser.create({ blockerId: parsedBlockerId, blockedId: [blockedIds] });
       }
   
       res.status(200).json(blockedUser);
     } catch (error) {
-      console.log('-----------------------ERROR', error);
+      // console.log('-----------------------ERROR', error);
       res.status(500).json({ error: 'Failed to block users' });
     }
   };
@@ -40,7 +40,7 @@ export const blockUsers = async (req, res) => {
     const parsedBlockerId = parseInt(id, 10);
   
     // Create or update blocked users
-    console.log('Finding BlockedUser with blockedId:', parsedBlockerId);
+    // console.log('Finding BlockedUser with blockedId:', parsedBlockerId);
     let blockedUser = await BlockedUser.findOne({ where: { blockerId: parsedBlockerId } });
     if(blockedUser)
         {
@@ -50,7 +50,7 @@ export const blockUsers = async (req, res) => {
             return  successResponse(req,res,{}); 
         }
     } catch (error) {
-        console.log('-----------------------ERROR', error);
+        // console.log('-----------------------ERROR', error);
         res.status(500).json({ error: 'Failed to block users' });
       }
   }
@@ -74,7 +74,7 @@ export const blockUsers = async (req, res) => {
         return successResponse(req, res, []);
       }
     } catch (error) {
-      console.log('-----------------------ERROR', error);
+      // console.log('-----------------------ERROR', error);
       res.status(500).json({ error: 'Failed to retrieve users who blocked the current user' });
     }
   };

@@ -37,7 +37,7 @@ export const respondToInvitation = async (req, res) => {
 
     res.json(invitation);
   } catch (error) {
-    console.log("------------------INVITATION ERROR,",error.message);
+    // console.log("------------------INVITATION ERROR,",error.message);
     res.status(500).json({ error: error.message });
   }
 };
@@ -82,10 +82,10 @@ export const getInvitationsByUserId = async (req, res) => {
         adminProfilePicture: admin.profilePic,
       };
     });
-console.log('-------------------',invitations);
+// console.log('-------------------',invitations);
     res.json(invitations);
   } catch (error) {
-    console.log('-------------------', error.message);
+    // console.log('-------------------', error.message);
     res.status(500).json({ error: error.message });
   }
 };

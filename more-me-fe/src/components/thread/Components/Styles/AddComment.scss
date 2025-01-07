@@ -113,3 +113,386 @@
     transform: translateY(0);
   }
 }
+
+
+//////////////////////////////
+/* src/components/AddComment/AddComment.scss */
+
+/* src/components/AddComment/AddComment.scss */
+
+$primary-color: #5457B6;
+$secondary-color: #357ab8;
+$danger-color: #ff4d4f;
+$light-gray: #f5f5f5;
+$border-color: #e0e0e0;
+$text-color: #333333;
+$background-color: #ffffff;
+$error-color: $danger-color;
+$disabled-color: #a0a0a0;
+
+.add-comment-container {
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+  .add-comment {
+    background-color: $background-color;
+    border: 1px solid $border-color;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+    .comment-input {
+      width: 100%;
+      height: 100px;
+      padding: 12px;
+      border: 1px solid $border-color;
+      border-radius: 8px;
+      resize: vertical;
+      font-size: 16px;
+      margin-bottom: 10px;
+      transition: border-color 0.3s;
+
+      &.error {
+        border-color: $error-color;
+      }
+
+      &:focus {
+        border-color: $primary-color;
+        outline: none;
+      }
+    }
+
+    .error-message {
+      color: $error-color;
+      margin-bottom: 15px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .file-inputs {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+
+      .file-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: $primary-color;
+        cursor: pointer;
+        transition: transform 0.2s, color 0.3s;
+
+        &:hover {
+          transform: scale(1.2);
+          color: $secondary-color;
+        }
+
+        svg {
+          pointer-events: none;
+        }
+      }
+
+      .link-input-wrapper {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        border: 1px solid $border-color;
+        border-radius: 8px;
+        padding: 8px 12px;
+        transition: border-color 0.3s;
+
+        &:focus-within {
+          border-color: $primary-color;
+        }
+
+        .link-icon {
+          margin-right: 8px;
+          color: $primary-color;
+        }
+
+        .link-input {
+          flex: 1;
+          border: none;
+          outline: none;
+          font-size: 16px;
+
+          &::placeholder {
+            color: #a0a0a0;
+          }
+        }
+
+        .add-link-btn {
+          background-color: $primary-color;
+          color: #ffffff;
+          border: none;
+          border-radius: 50%;
+          padding: 8px;
+          margin-left: 8px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background-color 0.3s, transform 0.2s;
+
+          &:hover {
+            background-color: $secondary-color;
+            transform: translateY(-2px);
+          }
+
+          &:disabled {
+            background-color: $disabled-color;
+            cursor: not-allowed;
+            transform: none;
+          }
+
+          svg {
+            pointer-events: none;
+          }
+        }
+      }
+    }
+
+    .uploading-text {
+      color: $primary-color;
+      margin-bottom: 10px;
+      font-style: italic;
+    }
+
+    .add-btn {
+      background-color: $primary-color;
+      color: #ffffff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s, transform 0.2s;
+
+      &:hover {
+        background-color: $secondary-color;
+        transform: translateY(-2px);
+      }
+
+      &:active {
+        background-color: darken($secondary-color, 10%);
+      }
+    }
+  }
+
+  .attachments {
+    margin-top: 30px;
+
+    .attachment-section {
+      margin-bottom: 25px;
+
+      h4 {
+        margin-bottom: 15px;
+        color: $text-color;
+        font-size: 18px;
+        border-bottom: 2px solid $border-color;
+        padding-bottom: 5px;
+      }
+
+      &.image-section {
+        .image-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 15px;
+
+          .image-wrapper {
+            position: relative;
+            width: calc(33.333% - 10px);
+
+            img {
+              width: 100%;
+              height: auto;
+              border-radius: 8px;
+              object-fit: cover;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .remove-btn {
+              position: absolute;
+              top: 8px;
+              right: 8px;
+              background-color: rgba(255, 255, 255, 0.8);
+              border: none;
+              border-radius: 50%;
+              padding: 5px;
+              cursor: pointer;
+              font-size: 14px;
+              color: $danger-color;
+              transition: background-color 0.3s, color 0.3s;
+
+              &:hover {
+                background-color: $danger-color;
+                color: #ffffff;
+              }
+
+              svg {
+                pointer-events: none;
+              }
+            }
+          }
+        }
+      }
+
+      &.pdf-section {
+        .pdf-list {
+          list-style: none;
+          padding: 0;
+
+          .pdf-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+
+            .pdf-link {
+              color: $primary-color;
+              text-decoration: none;
+              font-weight: 500;
+              transition: color 0.3s;
+
+              &:hover {
+                color: $secondary-color;
+              }
+            }
+
+            .view-btn,
+            .remove-btn {
+              background-color: transparent;
+              border: none;
+              cursor: pointer;
+              color: $primary-color;
+              font-size: 16px;
+              transition: color 0.3s;
+
+              &:hover {
+                color: $danger-color;
+              }
+
+              &.view-btn {
+                color: $primary-color;
+
+                &:hover {
+                  color: $secondary-color;
+                }
+              }
+
+              &.remove-btn {
+                color: $danger-color;
+
+                &:hover {
+                  color: #ffffff;
+                  background-color: $danger-color;
+                  border-radius: 50%;
+                }
+              }
+
+              svg {
+                pointer-events: none;
+              }
+            }
+          }
+        }
+      }
+
+      &.link-section {
+        .links-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 15px;
+
+          .link-wrapper {
+            position: relative;
+            width: calc(50% - 10px);
+
+            .microlink {
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .remove-btn {
+              position: absolute;
+              top: 8px;
+              right: 8px;
+              background-color: rgba(255, 255, 255, 0.8);
+              border: none;
+              border-radius: 50%;
+              padding: 5px;
+              cursor: pointer;
+              font-size: 14px;
+              color: $danger-color;
+              transition: background-color 0.3s, color 0.3s;
+
+              &:hover {
+                background-color: $danger-color;
+                color: #ffffff;
+              }
+
+              svg {
+                pointer-events: none;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .add-comment {
+      .file-inputs {
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .link-input-wrapper {
+        width: 100%;
+      }
+
+      .attachments {
+        .attachment-section {
+          .image-grid {
+            .image-wrapper {
+              width: calc(50% - 10px);
+            }
+          }
+
+          .links-grid {
+            .link-wrapper {
+              width: calc(100% - 10px);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    .add-comment {
+      .file-inputs {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .attachments {
+        .attachment-section {
+          .image-grid,
+          .links-grid {
+            .image-wrapper,
+            .link-wrapper {
+              width: 100%;
+            }
+          }
+        }
+      }
+    }
+  }
+}

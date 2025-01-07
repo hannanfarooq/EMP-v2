@@ -17,8 +17,6 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 
 function validateForm(members) {
   const errors = {};
-
- 
   
   if (members.length !=1 ) {
     errors.members = "Only one Member Allowed";
@@ -27,7 +25,7 @@ function validateForm(members) {
   return errors;
 }
 
-export default function SingleUserChat({ fetchGroupChats }) {
+export default function SingleUserChat({ fetchGroupChats,handleCloseuser }) {
   const [formData, setFormData] = useState({
     name: "",
    
@@ -117,11 +115,20 @@ export default function SingleUserChat({ fetchGroupChats }) {
       try {
         
         
-        await createConversation(data, storedUserData.token);
+     const res=   await createConversation(data, storedUserData.token);
+    //  console.log("RESPONSE OF DATA FROM SERVER: ",res);
+     if(res.status==400)
+     {
+      toast.success("Convesation Already Exist!");
+     }
+     else 
+     {
+      toast.success("Conversation Created Sucessfully");
+     }
         
         setSubmitting(false);
-        toast.success("Group chat created successfully!");
-
+      
+        handleCloseuser();
         // Reset form after 3 seconds
         setTimeout(() => {
           setFormData({

@@ -26,9 +26,9 @@ export const sendEMail = (sender_email, receiver_email, email_subject, email_bod
 
 	transporter.sendMail(data, (error, info) => {
 		if (error) {
-			console.log('Error sending email:', error);
+			// console.log('Error sending email:', error);
 		} else {
-			console.log('Email sent:', data ,info.response);
+			// console.log('Email sent:', data ,info.response);
 		}
 	})
 }

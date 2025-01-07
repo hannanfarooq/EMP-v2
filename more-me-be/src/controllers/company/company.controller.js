@@ -4,7 +4,7 @@ import { createUser } from "../user/user.controller";
 const { Op } = require("@sequelize/core");
 
 export const createCompany = async (req, res) => {
-  console.log("create company req: ", req.body);
+  // console.log("create company req: ", req.body);
   const { adminEmails } = req.body;
 
   const adminIds = [];
@@ -39,7 +39,7 @@ export const createCompany = async (req, res) => {
     });
 
     if (adminIds.length) {
-      console.log("req.body of company creation:", req.body);
+      // console.log("req.body of company creation:", req.body);
       // Update the company with adminIds
       await Company.update(
         { adminId: adminIds },
@@ -82,11 +82,11 @@ export const getCompanyById = async (req, res) => {
   try {
     const { companyId } = req.body;
 
-    console.log("company", companyId);
+    // console.log("company", companyId);
 
     const company = await Company.findByPk(companyId);
 
-    console.log(company);
+    // console.log(company);
     return successResponse(req, res, company);
   } catch (error) {
     return errorResponse(req, res, error);

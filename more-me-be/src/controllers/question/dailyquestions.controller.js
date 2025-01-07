@@ -26,7 +26,7 @@ import db from "../../models"; // Import from the central models file
 
 const { DailyQuestions } = db;
 
-console.log("DailyQuestions Model:", DailyQuestions); // Add this line to log the model
+// console.log("DailyQuestions Model:", DailyQuestions); // Add this line to log the model
 
 export const createDailyQuestions = async (req, res) => {
   const { 

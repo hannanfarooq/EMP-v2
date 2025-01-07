@@ -4,7 +4,7 @@ import { Op, where } from 'sequelize';
 export const createMessage = async (req, res) => {
   try {
     const { senderId, content, chatId } = req.body;
-console.log("------------------------Posting a Message",req.body);
+// console.log("------------------------Posting a Message",req.body);
     const message = await Message.create({
       senderId,
       content,
@@ -17,7 +17,7 @@ console.log("------------------------Posting a Message",req.body);
     
     res.status(201).json(message);
   } catch (error) {
-    console.log("------------------------Posting a Message",error.message);
+    // console.log("------------------------Posting a Message",error.message);
     res.status(500).json({ error: error.message });
   }
 };
