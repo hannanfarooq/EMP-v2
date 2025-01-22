@@ -11,7 +11,7 @@ const adminAuth = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.SECRET);
     req.user = decoded.user;
-    if (decoded.user.role !== "admin") {
+    if (decoded.user.role !== "admin" && decoded.user.role !== "company-super-admin" &&decoded.user.role !== "manager" &&decoded.user.role !== "lead") {
       return errorResponse(
         req,
         res,

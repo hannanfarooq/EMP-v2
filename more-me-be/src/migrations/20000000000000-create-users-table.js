@@ -82,7 +82,15 @@ module.exports = {
         defaultValue: false,
       },
       role: {
-        type: Sequelize.ENUM('admin', 'super-admin', 'user'),
+        type: Sequelize.ENUM(
+          'company-super-admin',
+          'super-super-admin',
+          'admin',
+          'manager',
+          'lead',
+         
+          'user'
+        ),
         defaultValue: 'user',
       },
       is_function_head: {

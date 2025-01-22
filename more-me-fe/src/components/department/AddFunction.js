@@ -233,7 +233,7 @@ export default function AddFunction({ functionF, handleClose }) {
   useEffect(() => {
     getAllCompanyUser(userData?.token, userData?.company.id, isSuperAdmin).then(
       (res) => {
-        console.log("COMPANY USERS", res.data);
+        console.log("COMPANY USERS", res);
         setCompanyUsers(res.data);
         setHead(get(functionF, "Head.id", null));
       }
@@ -377,9 +377,11 @@ export default function AddFunction({ functionF, handleClose }) {
             onChange={(e) => setHead(e.target.value)}
           >
             {companyUsers.map((user) => (
-              <MenuItem key={user.id} value={user.id}>
+              user.role=="user" || user.id==head
+              ?( <MenuItem key={user.id} value={user.id}>
                 {user.firstName} {user.lastName}
-              </MenuItem>
+              </MenuItem>):(null)
+             
             ))}
           </Select>
           <FormHelperText>

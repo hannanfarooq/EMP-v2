@@ -11,114 +11,115 @@ import Container from "@mui/material/Container";
 import { useState } from "react";
 import { createCompanyAnnouncement } from "src/api";
 import { toast } from "react-toastify";
-import { uploadFileToS3 } from "src/utils/uploadFileToS3";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { uploadPDFAndGetURL } from "src/utils/uploadPDFAndGetURL";
+import { uploadImageAndGetURL } from "src/utils/uploadImageAndGetURL";
 import { DesktopDateTimePicker } from "@mui/x-date-pickers/DesktopDateTimePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { addMinutes } from "date-fns";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 
-// Validation function
 function validateForm(name, description, reward) {
   const errors = {};
-
-  if (!name.trim()) {
-    errors.name = "Name is required";
-  }
-
-  if (!description.trim()) {
-    errors.description = "Description is required";
-  }
-
-  if (isNaN(reward) || reward === "") {
-    errors.reward = "Reward must be a valid number";
-  }
-
-  if (reward < 1) {
-    errors.reward = "Reward must be a positive number";
-  }
-
+  if (!name.trim()) errors.name = "Name is required";
+  if (!description.trim()) errors.description = "Description is required";
+  if (isNaN(reward) || reward === "") errors.reward = "Reward must be a valid number";
+  if (reward < 1) errors.reward = "Reward must be a positive number";
   return errors;
 }
 
-export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose  }) {
+export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     reward: "",
-    announcementDate: null, // Initialize the date and time state
+    announcementDate: null,
+    questions: [],
   });
 
   const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedDocuments, setSelectedDocuments] = useState([]);
+  const [selectedImages, setSelectedImages] = useState([]);
+
+  const handleFileInput = (e, type) => {
+    const files = Array.from(e.target.files);
+    if (type === "documents") {
+      setSelectedDocuments((prev) => [...prev, ...files]);
+    } else if (type === "images") {
+      setSelectedImages((prev) => [...prev, ...files]);
+    }
+  };
+
+  const removeFile = (type, index) => {
+    if (type === "documents") {
+      setSelectedDocuments((prev) => prev.filter((_, i) => i !== index));
+    } else if (type === "images") {
+      setSelectedImages((prev) => prev.filter((_, i) => i !== index));
+    }
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const { name, description, reward, announcementDate } = formData;
+    const { name, description, reward, announcementDate, questions } = formData;
 
-    // Validate the form data
     const formErrors = validateForm(name, description, reward);
     setErrors(formErrors);
 
-    // Check if there are any validation errors
-    if (Object.keys(formErrors).length === 0) {
-      // If no errors, upload file to S3
-      const uploadToastId = toast.info("Uploading file...", { autoClose: false, isLoading: true });
+    if (!name || !description || !reward || !announcementDate) {
+      toast.error("All fields are required! Please fill out all the fields.");
+      return;
+    }
 
-      const progressCallback = (progressEvent) => {
-        const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
-        toast.update(uploadToastId, {
-          render: `Uploading file... ${progress}%`,
-          autoClose: false,
-          isLoading: true,
-        });
-      };
+    if (Object.keys(formErrors).length === 0) {
+      const uploadToastId = toast.info("Uploading files...", { autoClose: false, isLoading: true });
 
       try {
-        const docsUrl = await uploadFileToS3(selectedFile, progressCallback);
-        toast.dismiss(uploadToastId); // Dismiss the upload status toast
+        const documentUrls = await Promise.all(
+          selectedDocuments.map((file) => uploadPDFAndGetURL(file))
+        );
 
-        // Make API call to create company announcement
+        const imageUrls = await Promise.all(
+          selectedImages.map((file) => uploadImageAndGetURL(file))
+        );
+
+        toast.dismiss(uploadToastId);
+
         const data = {
-          name: formData.name,
-          description: formData.description,
-          rewardPoints: formData.reward,
+          name,
+          description,
+          rewardPoints: reward,
           companyId: storedUserData?.company.id,
-          documentUrl: docsUrl,
-          announcementDate: announcementDate, // Include the announcement date and time
+          documentUrls,
+          imageUrls,
+          announcementDate,
+          questions, // Send questions to the API
         };
-        console.log("data",data);
 
         setSubmitting(true);
         await createCompanyAnnouncement(data, storedUserData.token);
         fetchCompanyAnnouncements();
         setSubmitting(false);
         toast.success("Announcement created successfully!");
-        setTimeout(() => {
-          setFormData({
-            name: "",
-            description: "",
-            reward: "",
-            announcementDate: null, // Reset date
-          });
-          window.location.reload();
-        }, 3000);
+        setFormData({
+          name: "",
+          description: "",
+          reward: "",
+          announcementDate: null,
+          questions: [],
+        });
+        setSelectedDocuments([]);
+        setSelectedImages([]);
 
         if (onClose) {
           onClose();
         }
-
       } catch (error) {
         toast.dismiss(uploadToastId);
-        toast.error("Error uploading file. Please try again.");
+        toast.error("Error uploading files. Please try again.");
       }
     }
-  };
-
-  const handleFileInput = (e) => {
-    setSelectedFile(e.target.files[0]);
   };
 
   const handleInputChange = (event) => {
@@ -136,14 +137,44 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose  })
     });
   };
 
-  // Get current date and time to disable previous dates and times
-  const currentDate = new Date();
-  const minDateTime = addMinutes(currentDate, 1); // Minimum date and time is 1 minute ahead to prevent selecting the current time
+  const handleQuestionChange = (index, event) => {
+    const updatedQuestions = [...formData.questions];
+    updatedQuestions[index][event.target.name] = event.target.value;
+    setFormData({ ...formData, questions: updatedQuestions });
+  };
 
-  const defaultTheme = createTheme();
+  const handleAddQuestion = () => {
+    setFormData({
+      ...formData,
+      questions: [
+        ...formData.questions,
+        { question: "", options: [""] },
+      ],
+    });
+  };
+
+  const handleRemoveQuestion = (index) => {
+    const updatedQuestions = formData.questions.filter((_, i) => i !== index);
+    setFormData({ ...formData, questions: updatedQuestions });
+  };
+
+  const handleAddOption = (questionIndex) => {
+    const updatedQuestions = [...formData.questions];
+    updatedQuestions[questionIndex].options.push("");
+    setFormData({ ...formData, questions: updatedQuestions });
+  };
+
+  const handleRemoveOption = (questionIndex, optionIndex) => {
+    const updatedQuestions = [...formData.questions];
+    updatedQuestions[questionIndex].options.splice(optionIndex, 1);
+    setFormData({ ...formData, questions: updatedQuestions });
+  };
+
+  const currentDate = new Date();
+  const minDateTime = addMinutes(currentDate, 1);
 
   return (
-    <ThemeProvider theme={defaultTheme}>
+    <ThemeProvider theme={createTheme()}>
       <Container component="main" maxWidth="xs">
         <CssBaseline />
         <Box
@@ -160,12 +191,7 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose  })
           <Typography component="h1" variant="h5">
             Add new Announcement
           </Typography>
-          <Box
-            component="form"
-            noValidate
-            onSubmit={handleSubmit}
-            sx={{ mt: 3 }}
-          >
+          <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
@@ -174,7 +200,6 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose  })
                   id="name"
                   label="Announcement Name"
                   name="name"
-                  autoComplete="name"
                   value={formData.name}
                   onChange={handleInputChange}
                   error={!!errors.name}
@@ -188,10 +213,8 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose  })
                   id="description"
                   multiline
                   rows={6}
-                  maxRows={8}
                   label="Announcement Summary"
                   name="description"
-                  autoComplete="description"
                   value={formData.description}
                   onChange={handleInputChange}
                   error={!!errors.description}
@@ -206,56 +229,106 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose  })
                   id="reward"
                   label="Reward Points"
                   name="reward"
-                  autoComplete="reward"
                   value={formData.reward}
                   onChange={handleInputChange}
                   error={!!errors.reward}
                   helperText={errors.reward}
                 />
-                <span>Select announcement document file (.pdf/.docx)</span>
+              </Grid>
+              <Grid item xs={12}>
+                <span>Select announcement document files (.pdf/.docx)</span>
                 <input
                   type="file"
                   accept=".pdf, .docx"
-                  onChange={handleFileInput}
+                  multiple
+                  onChange={(e) => handleFileInput(e, "documents")}
                 />
+                <ul>
+                  {selectedDocuments.map((file, index) => (
+                    <li key={index}>
+                      {file.name}{" "}
+                      <Button size="small" onClick={() => removeFile("documents", index)}>
+                        Remove
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
               </Grid>
-
-              {/* Fancy DateTimePicker */}
+              <Grid item xs={12}>
+                <span>Select announcement images (.png, .jpg, .jpeg)</span>
+                <input
+                  type="file"
+                  accept=".png, .jpg, .jpeg"
+                  multiple
+                  onChange={(e) => handleFileInput(e, "images")}
+                />
+                <ul>
+                  {selectedImages.map((file, index) => (
+                    <li key={index}>
+                      {file.name}{" "}
+                      <Button size="small" onClick={() => removeFile("images", index)}>
+                        Remove
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </Grid>
               <Grid item xs={12}>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DesktopDateTimePicker
                     label="Announcement Date and Time"
                     value={formData.announcementDate}
                     onChange={handleDateChange}
-                    minDateTime={minDateTime} // Disable previous dates and times
+                    minDateTime={minDateTime}
                     renderInput={(params) => <TextField {...params} />}
-                    inputFormat="yyyy-MM-dd HH:mm" // 24-hour format
-                    disablePast
-                    ampm={false} // Disable AM/PM format
-                    views={["year", "month", "day", "hours", "minutes"]} // Show only relevant views
-                    sx={{
-                      width: '100%',
-                      '& .MuiInputBase-root': {
-                        fontSize: '1rem',
-                        backgroundColor: '#f4f6f8',
-                        borderRadius: '8px',
-                        padding: '10px',
-                      },
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: '10px',
-                      },
-                    }}
                   />
                 </LocalizationProvider>
               </Grid>
+
+              {/* Questions Section */}
+              <Grid item xs={12}>
+                <Typography variant="h6">Add Questions</Typography>
+                {formData.questions.map((question, questionIndex) => (
+                  <Box key={questionIndex} sx={{ mt: 2 }}>
+                    <TextField
+                      fullWidth
+                      label={`Question ${questionIndex + 1}`}
+                      name="question"
+                      value={question.question}
+                      onChange={(e) => handleQuestionChange(questionIndex, e)}
+                    />
+                    {question.options.map((option, optionIndex) => (
+                      <Box key={optionIndex} sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                        <TextField
+                          fullWidth
+                          label={`Option ${optionIndex + 1}`}
+                          name="option"
+                          value={option}
+                          onChange={(e) => {
+                            const updatedQuestions = [...formData.questions];
+                            updatedQuestions[questionIndex].options[optionIndex] = e.target.value;
+                            setFormData({ ...formData, questions: updatedQuestions });
+                          }}
+                        />
+                        <Button size="small" onClick={() => handleRemoveOption(questionIndex, optionIndex)}>
+                          Remove
+                        </Button>
+                      </Box>
+                    ))}
+                    <Button size="small" onClick={() => handleAddOption(questionIndex)}>
+                      Add Option
+                    </Button>
+                    <Button size="small" onClick={() => handleRemoveQuestion(questionIndex)}>
+                      Remove Question
+                    </Button>
+                  </Box>
+                ))}
+                <Button size="small" onClick={handleAddQuestion}>
+                  Add Question
+                </Button>
+              </Grid>
             </Grid>
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 1, mb: 1 }}
-              disabled={submitting}
-            >
+            <Button type="submit" fullWidth variant="contained" sx={{ mt: 1, mb: 1 }} disabled={submitting}>
               {submitting ? "Submitting..." : "Create"}
             </Button>
           </Box>

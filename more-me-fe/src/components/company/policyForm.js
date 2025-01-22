@@ -13,6 +13,7 @@ import { createCompanyPolicy } from "src/api";
 import { toast } from "react-toastify";
 import { uploadFileToS3 } from "src/utils/uploadFileToS3";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { uploadPDFAndGetURL } from "src/utils/uploadPDFAndGetURL";
 
 function validateForm(name, description, reward) {
   const errors = {};
@@ -71,7 +72,7 @@ export default function AddPolicy({ fetchCompanyPolicies }) {
       };
 
       try {
-        const docsUrl = await uploadFileToS3(selectedFile, progressCallback);
+        const docsUrl = await uploadPDFAndGetURL(selectedFile);
         toast.dismiss(uploadToastId); // Dismiss the upload status toast
         //toast.success("File uploaded successfully!");
 

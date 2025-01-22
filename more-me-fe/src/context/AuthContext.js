@@ -13,15 +13,9 @@ export const AuthProvider = ({ children }) => {
     const id = toast.loading("Logging in...");
     //do something else
     const isValidUser = await Login(email, password);
-    console.log("isValidUser", isValidUser);
+   
     if (!isValidUser.error) {
       // Perform your login logic here
-      setUserData(isValidUser.data.data);
-      localStorage.setItem(
-        "currentUser",
-        JSON.stringify(isValidUser.data.data)
-      );
-      setIsAuthenticated(true);
       toast.update(id, {
         render: "Logged in",
         type: "success",
@@ -29,6 +23,13 @@ export const AuthProvider = ({ children }) => {
         isLoading: false,
         closeButton: true,
       });
+      setUserData(isValidUser.data.data);
+      localStorage.setItem(
+        "currentUser",
+        JSON.stringify(isValidUser.data.data)
+      );
+      setIsAuthenticated(true);
+    
     } else {
       toast.update(id, {
         render:

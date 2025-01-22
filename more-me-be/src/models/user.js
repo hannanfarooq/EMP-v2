@@ -304,7 +304,6 @@
   // models/user.js
 
 // models/user.js
-
 'use strict';
 
 module.exports = (sequelize, DataTypes) => {
@@ -360,11 +359,6 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: {},
         allowNull: true
       },
-      dailyQuestionsithOptions: {
-        type: DataTypes.JSON,
-        defaultValue: {},
-        allowNull: true
-      },
       gamification: {
         type: DataTypes.JSON,
         defaultValue: {},
@@ -384,7 +378,15 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: false
       },
       role: {
-        type: DataTypes.ENUM('admin', 'super-admin', 'user'),
+        type: DataTypes.ENUM(
+          'company-super-admin',
+          'super-super-admin',
+          'admin',
+          'manager',
+          'lead',
+          'hr',
+          'user'
+        ),
         defaultValue: 'user'
       },
       companyId: {
@@ -464,6 +466,14 @@ module.exports = (sequelize, DataTypes) => {
       },
       phoneNumber: {
         type: DataTypes.STRING,
+        allowNull: true
+      },
+      departmentId:{
+        type: DataTypes.INTEGER,
+        allowNull: true
+      },
+      teamid:{
+        type: DataTypes.INTEGER,
         allowNull: true
       }
     },

@@ -33,7 +33,7 @@ export default function AddTeam({ department, team, handleClose }) {
   const [companyUsers, setCompanyUsers] = useState([]);
 
   const [teamName, setTeamName] = useState(team?.name || "");
-  const [lead, setLead] = useState("");
+  const [lead, setLead] = useState(null);
   const [teamMembers, setTeamMembers] = useState([]);
 
   const [teamNameIsValid, setTeamNameIsValid] = useState(true);
@@ -56,23 +56,22 @@ export default function AddTeam({ department, team, handleClose }) {
         "COMPANY USERS NON FUNCTION HEADS",
         res.data.filter((user) => !user.is_function_head)
       );
-      setLead(get(team, "Lead.id", null));
+      
+     
       if (team) {
-        setTeamMembers(res.data.filter((user) => user.teamId === team.id));
+        setLead(team.leadId);
+     
+        const userIds = team.userIds || [];
+        console.log("userIds",userIds);
+
+        // Filter users whose id is in the userIds array from the team
+        setTeamMembers(
+          userIds
+        );
+        
       }
     });
-    if (team) {
-      getTeamMembers(storedUserData.token, team.id).then((res) => {
-        console.log("TEAM MEMBERS", res.data);
-        setTeamMembers(
-          res.data.map((member) => ({
-            firstName: member.firstName,
-            lastName: member.lastName,
-            id: member.id,
-          }))
-        );
-      });
-    }
+  
   }, []);
 
   const addNewMemberFields = () => {
@@ -103,6 +102,10 @@ export default function AddTeam({ department, team, handleClose }) {
       setLeadIsValid(false);
       noErrors = false;
     } else setLeadIsValid(true);
+    if(teamMembers==null)
+    {
+
+    }
 
     if (!noErrors) return;
     if (!team) {
@@ -124,11 +127,13 @@ export default function AddTeam({ department, team, handleClose }) {
           name: teamName,
           leadId: lead,
           departmentId: department?.id,
+          member:teamMembers
         },
         storedUserData.token
       );
 
       if (response.code === 200) {
+        console.log("TEAMS MEMBERS :",teamMembers);
         teamMembers.forEach(async (teamMember) => {
           await UpdateUser({ id: teamMember.id, teamId: response.data.id });
         });
@@ -138,12 +143,14 @@ export default function AddTeam({ department, team, handleClose }) {
         toast.error("Failed to add members to the team.");
       }
     } else {
+      console.log("NEW TEAM MEMBERS : ",teamMembers);
       const response = await updateTeam(
         {
           id: team.id,
           name: teamName,
           leadId: lead,
           departmentId: department?.id,
+          teamMembers:teamMembers
         },
         storedUserData.token
       );
@@ -159,7 +166,7 @@ export default function AddTeam({ department, team, handleClose }) {
   return (
     <Box>
       <Typography variant="h5" marginBlock={2}>
-        {team ? "Edit" : "Add a new"} Team {team ? "" : "to"} {department.name}
+        {team ? "Edit" : "Add a new"} Team 
       </Typography>
       <Box
         component={"form"}
@@ -181,25 +188,35 @@ export default function AddTeam({ department, team, handleClose }) {
             />
           </FormControl>
           <FormControl className="my-3 flex-grow" error={!leadIsValid}>
-            <InputLabel id="dept-lead-label">Team Lead</InputLabel>
-            <Select
-              labelId="team-lead-label"
-              id="team-lead"
-              label="Team Lead"
-              fullWidth
-              value={lead ?? ""}
-              onChange={(e) => setLead(e.target.value)}
-            >
-              {companyUsers.map((user) => (
-                <MenuItem key={user.id} value={user.id}>
-                  {user.firstName} {user.lastName}
-                </MenuItem>
-              ))}
-            </Select>
-            <FormHelperText>
-              {leadIsValid ? "" : "Select the lead of the team"}
-            </FormHelperText>
-          </FormControl>
+  <InputLabel id="team-lead">Team Lead</InputLabel>
+  <Select
+  labelId="team-lead-label"
+  id="team-lead"
+  label="Team Lead"
+  fullWidth
+  value={lead ?? ""}
+  onChange={(e) => setLead(e.target.value)}
+  error={!leadIsValid}
+  helperText={leadIsValid ? "" : "Select a Team Lead"}
+  disabled={storedUserData.user.role === "lead"} // Disable if the user is a lead
+>
+  <MenuItem value="" disabled>Select a Team Lead</MenuItem>
+  {companyUsers
+    .filter((user) => user.role === "user" || user.id === lead) // Filter users with role "user"
+    .map((user) => (
+      <MenuItem key={user.id} value={user.id}>
+        {user.firstName} {user.lastName}
+      </MenuItem>
+    ))}
+</Select>
+
+  <FormHelperText>
+    {leadIsValid ? "" : "Select the lead of the team"}
+  </FormHelperText>
+</FormControl>
+
+
+        
         </Stack>
         <FormControl className="my-3" fullWidth>
           {teamMembers && teamMembers.length > 0 && (
@@ -218,20 +235,38 @@ export default function AddTeam({ department, team, handleClose }) {
                   labelId="team-member-label"
                   id="team-member"
                   label="Team Member"
-                  value={teamMember.id ?? ""}
-                  onChange={(e) => {
-                    setTeamMembers((currentTeamMembers) => {
-                      const newTeamMembers = [...currentTeamMembers];
-                      newTeamMembers[teamMemberIndex].id = e.target.value;
-                      return newTeamMembers;
-                    });
-                  }}
+                  
+                  value={teamMember ?? ""}
+                 onChange={(e) => {
+      const selectedMemberId = e.target.value;
+      
+      // Find the selected user object based on the selected ID
+      const selectedUser = companyUsers.find(user => user.id === selectedMemberId);
+      
+      // Update the teamMembers array with the selected member
+      setTeamMembers((currentTeamMembers) => {
+        const newTeamMembers = [...currentTeamMembers];
+        newTeamMembers[teamMemberIndex] = 
+           selectedUser.id;
+        return newTeamMembers;
+      });
+    }}
+  
                 >
-                  {companyUsers.map((user) => (
-                    <MenuItem key={user.id} value={user.id} selected={teamMember.id === user.id}>
-                      {user.firstName} {user.lastName}
-                    </MenuItem>
-                  ))}
+       {companyUsers
+  .filter((user) => {
+    const isUserRole = user.role === "user";
+    const isNotInTeamMembers = !teamMembers.some((member) => member == user.id);
+    const isCurrentTeamMember = user.id == teamMember;
+
+    // Always include the current team member and lead (if necessary)
+    return isUserRole && (isNotInTeamMembers || isCurrentTeamMember || user.id == lead);
+  })
+  .map((user) => (
+    <MenuItem key={user.id} value={user.id}>
+      {user.firstName} {user.lastName}
+    </MenuItem>
+  ))}
                 </Select>
               </FormControl>
               <span

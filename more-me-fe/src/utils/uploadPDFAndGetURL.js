@@ -1,14 +1,13 @@
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "src/utils/firebase";
-
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 export async function uploadPDFAndGetURL(mediaFile) {
   if (!mediaFile) return null;
 
-  // Determine the file type (either image or PDF)
-  const fileExtension = mediaFile.name.split('.').pop().toLowerCase();
-  const fileType = fileExtension === 'pdf' ? 'pdfs' : 'media'; // Use 'pdfs' directory for PDFs and 'media' for images
+  // Extract the file extension and type dynamically
+  const fileExtension = mediaFile.name ? mediaFile.name.split('.').pop().toLowerCase():mediaFile.split('.').pop().toLowerCase();
 
-  const storageRef = ref(storage, `${fileType}/${new Date().getTime()}_${mediaFile.name}`);
+  // Use a directory named 'uploads' for all file types
+  const storageRef = ref(storage, `uploads/${new Date().getTime()}_${mediaFile.name}`);
   const uploadTask = uploadBytesResumable(storageRef, mediaFile);
 
   try {
@@ -17,10 +16,9 @@ export async function uploadPDFAndGetURL(mediaFile) {
     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
     return downloadURL;
   } catch (error) {
-    console.error("Error uploading media file:", error);
+    console.error("Error uploading file:", error);
     return null;
   }
 }
-
 // Usage example:
-// const mediaUrl = await uploadMediaAndGetURL(file);
+// const mediaUrl = await uploadFileAndGetURL(file);

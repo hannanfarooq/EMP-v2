@@ -1634,10 +1634,75 @@ export const handleDeleteCompanyPolicy = async (companyId, token) => {
 };
 
 //announcements
+
+
+export const toggleVisibility = async (token, announcementId) => {
+  const apiUrl = "/api/companyAdmin/toggleVisibility";
+  const data = {
+    id: announcementId,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
 export const getAllCompanyAnnouncements = async (token, companyId) => {
   const apiUrl = "/api/companyAdmin/allCompanyAnnouncement";
   const data = {
     companyId: companyId,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const getProjectsByDepartmentId = async (token,departmentid) => {
+  const apiUrl = "/api/getProjectsByDepartmentId";
+
+  const data = {
+ 
+   
+    departmentid:departmentid
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+
+export const CreateProject = async (token,name,description,departmentid,startDate,endDate,projectLead,projectAdministrator,projectTeam) => {
+  const apiUrl = "/api/create-project";
+
+  const data = {
+ 
+    name:name,
+    description:description,
+   
+    departmentid:departmentid,
+ 
+    startDate:startDate,
+    endDate:endDate,
+    projectLead:projectLead,
+    projectAdministrator:projectAdministrator,
+    projectTeam:projectTeam
   };
   const res = await fetch(baseURL + apiUrl, {
     method: "POST",
@@ -1668,7 +1733,7 @@ export const handleDeleteCompanyAnnouncement = async (companyId, token) => {
   const apiUrl = "/api/companyAdmin/deleteCompanyAnnouncement";
 
   const requestData = {
-    companyId: companyId,
+    id: companyId,
   };
   const res = await fetch(baseURL + apiUrl, {
     method: "DELETE",
@@ -1901,7 +1966,36 @@ export const createStartUpQuestions = async (data, token) => {
   }
 };
 
-
+export const getDepartmentTeamsbyLead = async (token, leadId) => {
+  const apiUrl = "/api/getDepartmentTeamsbyLead";
+  const data = {
+    leadId: leadId,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": token,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+export const getDepartmentsyuserid = async (token, headId) => {
+  const apiUrl = "/api/getDepartmentsyuserid";
+  const data = {
+    headId: headId,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": token,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
 export const getFunctionDepartments = async (token, functionId) => {
   const apiUrl = "/api/getFunctionDepartments";
   const data = {
@@ -1963,6 +2057,22 @@ export const createFunction = async (data, token) => {
   });
   return res.json();
 };
+
+export const getCompanyFunctionsbyuserid = async (token, userid) => {
+  const apiUrl = "/api/getCompanyFunctionsbyuserid";
+  const data = {
+    userid: userid,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": token,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
 
 export const getCompanyFunctions = async (token, companyId) => {
   const apiUrl = "/api/getCompanyFunctions";
@@ -2139,6 +2249,63 @@ export const getCompanyAnnouncement = async (token, companyId) => {
   return res.json();
 };
 
+
+
+
+export const getAnnouncementStats = async ( announcementId, token) => {
+  const apiUrl = "/api/getAnnouncementStats";
+  const data = {
+   
+    announcementId: announcementId,
+  
+  };
+
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const getResponsesByUserId = async ( userId, token) => {
+  const apiUrl = "/api/getResponsesByUserId";
+  const data = {
+   
+    userId: userId,
+  
+  };
+
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const saveAnswers = async (answers, userId, token) => {
+  const apiUrl = "/api/saveAnswers";
+  const data = {
+    answers: answers,
+    userId: userId,
+  
+  };
+
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
 export const updateUserPoints = async (point, userId, policyId, token) => {
   const apiUrl = "/api/updateUserPoints";
   const data = {
@@ -3594,4 +3761,384 @@ export const getDailyQuestionsForCompany = async (token, parsedUserData) => {
     console.error("Error fetching questions:", error);
     throw error; // Rethrow the error to be handled by the caller
   }
+};
+
+
+//Project 
+
+export const ClearBoardAndAssociations = async (token,id) => {
+  const apiUrl = "/api/ClearBoardAndAssociations";
+
+  const data = {
+   
+    id: id,
+ 
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+//Delete Board 
+export const deleteBoardAndAssociations = async (token,id) => {
+  const apiUrl = "/api/deleteBoardAndAssociations";
+
+  const data = {
+   
+    id: id,
+ 
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const updateSubTaskStatus = async (token,subTaskId,status,updatedBy) => {
+  const apiUrl = "/api/updateSubTaskStatus";
+
+  const data = {
+   
+    subTaskId: subTaskId,
+    status:status,
+    updatedBy:updatedBy,
+
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const createtaskchat = async (token,taskId,userId,message,imageUrl,attachmentUrl,link) => {
+  const apiUrl = "/api/task-chat";
+
+  const data = {
+   
+    taskId: taskId,
+    userId:userId,
+    message:message,
+    imageUrl:imageUrl,
+    attachmentUrl:attachmentUrl,
+    link:link
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+
+export const updateTaskBoardId = async (token,taskId,newBoardId,userId) => {
+  const apiUrl = "/api/updateTaskBoard";
+
+  const data = {
+   
+    taskId: taskId,
+    newBoardId:newBoardId,
+    userId:userId,
+   
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+
+export const updateTaskBoardUser = async (token,taskId,newAssignee,userId) => {
+  const apiUrl = "/api/updateTaskUser";
+
+  const data = {
+   
+    taskId: taskId,
+    newAssignee:newAssignee,
+    userId:userId,
+   
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const Create_SubTask = async (token,taskTitle,assignee,description,deadline,taskId) => {
+  const apiUrl = "/api/Create_SubTask";
+
+  const data = {
+   
+    title: taskTitle,
+    description:description,
+  
+    taskId:taskId,
+    assignedTo:assignee,
+    deadline:deadline,
+  
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const createtask = async (token,taskTitle,assignee,description,deadline,tags,selectedcolumn) => {
+  const apiUrl = "/api/create-task";
+
+  const data = {
+   
+    title: taskTitle,
+    assignedTo:assignee,
+    deadline:deadline,
+    tag:tags,
+    description:description,
+    boardId:selectedcolumn,
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const createboard = async (token,companyId,boardname,projectId) => {
+
+  const apiUrl = "/api/create-board";
+
+  const data = {
+   
+    companyId: companyId,
+    name:boardname,
+
+    projectId:projectId,
+  };
+
+
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const gettaskchat = async (token,taskId) => {
+  const apiUrl = "/api/gettaskchat";
+
+  const data = {
+   
+    taskId: taskId,
+   
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const getProjectsforUser= async (token,userId) => {
+  const apiUrl = "/api/getProjectsforUser";
+
+  const data = {
+ 
+   
+    userId:userId
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const getProjectsBTeamid= async (token,teamid) => {
+  const apiUrl = "/api/getProjectsBTeamid";
+
+  const data = {
+ 
+   
+    teamid:teamid
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const getallboards = async (token,companyId) => {
+  const apiUrl = "/api/getAllBoardsByCompanyId";
+
+  const data = {
+   
+    companyId: companyId,
+ 
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const getTeamuser = async (token, teamId) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  let apiUrl = `/api/getteamuser`;
+  
+
+  const data = {
+    id: teamId,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const getAlldepartmentuser = async (token, departmentId) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  let apiUrl = `/api/getdepartmentuser`;
+  
+
+  const data = {
+    departmentId: departmentId,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+
+//Notification 
+export const getNotificationsByUserId = async (token,userId) => {
+  const apiUrl = "/api/getNotificationsByUserId";
+
+  const data = {
+   
+    userId: userId,
+  
+
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const markAllNotificationsAsRead = async (token,userId) => {
+  const apiUrl = "/api/markAllNotificationsAsRead";
+
+  const data = {
+   
+    userId: userId,
+  
+
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const getTeamMembersbyuser = async (token, id) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  let apiUrl = `/api/getTeamMembersbyteam`;
+  
+
+  const data = {
+    id: id,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
 };

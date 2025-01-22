@@ -10,7 +10,7 @@ module.exports = {
         email: 'admin@gmail.com',
         password: 'e10adc3949ba59abbe56e057f20f883e',
         isAdmin: true,
-        role: 'super-admin',
+        role: 'super-super-admin',
         createdAt: new Date(),
         updatedAt: new Date(),
       },

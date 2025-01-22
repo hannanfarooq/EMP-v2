@@ -29,7 +29,7 @@ export const createCompany = async (req, res) => {
 
     // Create users with the companyId
     const data = await Promise.all(
-      adminEmails.map((admin) => createUser(admin, "admin", "","", companyId))
+      adminEmails.map((admin) => createUser(admin, "company-super-admin", "","", companyId))
     );
 
     data.map((e) => {

@@ -9,10 +9,15 @@ export const createDepartment = async (req, res) => {
         name: data.name,
         headId: data.headId,
         functionId: data.functionId,
+        compnayid:data.compnayid,
         });
 
         const userData = await User.findByPk(data.headId);
         userData.is_department_head = true;
+        userData.role = "manager";
+       
+        userData.departmentId=departmentData.id;
+
         await userData.save()
 
         return successResponse(req, res, departmentData);
@@ -22,7 +27,6 @@ export const createDepartment = async (req, res) => {
         throw error;
     }
 }
-
 export const getFunctionDepartments = async (req, res) => {
     try {
         const { functionId } = req.body;
@@ -33,10 +37,20 @@ export const getFunctionDepartments = async (req, res) => {
         throw error;
     }
 }
+export const getDepartmentsyuserid = async (req, res) => {
+    try {
+        const { headId } = req.body;
+        const departments = await Department.findAll({ where: { headId }, include: 'Head' });
+        return successResponse(req, res, departments);
+    }
+    catch (error) {
+        throw error;
+    }
+}
 
 export const updateDepartment = async (req, res) => {
     try {
-        const { name, headId, functionId, id } = req.body;
+        const { name, headId,  id } = req.body;
         const departmentData = await Department.findByPk(id);
 
         if (!departmentData) {
@@ -45,7 +59,7 @@ export const updateDepartment = async (req, res) => {
 
         departmentData.name = name;
         departmentData.headId = headId;
-        departmentData.functionId = functionId;
+      
 
         const resp = await departmentData.save();
         return successResponse(req, res, resp);

@@ -17,6 +17,7 @@ import {
   createCompanyAnnouncement,
   deleteCompanyAnnouncement,
   getCompanyAnnouncement,
+  toggleVisibility,
   updateCompanyAnnouncement,
 } from "../controllers/companyAnnouncement/companyAnnouncement.controller";
 import { updateCompanyPolicyValidator } from "../controllers/companyPolicy/companyPolicy.validator";
@@ -44,6 +45,7 @@ router.post(
 );
 //company Announcement Crud
 router.post("/allCompanyAnnouncement", getCompanyAnnouncement);
+router.post("/toggleVisibility",toggleVisibility);
 router.delete("/deleteCompanyAnnouncement", deleteCompanyAnnouncement);
 router.post(
   "/updateCompanyAnnouncement",
