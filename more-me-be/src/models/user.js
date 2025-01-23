@@ -489,6 +489,18 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
+  User.beforeDestroy(async (user, options) => {
+    if (user.companyId) {
+      const company = await sequelize.models.Company.findByPk(user.companyId);
+      if (!company) {
+        // If the company doesn't exist, just return
+        return;
+      }
+      // Set isVerified to false before deleting the company
+      user.isVerified = false;
+      await user.save();
+    }
+  });
   User.associate = function (models) {
     User.belongsTo(models.Company, {
       foreignKey: 'companyId',

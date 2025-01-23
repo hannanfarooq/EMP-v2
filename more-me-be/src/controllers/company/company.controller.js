@@ -1,5 +1,5 @@
 import { errorResponse, successResponse } from "../../helpers";
-import { User, Company } from "../../models"; // Assuming you have your Sequelize instance initialized
+import { User, Company,AnnouncementResponse,CompanyAnnouncement,AnnouncementQuestion } from "../../models"; // Assuming you have your Sequelize instance initialized
 import { createUser } from "../user/user.controller";
 const { Op } = require("@sequelize/core");
 
@@ -110,17 +110,63 @@ export const updateCompany = async (req, res) => {
 
 export const deleteCompany = async (req, res) => {
   try {
+    // Step 1: Fetch the company to be deleted
     const company = await Company.findByPk(req.body.companyId);
     if (!company) {
-      return errorResponse(req, res, error);
+      return errorResponse(req, res, "Company not found.");
     }
-    const companydata = await company.destroy();
-    return successResponse(req, res, companydata);
+
+    // Step 2: Find all users of the company
+    const users = await User.findAll({
+      where: { companyId: req.body.companyId },
+      attributes: ["id"], // Only fetch user IDs
+    });
+    const userIds = users.map((user) => user.id);
+
+    if (userIds.length > 0) {
+      // Step 3: Mark all users of the company as isVerified = false
+      await User.update(
+        { isVerified: false },
+        { where: { companyId: req.body.companyId } }
+      );
+
+      // Step 4: Delete all AnnouncementResponses for these users
+      await AnnouncementResponse.destroy({
+        where: { userId: userIds }, // Match all userIds of the company
+      });
+    }
+
+    // Step 5: Delete related AnnouncementQuestions and AnnouncementResponses
+    const announcements = await CompanyAnnouncement.findAll({
+      where: { companyId: req.body.companyId },
+      attributes: ["id"], // Only fetch announcement IDs
+    });
+    const announcementIds = announcements.map((announcement) => announcement.id);
+
+    if (announcementIds.length > 0) {
+      // Delete AnnouncementQuestions linked to the announcements
+      await AnnouncementQuestion.destroy({
+        where: { announcementId: announcementIds },
+      });
+
+      // Delete the announcements themselves
+      await CompanyAnnouncement.destroy({
+        where: { companyId: req.body.companyId },
+      });
+    }
+
+    // Step 6: Delete the company
+    const companyData = await company.destroy();
+
+    // Step 7: Return success response
+    return successResponse(req, res, companyData);
   } catch (error) {
     console.error("Error deleting company:", error);
-    throw error;
+    return errorResponse(req, res, "An error occurred while deleting the company.");
   }
 };
+
+
 export const getCompanyByAdminId = async (req, res) => {
   try {
     const { adminId } = req.body;

@@ -93,6 +93,7 @@ export const createUser = async (email, role, firstName, lastName, companyId) =>
       firstName: firstName,
       lastName: lastName,
       companyId: companyId,
+      isVerified:true,
     });
     // console.log("Company user data", email, companyId);
 
@@ -177,7 +178,7 @@ export const register = async (req, res) => {
       firstName,
       lastName,
       password: reqPass,
-      isVerified: false,
+      isVerified: true,
       verifyToken: uniqueId(),
     };
 
@@ -204,7 +205,12 @@ export const login = async (req, res) => {
       throw new Error("Incorrect Email Id/Password");
     }
 
-    // Step 2: Hash and compare password
+    // Step 2: Check if user is verified
+    if (!user.isVerified) {
+      throw new Error("Account not verified");
+    }
+
+    // Step 3: Hash and compare password
     const hashStart = Date.now();
     const reqPass = crypto
       .createHash("md5")
@@ -215,7 +221,7 @@ export const login = async (req, res) => {
     }
     console.log(`[Timing] Password Hashing and Comparison: ${Date.now() - hashStart} ms`);
 
-    // Step 3: Generate JWT
+    // Step 4: Generate JWT
     const tokenStart = Date.now();
     const token = jwt.sign(
       {
@@ -230,22 +236,22 @@ export const login = async (req, res) => {
     );
     console.log(`[Timing] JWT Generation: ${Date.now() - tokenStart} ms`);
 
-    // Step 4: Fetch company details if needed
+    // Step 5: Fetch company details if needed
     const companyStart = Date.now();
     let company;
 
-    if (user.role === "admin"||user.role === "company-super-admin" ||user.role=="super-super-admin") {
+    if (user.role === "admin" || user.role === "company-super-admin" || user.role === "super-super-admin") {
       company = await getAdminCompany(user.id);
       if (!company) {
         company = await FetchCompanyDataByid(user.companyId);
       }
     }
-    if ( user.companyId) {
+    if (user.companyId) {
       company = await FetchCompanyDataByid(user.companyId);
     }
     console.log(`[Timing] Company Fetch: ${Date.now() - companyStart} ms`);
 
-    // Step 5: Return success response
+    // Step 6: Return success response
     console.log(`[Timing] Total Login Process: ${Date.now() - start} ms`);
     delete user.dataValues.password;
     return successResponse(req, res, {
@@ -254,10 +260,11 @@ export const login = async (req, res) => {
       company: company ? company : null,
     });
   } catch (error) {
-    console.log(`[Timing] Error Occurred: ${Date.now() - start} ms`);
+    console.log(`[Timing] Error Occurred: ${Date.now() - start} ms`, error);
     return errorResponse(req, res, error.message);
   }
 };
+
 export const forgetPassword = async (req, res) => {
   try {
     const { email } = req.body;
