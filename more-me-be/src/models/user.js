@@ -384,7 +384,6 @@ module.exports = (sequelize, DataTypes) => {
           'admin',
           'manager',
           'lead',
-          'hr',
           'user'
         ),
         defaultValue: 'user'

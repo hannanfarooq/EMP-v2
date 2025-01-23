@@ -1,5 +1,5 @@
 import { errorResponse, successResponse } from "../../helpers";
-import { User, Company,AnnouncementResponse,CompanyAnnouncement,AnnouncementQuestion } from "../../models"; // Assuming you have your Sequelize instance initialized
+import { User, Company,AnnouncementResponse,CompanyAnnouncement,AnnouncementQuestion,DailyQuestionWithOptions } from "../../models"; // Assuming you have your Sequelize instance initialized
 import { createUser } from "../user/user.controller";
 const { Op } = require("@sequelize/core");
 
@@ -9,6 +9,7 @@ export const createCompany = async (req, res) => {
 
   const adminIds = [];
 
+  
   try {
     // Create the company first without adminId
     const company = await Company.create({
@@ -27,17 +28,57 @@ export const createCompany = async (req, res) => {
 
     const companyId = company.dataValues.id; // Get the auto-generated companyId
 
+   
     // Create users with the companyId
     const data = await Promise.all(
       adminEmails.map((admin) => createUser(admin, "company-super-admin", "","", companyId))
     );
 
+    let id;
     data.map((e) => {
-      // console.log(e.data.dataValues.id);
+       console.log("e.data.dataValues.id : ",e.data.dataValues.id);
       // eslint-disable-next-line radix
+      id=e.data.dataValues.id;
       adminIds.push(parseInt(e.data.dataValues.id));
     });
-
+   await DailyQuestionWithOptions.create({
+      questionText: "How are you feeling?",
+      type: "single-choice",
+      companyId: companyId,
+      userId: id,
+      options: ["Satisfied", "Frustrated", "Hurt", "Depressed", "Anxious", "Tired", "Sad", "Excited"]
+    });
+    await   DailyQuestionWithOptions.create({
+      questionText: "Reasons for feeling this way, select the emoji best suited",
+      type: "single-choice",
+      companyId: companyId,
+      userId: id,
+      options: [
+        "Positivity 🌞",
+        "General Well-being 🌈", 
+        "Planning Work 📋",
+        "Lack of Sleep 😴",
+        "Career Choices 🚀", 
+        "Financial 💰",
+        "Health 💪",
+        "Spiritual 🧘",
+        "Mental Health 🧠"
+      ]
+    });
+    await  DailyQuestionWithOptions.create({
+      questionText: "Do you have any of the below symptoms",
+      type: "dropdown",
+      companyId: companyId,
+      userId: id,
+      options: ["Nervousness", "feeling on edge", "constant worrying", "trouble relaxing", "trouble concentrating"]
+    });
+    await  DailyQuestionWithOptions.create({
+      questionText: "What is your level of Anxiety (1-10)",
+      type: "textfield",
+      companyId: companyId,
+      userId: id,
+      options: []
+    });
     if (adminIds.length) {
       // console.log("req.body of company creation:", req.body);
       // Update the company with adminIds

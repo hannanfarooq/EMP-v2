@@ -10,37 +10,36 @@ export const AuthProvider = ({ children }) => {
   const [userData, setUserData] = useState();
 
   const login = async (email, password) => {
-    const id = toast.loading("Logging in...");
-    //do something else
-    const isValidUser = await Login(email, password);
-   
-    if (!isValidUser.error) {
-      // Perform your login logic here
-      toast.update(id, {
-        render: "Logged in",
-        type: "success",
-        autoClose: 2000,
-        isLoading: false,
-        closeButton: true,
-      });
-      setUserData(isValidUser.data.data);
-      localStorage.setItem(
-        "currentUser",
-        JSON.stringify(isValidUser.data.data)
-      );
-      setIsAuthenticated(true);
-    
-    } else {
-      toast.update(id, {
-        render:
-          isValidUser.status == 200
-            ? "Invalid email or password"
-            : "Error Connecting server",
-        type: "error",
-        autoClose: 2000,
-        isLoading: false,
-        closeButton: true,
-      });
+    try {
+     
+      
+      const isValidUser = await Login(email, password);
+     
+      if (!isValidUser.error) {
+        toast.success("Logged in");
+       
+        
+        setUserData(isValidUser.data.data);
+        localStorage.setItem(
+          "currentUser",
+          JSON.stringify(isValidUser.data.data)
+        );
+        setIsAuthenticated(true);
+      } else {
+
+        if (isValidUser.status === 200)
+        {
+          toast.error("Invalid email or password");
+        }
+        else
+        {
+          toast.error("Error connecting to server");
+          
+        }
+       
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
     }
   };
 

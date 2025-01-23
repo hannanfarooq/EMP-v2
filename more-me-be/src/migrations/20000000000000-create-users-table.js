@@ -88,7 +88,6 @@ module.exports = {
           'admin',
           'manager',
           'lead',
-         
           'user'
         ),
         defaultValue: 'user',
