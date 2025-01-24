@@ -753,7 +753,7 @@ export default function AddDepartment({ functionF, department, handleClose }) {
           id: department.id,
           name: departmentName,
           headId: head,
-          functionId: functionF.id,
+         
         },
         storedUserData.token
       );
@@ -791,7 +791,7 @@ export default function AddDepartment({ functionF, department, handleClose }) {
   return (
     <Box>
       <Typography variant="h5" marginBlock={2}>
-        {department ? "Edit" : "Add"} Department {department ? "of Function" : "to"} {functionF.name}
+        {department ? "Edit" : "Add"} Department {department ? "of Function" : "to"} 
       </Typography>
       <Box
         component={"form"}
@@ -823,92 +823,18 @@ export default function AddDepartment({ functionF, department, handleClose }) {
             style={{ borderColor: !headIsValid ? 'red' : undefined }}
           >
             {companyUsers.map((user) => (
-              <MenuItem key={user.id} value={user.id}>
+              user.role=="user" || user.id==head
+              ?( <MenuItem key={user.id} value={user.id}>
                 {user.firstName} {user.lastName}
-              </MenuItem>
+              </MenuItem>):(null)
+             
             ))}
           </Select>
           <FormHelperText>
             {headIsValid ? "" : "Select the head of the department"}
           </FormHelperText>
         </FormControl>
-        <FormControl className="my-3" fullWidth>
-          {teams && teams.length > 0 && (
-            <Typography variant="h5">Teams</Typography>
-          )}
-          {teams.map((team, teamIndex) => (
-            <Stack direction={"row"} gap={1} marginBlock={1} key={teamIndex}>
-              <FormControl error={!teamNameIsValid[teamIndex]} style={{ width: '50%' }}>
-                <TextField
-                  error={!teamNameIsValid[teamIndex]}
-                  label="Team Name"
-                  id="team-name"
-                  variant="outlined"
-                  value={team.name}
-                  onChange={(e) => {
-                    setTeams((currentTeams) => {
-                      const newTeams = [...currentTeams];
-                      newTeams[teamIndex].name = e.target.value;
-                      return newTeams;
-                    });
-                  }}
-                  helperText={
-                    teamNameIsValid[teamIndex] ? "" : (
-                      <span style={{ color: 'red' }}>Field must not be empty</span>
-                    )
-                  }
-                  InputProps={{
-                    style: { borderColor: !teamNameIsValid[teamIndex] ? 'red' : undefined },
-                  }}
-                  InputLabelProps={{
-                    style: { color: !teamNameIsValid[teamIndex] ? 'red' : undefined },
-                  }}
-                />
-              </FormControl>
-              <FormControl className="flex-grow" error={!teamLeadIsValid[teamIndex]} style={{ width: '50%' }}>
-                <InputLabel id="team-head-label" style={{ color: !teamLeadIsValid[teamIndex] ? 'red' : undefined }}>Team Lead</InputLabel>
-                <Select
-                  labelId="team-head-label"
-                  id="team-head"
-                  label="Team Lead"
-                  value={team.leadId}
-                  onChange={(e) => {
-                    setTeams((currentTeams) => {
-                      const newTeams = [...currentTeams];
-                      newTeams[teamIndex].leadId = e.target.value;
-                      return newTeams;
-                    });
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: !teamLeadIsValid[teamIndex] ? 'red' : undefined,
-                    },
-                  }}
-                >
-                  {companyUsers.map((user) => (
-                    <MenuItem key={user.id} value={user.id}>
-                      {user.firstName} {user.lastName}
-                    </MenuItem>
-                  ))}
-                </Select>
-                <FormHelperText>
-                  {teamLeadIsValid[teamIndex] ? "" : (
-                    <span style={{ color: 'red' }}>Field must not be empty</span>
-                  )}
-                </FormHelperText>
-              </FormControl>
-              <span
-                onClick={() => handleDeleteTeam(teamIndex)}
-                className="h-max self-center"
-              >
-                <DeleteOutlineIcon className="cursor-pointer hover:text-red-500 w-8 h-8" />
-              </span>
-            </Stack>
-          ))}
-          <Button variant="outlined" onClick={addNewTeamFields}>
-            Add a Team
-          </Button>
-        </FormControl>
+      
         <Box marginBlock={2}>
           <Button variant="contained" color="primary" type="submit">
             {department ? "Update" : "Add"} Department

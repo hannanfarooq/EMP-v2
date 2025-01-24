@@ -122,6 +122,7 @@ export const createFunction = async (req, res) => {
         }
 
         userData.is_function_head = true;
+        userData.role = "admin";
         await userData.save()
 
         const functionData = await Function.create({
@@ -154,6 +155,22 @@ export const getCompanyFunctions = async (req, res) => {
         return errorResponse(req, res, "Error fetching company functions");
     }
 }
+export const getCompanyFunctionsbyuserid = async (req, res) => {
+    try {
+        const { userid } = req.body;
+        // console.log('COMPANY ID:', companyId);
+        const functions = await Function.findAll({
+            where: { headId:userid },
+            include: "Head",
+        });
+
+        return successResponse(req, res, functions);
+    }
+    catch (error) {
+        return errorResponse(req, res, "Error fetching company functions");
+    }
+}
+
 
 export const updateFunction = async (req, res) => {
     try {
@@ -182,10 +199,11 @@ export const updateFunction = async (req, res) => {
         if (headId && headId !== functionData.headId) {
             const previousHead = await User.findByPk(functionData.headId);
             previousHead.is_function_head = false;
+            previousHead.role = "user";
             await previousHead.save();
-
             const newHead = await User.findByPk(headId);
             newHead.is_function_head = true;
+            newHead.role = "admin";
             await newHead.save();
         }
 

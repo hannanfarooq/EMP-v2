@@ -7,7 +7,7 @@ import QuestionAnswerOutlinedIcon from "@mui/icons-material/QuestionAnswerOutlin
 import ChatIcon from '@mui/icons-material/Chat';
 import BadgeIcon from "@mui/icons-material/Badge";
 import TaskIcon from "@mui/icons-material/AssignmentOutlined"; // For task management
-
+import { Cancel, EventOutlined } from "@mui/icons-material";
 const icon = (name) => (
   <SvgColor
     src={`/assets/icons/navbar/${name}.svg`}
@@ -20,6 +20,11 @@ const userConfig = [
     title: "dashboard",
     path: "/dashboard/app",
     icon: icon("ic_analytics"),
+  },
+  {
+    title: "Team Members",
+    path: "/dashboard/user",
+    icon: <EventOutlined />,
   },
   {
     title: "policy",

@@ -35,13 +35,16 @@ import AllQuestion from "./pages/AllQuestions"
 import Announcements  from "./pages/Announcements";
 import { Announcement } from "@mui/icons-material";
 import { element } from "prop-types";
+import DepartmentManagement from "./pages/DepartmentManagement";
+import TeamLeadManagementPage from "./pages/TeamManagement";
+import ProjectTable from "./pages/project";
 
 export default function Router() {
   const { isAuthenticated } = useAuth();
   const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
   const role = storedUserData?.user?.role ? storedUserData?.user?.role : "";
-  const isSuperAdmin = role == "super-admin";
-  const isAdmin = role == "admin";
+  const isSuperAdmin = role == "super-super-admin";
+  const isAdmin = role == "admin" || role =="company-super-admin" ;
   const isDepartmentHead = storedUserData?.user?.is_department_head;
   const navigate = useNavigate();
 
@@ -58,9 +61,15 @@ export default function Router() {
       path: isAdmin ? "company-employee-management" : undefined,
       element: isAdmin ? <CompanyEmployeeManagement /> : <Navigate to="/404" />,
     },
+    {path :role=="manager" ?"department-management":undefined,
+      element: role=="manager" ? <DepartmentManagement /> : <Navigate to="/404" />,
+    },
+    {path :role=="lead" ?"Team-management":undefined,
+      element: role=="lead" ? <TeamLeadManagementPage /> : <Navigate to="/404" />,
+    },
     {
-      path: isAdmin ? "chat-company" : undefined,
-      element: isAdmin ? <ChatPage /> : <Navigate to="/login" />,
+      path:  "chat-company",
+      element:  <ChatPage /> ,
     },
     {
       path: isAdmin ? "all-questions" : undefined,
@@ -75,6 +84,7 @@ export default function Router() {
     { path: "products", element: <ProductsPage /> },
     { path: "articles", element: <BlogPage /> },
     { path: "thread", element: <ThreadPage /> },
+    {path:"project-Management",element:<ProjectTable/>},
     
     {
       path: "questionnaire",

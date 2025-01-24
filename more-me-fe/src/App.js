@@ -79,8 +79,8 @@ import { StyledChart } from './components/chart';
 import ScrollToTop from './components/scroll-to-top';
 import TipsAvatar from './components/Avatar-help';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import {io} from 'socket.io-client';
 import './index.css';
-
 const client = new QueryClient();
 
 // Create a context for profileSetUp
@@ -89,21 +89,29 @@ const ProfileSetUpContext = createContext();
 export function useProfileSetUp() {
   return useContext(ProfileSetUpContext);
 }
-
+let socket;
 function AppContent() {
   const { profileSetUp } = useProfileSetUp();
   const { userData } = useAuth();
-
+  const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
+  if(storedUserData)
+  {
+    socket = io('http://localhost:3004', {
+      query: { token: storedUserData.token }, // JWT token
+    });
+  }
+  
+ 
   return (
     <>
       <ScrollToTop />
-      {/* {userData?.user.role === 'user' && profileSetUp && <TipsAvatar />} */}
+      {userData?.user.role === 'user' && profileSetUp && <TipsAvatar />}
       <StyledChart />
       <Router />
     </>
   );
 }
-
+export { socket }; 
 export default function App() {
   const [profileSetUp, setProfileSetUp] = useState(false);
 

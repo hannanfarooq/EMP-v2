@@ -1,310 +1,3 @@
-  // // module.exports = (sequelize, DataTypes) => {
-  // //   const User = sequelize.define(
-  // //     "User",
-  // //     {
-  // //       firstName: {
-  // //         type: DataTypes.STRING,
-  // //       },
-  // //       lastName: {
-  // //         type: DataTypes.STRING,
-  // //       },
-  // //       email: {
-  // //         type: DataTypes.STRING,
-  // //         allowNull: false,
-  // //         unique: true,
-  // //       },
-  // //       password: {
-  // //         type: DataTypes.STRING,
-  // //       },
-  // //       profilePic: {
-  // //         type: DataTypes.STRING,
-  // //       },
-  // //       resetToken: {
-  // //         type: DataTypes.STRING,
-  // //         defaultValue: null,
-  // //       },
-  // //       resetTokenExpires: {
-  // //         type: DataTypes.DATE,
-  // //         defaultValue: null,
-  // //       },
-  // //       userRewards: {
-  // //         type: DataTypes.INTEGER, // Integer type
-  // //         allowNull: true,
-  // //       },
-  // //       readPolicies: {
-  // //         type: DataTypes.ARRAY(DataTypes.INTEGER), // Array of integers
-  // //         allowNull: true,
-  // //       },
-  // //       verifyToken: {
-  // //         type: DataTypes.STRING,
-  // //         defaultValue: null,
-  // //       },
-  // //       questionnaire: {
-  // //         type: DataTypes.JSON,
-  // //         defaultValue: {},
-  // //         allowNull: true,
-  // //       },
-  // //       gamification: {
-  // //         type: DataTypes.JSON,
-  // //         defaultValue: {},
-  // //         allowNull: true,
-  // //       },
-  // //       points: {
-  // //         type: DataTypes.INTEGER,
-  // //         defaultValue: 0,
-  // //         allowNull: true,
-  // //       },
-  // //       isVerified: {
-  // //         type: DataTypes.BOOLEAN,
-  // //         defaultValue: false,
-  // //       },
-  // //       role: {
-  // //         type: DataTypes.ENUM("admin", "super-admin", "user"),
-  // //         defaultValue: "user",
-  // //       },
-  // //       companyId: {
-  // //         type: DataTypes.INTEGER,
-  // //         defaultValue: null,
-  // //       },
-  // //       is_function_head: {
-  // //         type: DataTypes.BOOLEAN,
-  // //         defaultValue: false,
-  // //       },
-  // //       is_department_head: {
-  // //         type: DataTypes.BOOLEAN,
-  // //         defaultValue: false,
-  // //       },
-  // //       is_team_lead: {
-  // //         type: DataTypes.BOOLEAN,
-  // //         defaultValue: false,
-  // //       },
-  // //       teamId: {
-  // //         type: DataTypes.INTEGER,
-  // //         defaultValue: null,
-  // //       },
-  // //       // This is not present in any migration file, so commenting for now
-  // //       // departmentId: {
-  // //       //   type: DataTypes.INTEGER,
-  // //       //   allowNull: true,
-  // //       // },
-  // //     },
-  // //     {
-  // //       defaultScope: {
-  // //         attributes: { exclude: ["password", "verifyToken"] },
-  // //       },
-  // //       scopes: {
-  // //         withSecretColumns: {
-  // //           attributes: { include: ["password", "verifyToken"] },
-  // //         },
-  // //       },
-  // //     }
-  // //   );
-  // //   User.associate = function (models) {
-  // //     User.belongsTo(models.Company, {
-  // //       foreignKey: "companyId",
-  // //       onDelete: "SET NULL",
-  // //       onUpdate: "CASCADE",
-  // //     });
-  // //     User.belongsTo(models.Team, {
-  // //       foreignKey: "teamId",
-  // //       onDelete: "SET NULL",
-  // //       onUpdate: "CASCADE",
-  // //     });
-  // //     // User.belongsTo(models.Department, { 
-  // //     //   foreignKey: "departmentId" ,
-  // //     //   onDelete: "SET NULL",
-  // //     //   onUpdate: "CASCADE",
-  // //     // });
-  // //     User.hasMany(models.Message, {
-  // //       foreignKey: "senderId",
-  // //     });
-  // //   };
-  // //   return User;
-  // // };
-
-
-  // module.exports = (sequelize, DataTypes) => {
-  //   const User = sequelize.define(
-  //     "User",
-  //     {
-  //       firstName: {
-  //         type: DataTypes.STRING,
-  //       },
-  //       lastName: {
-  //         type: DataTypes.STRING,
-  //       },
-  //       email: {
-  //         type: DataTypes.STRING,
-  //         allowNull: false,
-  //         unique: true,
-  //       },
-  //       password: {
-  //         type: DataTypes.STRING,
-  //       },
-  //       profilePic: {
-  //         type: DataTypes.STRING,
-  //       },
-  //       resetToken: {
-  //         type: DataTypes.STRING,
-  //         defaultValue: null,
-  //       },
-  //       resetTokenExpires: {
-  //         type: DataTypes.DATE,
-  //         defaultValue: null,
-  //       },
-  //       userRewards: {
-  //         type: DataTypes.INTEGER, // Integer type
-  //         allowNull: true,
-  //       },
-  //       readPolicies: {
-  //         type: DataTypes.ARRAY(DataTypes.INTEGER), // Array of integers
-  //         allowNull: true,
-  //       },
-  //       verifyToken: {
-  //         type: DataTypes.STRING,
-  //         defaultValue: null,
-  //       },
-  //       questionnaire: {
-  //         type: DataTypes.JSON,
-  //         defaultValue: {},
-  //         allowNull: true,
-  //       },
-  //       gamification: {
-  //         type: DataTypes.JSON,
-  //         defaultValue: {},
-  //         allowNull: true,
-  //       },
-  //       points: {
-  //         type: DataTypes.INTEGER,
-  //         defaultValue: 0,
-  //         allowNull: true,
-  //       },
-  //       isVerified: {
-  //         type: DataTypes.BOOLEAN,
-  //         defaultValue: false,
-  //       },
-  //       role: {
-  //         type: DataTypes.ENUM("admin", "super-admin", "user"),
-  //         defaultValue: "user",
-  //       },
-  //       companyId: {
-  //         type: DataTypes.INTEGER,
-  //         defaultValue: null,
-  //       },
-  //       is_function_head: {
-  //         type: DataTypes.BOOLEAN,
-  //         defaultValue: false,
-  //       },
-  //       is_department_head: {
-  //         type: DataTypes.BOOLEAN,
-  //         defaultValue: false,
-  //       },
-  //       is_team_lead: {
-  //         type: DataTypes.BOOLEAN,
-  //         defaultValue: false,
-  //       },
-  //       teamId: {
-  //         type: DataTypes.INTEGER,
-  //         defaultValue: null,
-  //       },
-  //       // This is not present in any migration file, so commenting for now
-  //       // departmentId: {
-  //       //   type: DataTypes.INTEGER,
-  //       //   allowNull: true,
-  //       // },
-  //       ageRange: {
-  //         type: DataTypes.ENUM("18-24", "25-34", "35-44", "45-54", "55-64", "65+"),
-  //         allowNull: true,
-  //       },
-  //       childrenDOBs: {
-  //         type: DataTypes.ARRAY(DataTypes.DATE),
-  //         allowNull: true,
-  //       },
-  //       childrenNames: {
-  //         type: DataTypes.ARRAY(DataTypes.STRING),
-  //         allowNull: true,
-  //       },
-  //       dateOfBirth: {
-  //         type: DataTypes.DATE,
-  //         allowNull: true,
-  //       },
-  //       gender: {
-  //         type: DataTypes.STRING,
-  //         allowNull: true,
-  //       },
-  //       hasChildren: {
-  //         type: DataTypes.STRING, // Storing as string ("yes" or "no")
-  //         allowNull: true,
-  //       },
-  //       numChildren: {
-  //         type: DataTypes.INTEGER,
-  //         allowNull: true,
-  //       },
-  //       spouseName: {
-  //         type: DataTypes.STRING,
-  //         allowNull: true,
-  //       },
-  //       spouseDOB: {
-  //         type: DataTypes.DATE,
-  //         allowNull: true,
-  //       },
-  //       address: {
-  //         type: DataTypes.STRING,
-  //         allowNull: true,
-  //       },
-  //       city: {
-  //         type: DataTypes.STRING,
-  //         allowNull: true,
-  //       },
-  //       country: {
-  //         type: DataTypes.STRING,
-  //         allowNull: true,
-  //       },
-  //       phoneNumber: {
-  //         type: DataTypes.STRING,
-  //         allowNull: true,
-  //       },
-  //     },
-  //     {
-  //       defaultScope: {
-  //         attributes: { exclude: ["password", "verifyToken"] },
-  //       },
-  //       scopes: {
-  //         withSecretColumns: {
-  //           attributes: { include: ["password", "verifyToken"] },
-  //         },
-  //       },
-  //     }
-  //   );
-  
-  //   User.associate = function (models) {
-  //     User.belongsTo(models.Company, {
-  //       foreignKey: "companyId",
-  //       onDelete: "SET NULL",
-  //       onUpdate: "CASCADE",
-  //     });
-  //     User.belongsTo(models.Team, {
-  //       foreignKey: "teamId",
-  //       onDelete: "SET NULL",
-  //       onUpdate: "CASCADE",
-  //     });
-  //     // User.belongsTo(models.Department, { 
-  //     //   foreignKey: "departmentId" ,
-  //     //   onDelete: "SET NULL",
-  //     //   onUpdate: "CASCADE",
-  //     // });
-  //     User.hasMany(models.Message, {
-  //       foreignKey: "senderId",
-  //     });
-  //   };
-  
-  //   return User;
-  // };
-  
-  // models/user.js
-
-// models/user.js
-
 'use strict';
 
 module.exports = (sequelize, DataTypes) => {
@@ -360,11 +53,6 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: {},
         allowNull: true
       },
-      dailyQuestionsithOptions: {
-        type: DataTypes.JSON,
-        defaultValue: {},
-        allowNull: true
-      },
       gamification: {
         type: DataTypes.JSON,
         defaultValue: {},
@@ -384,7 +72,14 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: false
       },
       role: {
-        type: DataTypes.ENUM('admin', 'super-admin', 'user'),
+        type: DataTypes.ENUM(
+          'super-super-admin',
+          'admin',
+          'manager',
+          'lead',
+          'user',
+          'company-super-admin'
+        ),
         defaultValue: 'user'
       },
       companyId: {
@@ -465,6 +160,14 @@ module.exports = (sequelize, DataTypes) => {
       phoneNumber: {
         type: DataTypes.STRING,
         allowNull: true
+      },
+      departmentId:{
+        type: DataTypes.INTEGER,
+        allowNull: true
+      },
+      teamid:{
+        type: DataTypes.INTEGER,
+        allowNull: true
       }
     },
     {
@@ -479,6 +182,18 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
+  User.beforeDestroy(async (user, options) => {
+    if (user.companyId) {
+      const company = await sequelize.models.Company.findByPk(user.companyId);
+      if (!company) {
+        // If the company doesn't exist, just return
+        return;
+      }
+      // Set isVerified to false before deleting the company
+      user.isVerified = false;
+      await user.save();
+    }
+  });
   User.associate = function (models) {
     User.belongsTo(models.Company, {
       foreignKey: 'companyId',

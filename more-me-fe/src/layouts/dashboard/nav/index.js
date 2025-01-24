@@ -28,6 +28,8 @@ import { useAuth } from "src/context/AuthContext";
 import superAdminConfig from "./superAdminConfig";
 import adminConfig from "./adminConfig";
 import userConfig from "./userConfig";
+import managerconfig from "./managerconfig";
+import Leadconfig from "./leadconfig";
 
 // ----------------------------------------------------------------------
 
@@ -110,13 +112,14 @@ export default function Nav({ openNav, onCloseNav }) {
           </StyledAccount>
         </Link>
       </Box>
-      {role && role == "super-admin" ? (
+      {role && role == "super-super-admin" ? (
         <NavSection data={superAdminConfig} />
       ) : role == "user" ? (
         <NavSection data={userConfig} />
-      ) : (
-        <NavSection data={adminConfig} />
-      )}
+      ) :role == "manager" ? (
+        <NavSection data={managerconfig} />
+      ):
+      role=="lead"?(  <NavSection data={Leadconfig} />):( <NavSection data={adminConfig} />)}
 
       <Box sx={{ flexGrow: 1 }} />
 

@@ -1536,10 +1536,24 @@ export const inviteBulkUsers = async (token, usersData) => {
   return res.json();
 };
 
+export const GetAllCompaniesForCompanyAdmin = async (token) => {
+  const apiUrl = "/api/companyAdmin/GetAllCompaniesForCompanyAdmin";
+  console.log("token", token);
+
+  const res = await fetch(baseURL + apiUrl, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+  });
+  return res.json();
+};
+
 // create company policy
 export const createCompanyPolicy = async (data, token) => {
   const apiUrl = "/api/companyAdmin/createCompanyPolicy";
-
+  console.log("policy data", data);
   const res = await fetch(baseURL + apiUrl, {
     method: "POST",
     headers: {
@@ -1634,10 +1648,75 @@ export const handleDeleteCompanyPolicy = async (companyId, token) => {
 };
 
 //announcements
+
+
+export const toggleVisibility = async (token, announcementId) => {
+  const apiUrl = "/api/companyAdmin/toggleVisibility";
+  const data = {
+    id: announcementId,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
 export const getAllCompanyAnnouncements = async (token, companyId) => {
   const apiUrl = "/api/companyAdmin/allCompanyAnnouncement";
   const data = {
     companyId: companyId,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const getProjectsByDepartmentId = async (token,departmentid) => {
+  const apiUrl = "/api/getProjectsByDepartmentId";
+
+  const data = {
+ 
+   
+    departmentid:departmentid
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+
+export const CreateProject = async (token,name,description,departmentid,startDate,endDate,projectLead,projectAdministrator,projectTeam) => {
+  const apiUrl = "/api/create-project";
+
+  const data = {
+ 
+    name:name,
+    description:description,
+   
+    departmentid:departmentid,
+ 
+    startDate:startDate,
+    endDate:endDate,
+    projectLead:projectLead,
+    projectAdministrator:projectAdministrator,
+    projectTeam:projectTeam
   };
   const res = await fetch(baseURL + apiUrl, {
     method: "POST",
@@ -1668,7 +1747,7 @@ export const handleDeleteCompanyAnnouncement = async (companyId, token) => {
   const apiUrl = "/api/companyAdmin/deleteCompanyAnnouncement";
 
   const requestData = {
-    companyId: companyId,
+    id: companyId,
   };
   const res = await fetch(baseURL + apiUrl, {
     method: "DELETE",
@@ -1901,7 +1980,36 @@ export const createStartUpQuestions = async (data, token) => {
   }
 };
 
-
+export const getDepartmentTeamsbyLead = async (token, leadId) => {
+  const apiUrl = "/api/getDepartmentTeamsbyLead";
+  const data = {
+    leadId: leadId,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": token,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+export const getDepartmentsyuserid = async (token, headId) => {
+  const apiUrl = "/api/getDepartmentsyuserid";
+  const data = {
+    headId: headId,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": token,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
 export const getFunctionDepartments = async (token, functionId) => {
   const apiUrl = "/api/getFunctionDepartments";
   const data = {
@@ -1963,6 +2071,22 @@ export const createFunction = async (data, token) => {
   });
   return res.json();
 };
+
+export const getCompanyFunctionsbyuserid = async (token, userid) => {
+  const apiUrl = "/api/getCompanyFunctionsbyuserid";
+  const data = {
+    userid: userid,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": token,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
 
 export const getCompanyFunctions = async (token, companyId) => {
   const apiUrl = "/api/getCompanyFunctions";
@@ -2139,6 +2263,63 @@ export const getCompanyAnnouncement = async (token, companyId) => {
   return res.json();
 };
 
+
+
+
+export const getAnnouncementStats = async ( announcementId, token) => {
+  const apiUrl = "/api/getAnnouncementStats";
+  const data = {
+   
+    announcementId: announcementId,
+  
+  };
+
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const getResponsesByUserId = async ( userId, token) => {
+  const apiUrl = "/api/getResponsesByUserId";
+  const data = {
+   
+    userId: userId,
+  
+  };
+
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const saveAnswers = async (answers, userId, token) => {
+  const apiUrl = "/api/saveAnswers";
+  const data = {
+    answers: answers,
+    userId: userId,
+  
+  };
+
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
 export const updateUserPoints = async (point, userId, policyId, token) => {
   const apiUrl = "/api/updateUserPoints";
   const data = {
@@ -2935,14 +3116,14 @@ export const getArticlesFromTopicAndContentPref = async ({ topic, contentPrefere
   //old api key=AIzaSyC3FVIBTpZUcwYI16HR1K9eu8TktccL6Dw
   //new cx=06a74ca2383b64e43
   //old cx=430d5a3e4f6f644f4
-  console.log("hobbiesData in index.js file", hobbies);
-  // console.log("topic", topic);
+  //console.log("hobbiesData in index.js file", hobbies);
+  console.log("topic for getArticlesFromTopicAndContentPref", topic);
   // console.log("contentPreferences", contentPreferences);
   const apiKey = "AIzaSyC3FVIBTpZUcwYI16HR1K9eu8TktccL6Dw";
   const cx = "430d5a3e4f6f644f4";
   const numResults = 10;
   // const searchParams = `${topic} ${contentPreferences.join(' ')}`;
-  const searchParams = `${topic} ${hobbies.join(' ')}`;
+  const searchParams = `${topic} ',' ${hobbies.join(',')}`;
   const url = `https://customsearch.googleapis.com/customsearch/v1?cx=${cx}&q=${encodeURIComponent(searchParams)}&key=${apiKey}&num=${numResults}&start=${start}`;
 
   const fetchWithRetry = async (url, retries = 3, delay = 1000) => {
@@ -3170,58 +3351,172 @@ export const getVideos = async (topic) => {
 };
 // Fetch Podcasts
 
-export const getPodcasts = async (topic, numResults = 10) => {
-  const graphqlUrl = "https://api.podchaser.com/graphql";
-  const BearerPodcastApi = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5ZDdhNGEzYS1iNDQwLTQ4M2YtYjI4Mi02OGU1NjRjNTA1ZWMiLCJqdGkiOiJiZDNlMDU0OWMxY2Y4YWQ1MGYyYzc4Y2Y5M2RmMDRlODU2ODEwZDY3YzM2ODUzZGYzNTQyMzVmZDljMzU4MjViZWE1M2FkNmZjM2VjMTE0NiIsImlhdCI6MTczMTUwNjY2Ni44NTE4MjYsIm5iZiI6MTczMTUwNjY2Ni44NTE4MjgsImV4cCI6MTc2MzA0MjY2Ni44NDE1OTIsInN1YiI6IiIsInNjb3BlcyI6WyIqIl19.nic6eB0G1INAv7RlzF5EzrffedLNsWJa4e8wxUCirf4178Ob4EnsMX2OtGyVifskgUFOJ27AqkS6mcy0QKLHWKbV7LqIjvVeyHcY8_6bSB9OIWyKxiSVoqYYz4g1JwT1b63p-F4ztH3l7GgVBBiaXq5g3TpnnAfw2KQ50IcNnztveiHfI3IK0H9gk1e2IQG3OBFwg790u7-d4YD3B1Iv_mc-m1X7yB2B3tPV5w7DMJB4ztxPBaFLSLElgnUbrkobRoTT6v4XIKempaKSYPpwlMsmP_9vl4Ds35y0kgqvH7-FM6jsAI8W9OQgGmUG7UEVyroJU5wAstauWgNE-OIfZvYS9yhBlVk70Hy2-Yo3m2xJLw4yZXvTFgpHl9ahTAO1J--d0oTsV0y5S4-q7vgRu5xh1CfNuq66OMUtYzw3BlLl-Q2Mlmxb0or0LQjarO8M-DdLcepK99mqvhRt29gmc0NZlo27foghduA9N-4zG2f0sJnZrM7l09D_OBuWoVVrY-BR2rUK-32RIKxnfx3GVZSwM9hgMIiXkulaxrxf0U-SRlRmV_yMC9gn7RRZSlpJukXIzyDbH6-4SlDDYzo3OG5JQn6NY6e5lgaQaG0g-hmBcQV-WwpJllnrPRxg7bbCqLZ4kV8RO4amCIdbL2-ivgmcWfeFLIEs98nrknIUWC8";
+// export const getPodcasts = async (topic, numResults = 10) => {
+//   console.log("topic for podcast", topic);
+//   const graphqlUrl = "https://api.podchaser.com/graphql";
+//   const BearerPodcastApi = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5ZDdhNGEzYS1iNDQwLTQ4M2YtYjI4Mi02OGU1NjRjNTA1ZWMiLCJqdGkiOiJiZDNlMDU0OWMxY2Y4YWQ1MGYyYzc4Y2Y5M2RmMDRlODU2ODEwZDY3YzM2ODUzZGYzNTQyMzVmZDljMzU4MjViZWE1M2FkNmZjM2VjMTE0NiIsImlhdCI6MTczMTUwNjY2Ni44NTE4MjYsIm5iZiI6MTczMTUwNjY2Ni44NTE4MjgsImV4cCI6MTc2MzA0MjY2Ni44NDE1OTIsInN1YiI6IiIsInNjb3BlcyI6WyIqIl19.nic6eB0G1INAv7RlzF5EzrffedLNsWJa4e8wxUCirf4178Ob4EnsMX2OtGyVifskgUFOJ27AqkS6mcy0QKLHWKbV7LqIjvVeyHcY8_6bSB9OIWyKxiSVoqYYz4g1JwT1b63p-F4ztH3l7GgVBBiaXq5g3TpnnAfw2KQ50IcNnztveiHfI3IK0H9gk1e2IQG3OBFwg790u7-d4YD3B1Iv_mc-m1X7yB2B3tPV5w7DMJB4ztxPBaFLSLElgnUbrkobRoTT6v4XIKempaKSYPpwlMsmP_9vl4Ds35y0kgqvH7-FM6jsAI8W9OQgGmUG7UEVyroJU5wAstauWgNE-OIfZvYS9yhBlVk70Hy2-Yo3m2xJLw4yZXvTFgpHl9ahTAO1J--d0oTsV0y5S4-q7vgRu5xh1CfNuq66OMUtYzw3BlLl-Q2Mlmxb0or0LQjarO8M-DdLcepK99mqvhRt29gmc0NZlo27foghduA9N-4zG2f0sJnZrM7l09D_OBuWoVVrY-BR2rUK-32RIKxnfx3GVZSwM9hgMIiXkulaxrxf0U-SRlRmV_yMC9gn7RRZSlpJukXIzyDbH6-4SlDDYzo3OG5JQn6NY6e5lgaQaG0g-hmBcQV-WwpJllnrPRxg7bbCqLZ4kV8RO4amCIdbL2-ivgmcWfeFLIEs98nrknIUWC8";
 
-  const headers = {
-    'Authorization': `Bearer ${BearerPodcastApi}`,
-    'Content-Type': 'application/json',
-  };
+//   const headers = {
+//     'Authorization': `Bearer ${BearerPodcastApi}`,
+//     'Content-Type': 'application/json',
+//   };
 
-  const query = `
-    query {
-      podcasts{
-        data {
-          title
-          description
-          imageUrl
-          url
-        }
-      }
-    }
-  `;
+//   const query = `
+//     query {
+//       podcasts{
+//         data {
+//           title
+//           description
+//           imageUrl
+//           url
+//         }
+//       }
+//     }
+//   `;
 
-  const body = JSON.stringify({ query });
+//   const body = JSON.stringify({ query });
 
+//   try {
+//     const response = await fetch(graphqlUrl, {
+//       method: 'POST',
+//       headers,
+//       body,
+//     });
+
+//     if (!response.ok) {
+//       console.error('Error response from Podchaser API:', response.status, response.statusText);
+//       return [];
+//     }
+
+//     const data = await response.json();
+//     console.log('API Response Data:', data);
+
+//     // Extract podcast data
+//     return data.data?.podcasts?.data?.map((item) => ({
+//       title: item.title,
+//       description: item.description,
+//       image: item.imageUrl,
+//       link: item.url,
+//       type: 'Podcast',
+//     })) || [];
+//   } catch (error) {
+//     console.error('Error fetching podcasts:', error);
+//     return [];
+//   }
+// };
+
+// Fetch Videos
+export const getPodcasts = async (topic) => {
+  // Add the word "podcast" to each topic
+  const topicsWithPodcast = topic
+    .split(",")
+    .map((topic) => `${topic.trim()} podcast`)
+    .join(" | "); // Use " | " for OR search in YouTube Data API
+    console.log("topics for podcasts:", topicsWithPodcast);
+  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topicsWithPodcast)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=${numResults}`;
   try {
-    const response = await fetch(graphqlUrl, {
-      method: 'POST',
-      headers,
-      body,
-    });
-
-    if (!response.ok) {
-      console.error('Error response from Podchaser API:', response.status, response.statusText);
-      return [];
-    }
-
-    const data = await response.json();
-    console.log('API Response Data:', data);
-
-    // Extract podcast data
-    return data.data?.podcasts?.data?.map((item) => ({
-      title: item.title,
-      description: item.description,
-      image: item.imageUrl,
-      link: item.url,
-      type: 'Podcast',
+    const response = await fetchWithRetry(youtubeSearchUrl);
+    console.log("podcast results", response);
+    console.log("video response", response);
+    return response.items?.map((item) => ({
+      title: item.snippet.title,
+      link: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+      image: item.snippet.thumbnails.default.url,
+      type: 'Video',
     })) || [];
   } catch (error) {
-    console.error('Error fetching podcasts:', error);
+    console.error('Error fetching videos:', error);
     return [];
   }
 };
+
+// Fetch webinars
+export const getWebinars = async (topic) => {
+  // Add the word "podcast" to each topic
+  const topicsWithWebinars = topic
+    .split(",")
+    .map((topic) => `${topic.trim()} webinar`)
+    .join(" | "); // Use " | " for OR search in YouTube Data API
+    console.log("topics for podcasts:", topicsWithWebinars);
+  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topicsWithWebinars)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=${numResults}`;
+  try {
+    const response = await fetchWithRetry(youtubeSearchUrl);
+    console.log("webinar results", response);
+    return response.items?.map((item) => ({
+      title: item.snippet.title,
+      link: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+      image: item.snippet.thumbnails.default.url,
+      type: 'Video',
+    })) || [];
+  } catch (error) {
+    console.error('Error fetching videos:', error);
+    return [];
+  }
+};
+// export const getPodcasts = async (topics, numResults = 10) => {
+//   const graphqlUrl = "https://api.podchaser.com/graphql";
+//   const BearerPodcastApi = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5ZDdhNGEzYS1iNDQwLTQ4M2YtYjI4Mi02OGU1NjRjNTA1ZWMiLCJqdGkiOiJiZDNlMDU0OWMxY2Y4YWQ1MGYyYzc4Y2Y5M2RmMDRlODU2ODEwZDY3YzM2ODUzZGYzNTQyMzVmZDljMzU4MjViZWE1M2FkNmZjM2VjMTE0NiIsImlhdCI6MTczMTUwNjY2Ni44NTE4MjYsIm5iZiI6MTczMTUwNjY2Ni44NTE4MjgsImV4cCI6MTc2MzA0MjY2Ni44NDE1OTIsInN1YiI6IiIsInNjb3BlcyI6WyIqIl19.nic6eB0G1INAv7RlzF5EzrffedLNsWJa4e8wxUCirf4178Ob4EnsMX2OtGyVifskgUFOJ27AqkS6mcy0QKLHWKbV7LqIjvVeyHcY8_6bSB9OIWyKxiSVoqYYz4g1JwT1b63p-F4ztH3l7GgVBBiaXq5g3TpnnAfw2KQ50IcNnztveiHfI3IK0H9gk1e2IQG3OBFwg790u7-d4YD3B1Iv_mc-m1X7yB2B3tPV5w7DMJB4ztxPBaFLSLElgnUbrkobRoTT6v4XIKempaKSYPpwlMsmP_9vl4Ds35y0kgqvH7-FM6jsAI8W9OQgGmUG7UEVyroJU5wAstauWgNE-OIfZvYS9yhBlVk70Hy2-Yo3m2xJLw4yZXvTFgpHl9ahTAO1J--d0oTsV0y5S4-q7vgRu5xh1CfNuq66OMUtYzw3BlLl-Q2Mlmxb0or0LQjarO8M-DdLcepK99mqvhRt29gmc0NZlo27foghduA9N-4zG2f0sJnZrM7l09D_OBuWoVVrY-BR2rUK-32RIKxnfx3GVZSwM9hgMIiXkulaxrxf0U-SRlRmV_yMC9gn7RRZSlpJukXIzyDbH6-4SlDDYzo3OG5JQn6NY6e5lgaQaG0g-hmBcQV-WwpJllnrPRxg7bbCqLZ4kV8RO4amCIdbL2-ivgmcWfeFLIEs98nrknIUWC8";
+
+//   const headers = {
+//     Authorization: `Bearer ${BearerPodcastApi}`,
+//     "Content-Type": "application/json",
+//   };
+
+//   const query = `
+//     query($filter: PodcastFilters, $first: Int!) {
+//       podcasts(filters: $filter, first: $first) {
+//         data {
+//           title
+//           description
+//           imageUrl
+//           url
+//         }
+//       }
+//     }
+//   `;
+
+//   const variables = {
+//     filter: { categories: topics.split(",") }, // Replace 'categories' with the correct field
+//     first: numResults,
+//   };
+
+//   const body = JSON.stringify({ query, variables });
+
+//   try {
+//     const response = await fetch(graphqlUrl, {
+//       method: "POST",
+//       headers,
+//       body,
+//     });
+
+//     if (!response.ok) {
+//       console.error(
+//         "Error response from Podchaser API:",
+//         response.status,
+//         response.statusText
+//       );
+//       return [];
+//     }
+
+//     const data = await response.json();
+//     console.log("API Response Data:", data);
+
+//     // Extract podcast data
+//     return (
+//       data.data?.podcasts?.data?.map((item) => ({
+//         title: item.title,
+//         description: item.description,
+//         image: item.imageUrl,
+//         link: item.url,
+//         type: "Podcast",
+//       })) || []
+//     );
+//   } catch (error) {
+//     console.error("Error fetching podcasts:", error);
+//     return [];
+//   }
+// };
+
 
 
 
@@ -3594,4 +3889,384 @@ export const getDailyQuestionsForCompany = async (token, parsedUserData) => {
     console.error("Error fetching questions:", error);
     throw error; // Rethrow the error to be handled by the caller
   }
+};
+
+
+//Project 
+
+export const ClearBoardAndAssociations = async (token,id) => {
+  const apiUrl = "/api/ClearBoardAndAssociations";
+
+  const data = {
+   
+    id: id,
+ 
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+//Delete Board 
+export const deleteBoardAndAssociations = async (token,id) => {
+  const apiUrl = "/api/deleteBoardAndAssociations";
+
+  const data = {
+   
+    id: id,
+ 
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const updateSubTaskStatus = async (token,subTaskId,status,updatedBy) => {
+  const apiUrl = "/api/updateSubTaskStatus";
+
+  const data = {
+   
+    subTaskId: subTaskId,
+    status:status,
+    updatedBy:updatedBy,
+
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const createtaskchat = async (token,taskId,userId,message,imageUrl,attachmentUrl,link) => {
+  const apiUrl = "/api/task-chat";
+
+  const data = {
+   
+    taskId: taskId,
+    userId:userId,
+    message:message,
+    imageUrl:imageUrl,
+    attachmentUrl:attachmentUrl,
+    link:link
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+
+export const updateTaskBoardId = async (token,taskId,newBoardId,userId) => {
+  const apiUrl = "/api/updateTaskBoard";
+
+  const data = {
+   
+    taskId: taskId,
+    newBoardId:newBoardId,
+    userId:userId,
+   
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+
+export const updateTaskBoardUser = async (token,taskId,newAssignee,userId) => {
+  const apiUrl = "/api/updateTaskUser";
+
+  const data = {
+   
+    taskId: taskId,
+    newAssignee:newAssignee,
+    userId:userId,
+   
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const Create_SubTask = async (token,taskTitle,assignee,description,deadline,taskId) => {
+  const apiUrl = "/api/Create_SubTask";
+
+  const data = {
+   
+    title: taskTitle,
+    description:description,
+  
+    taskId:taskId,
+    assignedTo:assignee,
+    deadline:deadline,
+  
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const createtask = async (token,taskTitle,assignee,description,deadline,tags,selectedcolumn) => {
+  const apiUrl = "/api/create-task";
+
+  const data = {
+   
+    title: taskTitle,
+    assignedTo:assignee,
+    deadline:deadline,
+    tag:tags,
+    description:description,
+    boardId:selectedcolumn,
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const createboard = async (token,companyId,boardname,projectId) => {
+
+  const apiUrl = "/api/create-board";
+
+  const data = {
+   
+    companyId: companyId,
+    name:boardname,
+
+    projectId:projectId,
+  };
+
+
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const gettaskchat = async (token,taskId) => {
+  const apiUrl = "/api/gettaskchat";
+
+  const data = {
+   
+    taskId: taskId,
+   
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const getProjectsforUser= async (token,userId) => {
+  const apiUrl = "/api/getProjectsforUser";
+
+  const data = {
+ 
+   
+    userId:userId
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const getProjectsBTeamid= async (token,teamid) => {
+  const apiUrl = "/api/getProjectsBTeamid";
+
+  const data = {
+ 
+   
+    teamid:teamid
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const getallboards = async (token,companyId) => {
+  const apiUrl = "/api/getAllBoardsByCompanyId";
+
+  const data = {
+   
+    companyId: companyId,
+ 
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const getTeamuser = async (token, teamId) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  let apiUrl = `/api/getteamuser`;
+  
+
+  const data = {
+    id: teamId,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const getAlldepartmentuser = async (token, departmentId) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  let apiUrl = `/api/getdepartmentuser`;
+  
+
+  const data = {
+    departmentId: departmentId,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+
+//Notification 
+export const getNotificationsByUserId = async (token,userId) => {
+  const apiUrl = "/api/getNotificationsByUserId";
+
+  const data = {
+   
+    userId: userId,
+  
+
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const markAllNotificationsAsRead = async (token,userId) => {
+  const apiUrl = "/api/markAllNotificationsAsRead";
+
+  const data = {
+   
+    userId: userId,
+  
+
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const getTeamMembersbyuser = async (token, id) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  let apiUrl = `/api/getTeamMembersbyteam`;
+  
+
+  const data = {
+    id: id,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
 };

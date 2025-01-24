@@ -19,9 +19,15 @@ module.exports = {
       rewardPoints: {
         type: Sequelize.INTEGER
       },
-      documentUrl: {
-        type: Sequelize.STRING,
-        allowNull: true
+      documentUrls: {
+        type: Sequelize.JSON,
+        allowNull: true, 
+        defaultValue: [],
+      },
+      imageUrls: {
+        type: Sequelize.JSON,
+        allowNull: true,
+        defaultValue: [],
       },
       announcementDate: {
         type: Sequelize.STRING,

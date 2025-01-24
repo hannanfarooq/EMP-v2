@@ -186,7 +186,7 @@ const Q3 = ({ handleNext, handleAnswerChange }) => {
               animation: error && spouseDOB === '' ? `${vibration} 0.3s linear` : 'none'
             }}
           >
-            <TextField
+            {/* <TextField
               type='date'
               label='Spouse Date of Birth'
               value={spouseDOB}
@@ -194,6 +194,21 @@ const Q3 = ({ handleNext, handleAnswerChange }) => {
               InputLabelProps={{ shrink: true }}
               inputProps={{ max: today }}
               margin='normal'
+              error={error && spouseDOB === ''}
+              helperText={error && spouseDOB === '' ? 'Spouse date of birth is required' : ''}
+            /> */}
+            <TextField
+              type="date"
+              label="Spouse Date of Birth"
+              value={spouseDOB}
+              onChange={(e) => {
+                setSpouseDOB(e.target.value);
+                // Programmatically blur the input after selection
+                e.target.blur();
+              }}
+              InputLabelProps={{ shrink: true }}
+              inputProps={{ max: today }}
+              margin="normal"
               error={error && spouseDOB === ''}
               helperText={error && spouseDOB === '' ? 'Spouse date of birth is required' : ''}
             />

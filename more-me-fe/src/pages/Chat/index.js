@@ -244,7 +244,7 @@ export default function ChatPage() {
               </Badge>
               </Grid>
               <Grid item>
-                <Tooltip title="Create Group Chat">
+                <Tooltip style={{color:"red"}} title="Create Group Chat">
                   <ChatTransitionsModal
                     icon={<Iconify icon="el:group" style={{ color: `#625555` }} />}
                     open={openTransitiongroup}

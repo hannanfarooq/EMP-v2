@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import axios from "axios";
-import { User } from "../../models";
+import { User,Team,Department } from "../../models";
 import { successResponse, errorResponse, uniqueId } from "../../helpers";
 import { sendEMail } from "../../helpers/mailer";
 import { Op } from "sequelize";
@@ -93,6 +93,7 @@ export const createUser = async (email, role, firstName, lastName, companyId) =>
       firstName: firstName,
       lastName: lastName,
       companyId: companyId,
+      isVerified:true,
     });
     // console.log("Company user data", email, companyId);
 
@@ -177,7 +178,7 @@ export const register = async (req, res) => {
       firstName,
       lastName,
       password: reqPass,
-      isVerified: false,
+      isVerified: true,
       verifyToken: uniqueId(),
     };
 
@@ -189,16 +190,28 @@ export const register = async (req, res) => {
 };
 
 export const login = async (req, res) => {
+  const start = Date.now(); // Start timer
   try {
+    console.log(`[Timing] Start Login Process`);
+
+    // Step 1: Fetch user with secret columns
+    const userStart = Date.now();
     const user = await User.scope("withSecretColumns").findOne({
       where: { email: req.body.email },
     });
-
-    // console.log("---------", user);
+    console.log(`[Timing] User Fetch: ${Date.now() - userStart} ms`);
 
     if (!user) {
       throw new Error("Incorrect Email Id/Password");
     }
+
+    // Step 2: Check if user is verified
+    if (!user.isVerified) {
+      throw new Error("Account not verified");
+    }
+
+    // Step 3: Hash and compare password
+    const hashStart = Date.now();
     const reqPass = crypto
       .createHash("md5")
       .update(req.body.password || "")
@@ -206,6 +219,10 @@ export const login = async (req, res) => {
     if (reqPass !== user.password) {
       throw new Error("Incorrect Email Id/Password");
     }
+    console.log(`[Timing] Password Hashing and Comparison: ${Date.now() - hashStart} ms`);
+
+    // Step 4: Generate JWT
+    const tokenStart = Date.now();
     const token = jwt.sign(
       {
         user: {
@@ -217,22 +234,33 @@ export const login = async (req, res) => {
       },
       process.env.SECRET
     );
-    delete user.dataValues.password;
+    console.log(`[Timing] JWT Generation: ${Date.now() - tokenStart} ms`);
+
+    // Step 5: Fetch company details if needed
+    const companyStart = Date.now();
     let company;
 
-    if (user.role == "admin") {
+    if (user.role === "admin" || user.role === "company-super-admin" || user.role === "super-super-admin") {
       company = await getAdminCompany(user.id);
+      if (!company) {
+        company = await FetchCompanyDataByid(user.companyId);
+      }
     }
-    if (user.role == "user" && user.companyId) {
+    if (user.companyId) {
       company = await FetchCompanyDataByid(user.companyId);
     }
+    console.log(`[Timing] Company Fetch: ${Date.now() - companyStart} ms`);
 
+    // Step 6: Return success response
+    console.log(`[Timing] Total Login Process: ${Date.now() - start} ms`);
+    delete user.dataValues.password;
     return successResponse(req, res, {
       user,
       token,
       company: company ? company : null,
     });
   } catch (error) {
+    console.log(`[Timing] Error Occurred: ${Date.now() - start} ms`, error);
     return errorResponse(req, res, error.message);
   }
 };
@@ -312,13 +340,66 @@ export const getAllUserByCompanyId = async (req, res) => {
   try {
     const { companyId } = req.body;
 
-    const users = await User.findAll({
-      where: {
-        companyId: companyId,
-      },
+    // Fetch all users belonging to the given company ID
+    const userDetails = await User.findAll({
+      where: { companyId },
     });
 
-    return successResponse(req, res, users);
+    // Iterate through each user to fetch their associated departments and teams
+    const user = await Promise.all(
+      userDetails.map(async (user) => {
+        // Fetch all teams where the user is part of (either leadId or in userIds)
+        const teams = await Team.findAll({
+          where: {
+            [Op.or]: [
+              { leadId: user.id }, // User is the team lead
+              {
+                userIds: {
+                  [Op.contains]: [user.id], // User is a part of userIds array
+                },
+              },
+            ],
+          },
+        });
+
+        // Extract team names
+        const teamNames = teams.map((team) => team.name);
+
+        // Check if the user is the head of any department
+        const departmentHead = await Department.findOne({
+          where: { headId: user.id },
+        });
+
+        // If the user is the department head, include the department name
+        const departmentNames = departmentHead
+          ? [departmentHead.name]
+          : await Promise.all(
+              teams.map(async (team) => {
+                const department = await Department.findOne({
+                  where: { id: team.departmentId },
+                });
+                return department ? department.name : null;
+              })
+            );
+
+        // Remove duplicate department names and null values
+        const uniqueDepartments = [...new Set(departmentNames)].filter(Boolean);
+
+        // Handle case where user is not part of any team or department
+        const teamsField = teamNames.length > 0 ? teamNames : ["None"];
+        const departmentsField =
+          uniqueDepartments.length > 0 ? uniqueDepartments : ["None"];
+
+        // Embed department and team names in the user details
+        return {
+          ...user.toJSON(), // Spread user details
+          teams: teamsField, // Embedded team names or "None"
+          departments: departmentsField, // Embedded department names or "None"
+        };
+      })
+    );
+
+    return successResponse(req, res, user);
   } catch (error) {
     return errorResponse(req, res, error.message);
   }

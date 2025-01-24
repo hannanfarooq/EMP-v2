@@ -17,11 +17,13 @@ import {
   createCompanyAnnouncement,
   deleteCompanyAnnouncement,
   getCompanyAnnouncement,
+  toggleVisibility,
   updateCompanyAnnouncement,
 } from "../controllers/companyAnnouncement/companyAnnouncement.controller";
 import { updateCompanyPolicyValidator } from "../controllers/companyPolicy/companyPolicy.validator";
 
 import { updateCompanyAnnouncementValidator } from "../controllers/companyAnnouncement/companyAnnouncement.validator";
+import { GetAllCompaniesForCompanyAdmin } from "../controllers/company/company.controller";
 
 const router = express.Router();
 
@@ -44,6 +46,7 @@ router.post(
 );
 //company Announcement Crud
 router.post("/allCompanyAnnouncement", getCompanyAnnouncement);
+router.post("/toggleVisibility",toggleVisibility);
 router.delete("/deleteCompanyAnnouncement", deleteCompanyAnnouncement);
 router.post(
   "/updateCompanyAnnouncement",
@@ -66,6 +69,8 @@ router.post("/updateUser", userController.updateUser);
 router.delete("/deleteUserById", userController.deleteUserById);
 //deleteDynamicQuestion
 router.delete("/deleteDynamicQuestion", questionController.deleteDynamicQuestion);
+router.get("/GetAllCompaniesForCompanyAdmin", GetAllCompaniesForCompanyAdmin);
+
 
 //get all questionnaire based on specific company
 router.get("/getQuestionnaire/:companyId", questionController.getQuestionnaire);

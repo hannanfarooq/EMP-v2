@@ -492,8 +492,9 @@ export default function AddCompany({ refetchCompanies, handleClose }) {
         },
         body: JSON.stringify({ ...companyData, ...files }),
       });
-
+      
       const data = await res.json();
+      console.log("ALL THE DATA",res);
       if (data.code === 400) {
         return toast.update(id, {
           render: data.errorMessage,

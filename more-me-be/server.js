@@ -4,79 +4,72 @@ const chalk = require('chalk');
 const dotenv = require('dotenv');
 const cluster = require('cluster');
 const numCores = require('os').cpus().length;
-const app = require('./app');
+const http = require('http');
 
+const app = require('./app');
+const jwt = require('jsonwebtoken');
+const { Socket_Maker } = require('./socket');// Correct path to socket.js
+console.log('Imported Socket_Maker:', Socket_Maker);
 // Handle uncaught exceptions
 process.on('uncaughtException', (uncaughtExc) => {
-  // Won't execute
   console.log(chalk.bgRed('UNCAUGHT EXCEPTION! 💥 Shutting down...'));
   console.log('uncaughtException Err::', uncaughtExc);
   console.log('uncaughtException Stack::', JSON.stringify(uncaughtExc.stack));
   process.exit(1);
 });
 
-// Setup number of worker processes to share port which will be defined while setting up server
 const workers = [];
+
+// Function to set up worker processes
 const setupWorkerProcesses = () => {
-  // Read number of cores on system
   console.log(`Master cluster setting up ${numCores} workers`);
 
-  // Iterate on number of cores need to be utilized by an application
-  // Current example will utilize all of them
   for (let i = 0; i < numCores; i++) {
-    // Creating workers and pushing reference in an array
-    // these references can be used to receive messages from workers
-    workers.push(cluster.fork());
+    const worker = cluster.fork();
+    workers.push(worker);
 
-    // Receive messages from worker process
-    workers[i].on('message', function (message) {
+    worker.on('message', function (message) {
       console.log(message);
     });
   }
 
-  // Process is clustered on a core and process id is assigned
   cluster.on('online', function (worker) {
-    console.log(`Worker ${worker.process.pid} is listening`);
+    console.log(`Worker ${worker.process.pid} is online`);
   });
 
-  // If any of the worker process dies then start a new one by simply forking another one
   cluster.on('exit', function (worker, code, signal) {
-    console.log(
-      `Worker ${worker.process.pid} died with code: ${code}, and signal: ${signal}`
-    );
-    console.log('Starting a new worker');
-    cluster.fork();
-    workers.push(cluster.fork());
-    // Receive messages from worker process
-    workers[workers.length - 1].on('message', function (message) {
+    console.log(`Worker ${worker.process.pid} died. Forking a new worker...`);
+    const newWorker = cluster.fork();
+    workers.push(newWorker);
+    newWorker.on('message', function (message) {
       console.log(message);
     });
   });
 };
 
-// Setup an express server and define port to listen all incoming requests for this application
-const setUpExpress = () => {
-  dotenv.config({ path: '.env' });
-  
-  const port = process.env.APP_PORT || 3000;
-  console.log(port)
+// Create HTTP server and bind Express app to it
+const server = http.createServer(app);
 
-  const server = app.listen(port, () => {
+// Setup Socket.IO
+
+
+
+
+// Export the io object properly for use in controllers or other parts of the application
+
+// Start the server
+const startServer = () => {
+  const port = process.env.APP_PORT || 3000;
+
+  server.listen(port, () => {
     console.log(`App running on port ${chalk.greenBright(port)}...`);
   });
-
-  // In case of an error
-  app.on('error', (appErr, appCtx) => {
-    console.error('app error', appErr.stack);
-    console.error('on url', appCtx.req.url);
-    console.error('with headers', appCtx.req.headers);
-  });
+   Socket_Maker(server);
 
   // Handle unhandled promise rejections
   process.on('unhandledRejection', (err) => {
     console.log(chalk.bgRed('UNHANDLED REJECTION! 💥 Shutting down...'));
     console.log(err.name, err.message);
-    // Close server & exit process
     server.close(() => {
       process.exit(1);
     });
@@ -90,19 +83,23 @@ const setUpExpress = () => {
   });
 };
 
-// Setup server either with clustering or without it
+// Set up server with clustering support
 const setupServer = (isClusterRequired) => {
-  // If it is a master process then call setting up worker process
   if (isClusterRequired && cluster.isMaster) {
     setupWorkerProcesses();
   } else {
-    // Setup server configurations and share port address for incoming requests
-    setUpExpress();
+    startServer();
   }
 };
 
+// Call setup based on the environment
 if (process.env.NODE_ENV === 'production') {
   setupServer(true);
 } else {
   setupServer(false);
 }
+
+
+
+
+

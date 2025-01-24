@@ -174,7 +174,7 @@ const Q10 = ({ handleNext, handleAnswerChange }) => {
             <TextField
               {...params}
               variant="outlined"
-              label="Search inspirations"
+              label="Search inspirations and life principles"
               placeholder="Inspirations"
               error={error || maxError}
               helperText={

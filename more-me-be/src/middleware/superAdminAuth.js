@@ -11,7 +11,7 @@ const superAdminAuth = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.SECRET);
     req.user = decoded.user;
-    if (decoded.user.role !== "super-admin") {
+    if (decoded.user.role !== "super-super-admin") {
       return errorResponse(
         req,
         res,

@@ -108,6 +108,7 @@ import { Box, List, ListItemText, Badge } from "@mui/material";
 //
 import { StyledNavItem, StyledNavItemIcon } from "./styles";
 import { getUnviewedThreadsCount } from "../../api/index";
+import { socket } from "src/App";
 
 // ----------------------------------------------------------------------
 
@@ -117,46 +118,52 @@ NavSection.propTypes = {
 
 export default function NavSection({ data = [], ...other }) {
   const [unviewedThreadsCount, setUnviewedThreadsCount] = useState(0);
+  const fetchUnviewedThreadsCount = async () => {
+    const currentUserString = localStorage.getItem("currentUser");
+    
+    if (!currentUserString) {
+      console.error("currentUser is not set in localStorage");
+      return;
+    }
 
+    const currentUser = JSON.parse(currentUserString);
+    if (!currentUser || !currentUser.user || !currentUser.company) {
+      console.error("Invalid currentUser object structure:", currentUser);
+      return;
+    }
+
+    try {
+      const count = await getUnviewedThreadsCount(
+        currentUser.user.id,
+        currentUser.company.id
+      );
+      setUnviewedThreadsCount(count);
+      //console.log("Fetched unviewed threads count:", count);
+    } catch (error) {
+      console.error("Error fetching unviewed threads count:", error);
+      setUnviewedThreadsCount(0); // Set default count to 0 on error
+    }
+  };
   // Fetch unviewed threads count when the component is mounted
   useEffect(() => {
-    const fetchUnviewedThreadsCount = async () => {
-      const currentUserString = localStorage.getItem("currentUser");
-      
-      if (!currentUserString) {
-        console.error("currentUser is not set in localStorage");
-        return;
-      }
-
-      const currentUser = JSON.parse(currentUserString);
-      if (!currentUser || !currentUser.user || !currentUser.company) {
-        console.error("Invalid currentUser object structure:", currentUser);
-        return;
-      }
-
-      try {
-        const count = await getUnviewedThreadsCount(
-          currentUser.user.id,
-          currentUser.company.id
-        );
-        setUnviewedThreadsCount(count);
-        //console.log("Fetched unviewed threads count:", count);
-      } catch (error) {
-        console.error("Error fetching unviewed threads count:", error);
-        setUnviewedThreadsCount(0); // Set default count to 0 on error
-      }
-    };
+    
 
     // Fetch initially on mount
     fetchUnviewedThreadsCount();
 
     // Set interval to fetch every 3 seconds
-    const intervalId = setInterval(fetchUnviewedThreadsCount); // 3000 ms = 3 seconds
-
-    // Cleanup the interval on component unmount
-    return () => clearInterval(intervalId);
+   
   }, []); // Empty array means this effect runs once on mount
-
+  useEffect(()=>
+    {
+      socket.on('getcount', (data) => {
+        if (data) {
+      
+        
+          fetchUnviewedThreadsCount();
+        }
+      });
+    })
   return (
     <Box {...other}>
       <List disablePadding sx={{ p: 1 }}>

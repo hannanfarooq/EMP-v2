@@ -1,6 +1,6 @@
 import express from "express";
 import validate from "express-validation";
-
+import * as userole from "../controllers/user/user.role";
 import * as userController from "../controllers/user/user.controller";
 import * as buyAndSellController from "../controllers/buyAndSell/buyAnsSell.controller";
 import * as questionController from "../controllers/question/question.controller";
@@ -10,7 +10,7 @@ import * as functionController from "../controllers/function/function.controller
 import * as teamController from "../controllers/team/team.controller";
 import * as departmentController from "../controllers/department/department.controller";
 import { getCompanyPolicy } from "../controllers/companyPolicy/companyPolicy.controller";
-import { getCompanyAnnouncement } from "../controllers/companyAnnouncement/companyAnnouncement.controller"
+import { getAnnouncementStats, getCompanyAnnouncement, getResponsesByUserId, saveAnswers } from "../controllers/companyAnnouncement/companyAnnouncement.controller"
 //import { postMessage, getConversations, getMessagesByConversationId, createConversation } from "../controllers/chat/chat.controller";
 import { createDailyQuestions } from "../controllers/question/dailyquestions.controller";
 import {createStartUpQuestions} from "../controllers/question/startupquestions";
@@ -19,6 +19,13 @@ import {createConversation,getConversationById,addUserToConversation,removeUserF
 import {createMessage,getMessagesByConversationId,markMessageAsRead}  from '../controllers/message/message';
 import {createInvitation,respondToInvitation,getInvitationsByUserId}  from '../controllers/invitation/invitation';
 import { GetBlockUser, GetBlockedByUsers, blockUsers, unblockUsers } from "../controllers/chat/block";
+import { de } from "@faker-js/faker";
+import { createProject, getProjectsByDepartmentId, getProjectsforUser } from "../controllers/Project/project.controller";
+import { ClearBoardAndAssociations, createboard, deleteBoardAndAssociations, getAllBoardsByCompanyId } from "../controllers/Task_Management/Board.controller";
+import { Create_Task, updateTaskBoardId } from "../controllers/Task_Management/task.controller";
+import { CreateTaskChat, gettaskchat } from "../controllers/Task_Management/taskchat.controller";
+import { Create_SubTask, updateSubTaskStatus } from "../controllers/Task_Management/subtask.controller";
+import { getNotificationsByUserId, markAllNotificationsAsRead } from "../controllers/Notification/notification.controller";
 
 const router = express.Router();
 
@@ -79,14 +86,17 @@ router.get("/GetUserGamificationbycompany/:companyId", gamificationController.Ge
 // function routes
 router.post("/createFunction", functionController.createFunction);
 router.post("/getCompanyFunctions", functionController.getCompanyFunctions);
+router.post('/getCompanyFunctionsbyuserid',functionController.getCompanyFunctionsbyuserid);
 router.post("/updateFunction", functionController.updateFunction);
 router.delete("/deleteFunction", functionController.deleteFunction);
 
 // department routes
 router.post("/createDepartment", departmentController.createDepartment);
 router.post("/getFunctionDepartments", departmentController.getFunctionDepartments);
+router.post('/getDepartmentsyuserid',departmentController.getDepartmentsyuserid)
 router.post("/updateDepartment", departmentController.updateDepartment);
 router.delete("/deleteDepartment", departmentController.deleteDepartment);
+router.post("/getDepartmentTeamsbyLead", teamController.getDepartmentLead);
 
 // Team routes
 router.post("/createTeam", teamController.createTeam);
@@ -129,5 +139,48 @@ router.get('/blockedByUsers/:id', GetBlockedByUsers);
 //dail user question routes
 // getDailyQuestionsForCompany
 router.get("/getDailyQuestionsForCompany/:companyId", questionController.getDailyQuestionsForCompany);
+
+router.post("/saveAnswers",saveAnswers);
+router.post("/getResponsesByUserId",getResponsesByUserId);
+router.post('/getAnnouncementStats',getAnnouncementStats);
+
+
+//Project 
+router.post('/create-project',createProject);
+router.post('/getProjectsByDepartmentId',getProjectsByDepartmentId);
+router.post('/getProjectsforUser',getProjectsforUser);
+
+//Board
+
+router.post('/create-board',createboard);
+router.post('/getAllBoardsByCompanyId',getAllBoardsByCompanyId);
+router.post('/updateTaskBoard',updateTaskBoardId);
+
+router.post('/deleteBoardAndAssociations',deleteBoardAndAssociations);
+
+router.post('/ClearBoardAndAssociations',ClearBoardAndAssociations);
+
+//CREATE TASK 
+router.post('/create-task',Create_Task)
+router.post('/task-chat',CreateTaskChat);
+router.post('/gettaskchat',gettaskchat);
+
+//Create Sub Task
+router.post('/Create_SubTask',Create_SubTask);
+router.post('/updateSubTaskStatus',updateSubTaskStatus);
+
+
+//Notification
+router.post('/getNotificationsByUserId',getNotificationsByUserId);
+router.post('/markAllNotificationsAsRead',markAllNotificationsAsRead);
+
+
+
+//ROLE BASE USER GET
+router.post('/getdepartmentuser',userole.getTeamsWithUsers);
+
+router.post('/getteamuser',userole.getTeamWithUsers);
+router.post('/getTeamMembersbyteam',userole.getTeamMembers);
+
 
 module.exports = router;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 // @mui
-import { Grid, Button, Container, Stack, Typography } from "@mui/material";
+import { Grid, Button, Container, Stack, Typography,Avatar } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import Paper from "@mui/material/Paper";
@@ -23,7 +23,10 @@ import {
   getCompanyFunctions,
   getDepartmentTeams,
   deleteFunction,
-  UpdateCompanyUser
+  UpdateCompanyUser,
+  getAllCompanyUser,
+  getTeamMembers,
+  getCompanyFunctionsbyuserid
 } from "src/api";
 import { toast } from "react-toastify";
 import { set } from "lodash";
@@ -46,7 +49,7 @@ export default function CompanyEmployeeManagementPage() {
   const [selectedFunction, setSelectedFunction] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [selectedTeam, setSelectedTeam] = useState(null);
-
+  const [teamMembers, setTeamMembers] = useState([]);
   const [openFunctionCreateModal, setOpenFunctionCreateModal] = useState(false);
   const [openDepartmentCreateModal, setOpenDepartmentCreateModal] =
     useState(false);
@@ -69,14 +72,29 @@ export default function CompanyEmployeeManagementPage() {
   }, [selectedFunction, openDepartmentCreateModal]);
 
   useEffect(() => {
-    getCompanyFunctions(storedUserData.token, storedUserData?.company.id)
+    if(storedUserData.user.role=="company-super-admin")
+    {
+      getCompanyFunctions(storedUserData.token, storedUserData?.company.id)
       .then((response) => {
-        console.log("COMPANY FUNCTIONS", response);
+      
         setCompanyFunctions(response.data);
       })
       .catch((error) => {
         toast.error("Failed to fetch company functions");
       });
+    }
+    else if (storedUserData.user.role==="admin")
+    {
+      getCompanyFunctionsbyuserid(storedUserData.token, storedUserData?.user.id)
+      .then((response) => {
+      
+        setCompanyFunctions(response.data);
+      })
+      .catch((error) => {
+        toast.error("Failed to fetch company functions");
+      });
+    }
+  
   }, [openFunctionCreateModal]);
 
   useEffect(() => {
@@ -92,6 +110,56 @@ export default function CompanyEmployeeManagementPage() {
     }
   }, [selectedDepartment, openTeamCreateModal])
 
+  
+  useEffect(() => {
+    const fetchUsersAndTeamMembers = async () => {
+      if (!selectedTeam) {
+        setTeamMembers([]); // Clear team members if no team is selected
+        return;
+      }
+  
+      try {
+        // Fetch all company users
+        const companyUsersResponse = await getAllCompanyUser(
+          storedUserData?.token,
+          storedUserData?.company.id
+        );
+        console.log("COMPANY USERS", companyUsersResponse.data);
+  
+        const allUsers = companyUsersResponse.data;
+  
+        // Fetch team member IDs
+        const teamMembersResponse = await getTeamMembers(
+          storedUserData.token,
+          selectedTeam.id
+        );
+        console.log("TEAM MEMBERS IDs", teamMembersResponse.data);
+  
+        // Filter users by IDs in teamMembersResponse.data
+        if (teamMembersResponse.data) {
+          const memberIds = teamMembersResponse.data; // Assuming this is an array of IDs
+          const matchingMembers = allUsers.filter((user) =>
+            memberIds.includes(user.id)
+          );
+  
+          setTeamMembers(
+            matchingMembers.map((member) => ({
+              profilePic:member.profilePic,
+              firstName: member.firstName,
+              lastName: member.lastName,
+              id: member.id,
+            }))
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching users or team members:", error);
+        toast.error("Failed to fetch users or team members");
+      }
+    };
+  
+    fetchUsersAndTeamMembers();
+  }, [selectedTeam, storedUserData?.token, storedUserData?.company?.id]);
+  
   async function handleDeleteDepartment(departmentId) {
     if (window.confirm("Are you sure you want to delete this department?")) {
       deleteDepartment(departmentId, storedUserData.token)
@@ -190,7 +258,9 @@ export default function CompanyEmployeeManagementPage() {
                       <Typography variant="h6" align="left">
                         Functions
                       </Typography>
-                      <TransitionsModal
+                      {
+                        storedUserData.user.role=="company-super-admin" &&
+                        <TransitionsModal
                         open={openFunctionCreateModal}
                         variant="outlined"
                         handleClose={() => setOpenFunctionCreateModal(false)}
@@ -208,6 +278,8 @@ export default function CompanyEmployeeManagementPage() {
                           />
                         }
                       />
+                      }
+                     
                     </Stack>
                     <Stack spacing={2}>
                       {companyFunctions &&
@@ -227,6 +299,8 @@ export default function CompanyEmployeeManagementPage() {
                             onClick={() => {
                               setSelectedFunction(functionF);
                               setSelectedDepartment(null);
+                              setSelectedTeam(null);
+
                               setTeams([]);
                             }}
                           >
@@ -245,14 +319,15 @@ export default function CompanyEmployeeManagementPage() {
                                 </Typography>
                               )}
                             </div>
-                            <Stack direction="row" spacing={2}>
+
+                          {storedUserData.user.role!="admin" &&  <Stack direction="row" spacing={2}>
                               <span
                                 onClick={() => {
                                   setSelectedFunction(functionF);
                                   setOpenFunctionCreateModal(true);
                                 }}
                               >
-                                <EditIcon className="cursor-pointer hover:text-lime-500" />
+                                <EditIcon  className="cursor-pointer hover:text-lime-500" />
                               </span>
                               <span
                                 onClick={() =>
@@ -261,7 +336,8 @@ export default function CompanyEmployeeManagementPage() {
                               >
                                 <DeleteOutlineIcon className="cursor-pointer hover:text-red-500 text-xl" />
                               </span>
-                            </Stack>
+                            </Stack>}
+                          
                           </Stack>
                         ))}
                     </Stack>
@@ -331,7 +407,9 @@ export default function CompanyEmployeeManagementPage() {
                                       : "bg-gray-100 hover:bg-cyan-50"
                                   }
                                 `}
-                            onClick={() => setSelectedDepartment(department)}
+                            onClick={() => {setSelectedDepartment(department)
+                              setSelectedTeam(null);
+                            }}
                           >
                             <div className="text-left">
                               <Typography variant="h5" marginBlock={1}>
@@ -387,6 +465,7 @@ export default function CompanyEmployeeManagementPage() {
                   open={openTeamCreateModal}
                   handleClose={() => setOpenTeamCreateModal(false)}
                   handleOpen={() => {
+                    setSelectedTeam(null);
                     setOpenTeamCreateModal(true);
                   }}
                   title={"Create New Team"}
@@ -400,6 +479,68 @@ export default function CompanyEmployeeManagementPage() {
                   disabled={selectedDepartment === null}
                 />
               </Stack>
+              {selectedTeam && (
+  <Grid item xs={12}>
+    <Item>
+      <Stack spacing={2}>
+        <Typography variant="h6" align="left">
+          Members of {selectedTeam.name}
+        </Typography>
+        {teamMembers.length === 0 ? (
+          <Typography variant="caption" align="center" sx={{ padding: 4 }}>
+            No members in this team
+          </Typography>
+        ) : (
+          <Paper elevation={2} sx={{ padding: 2 }}>
+            <Stack spacing={2}>
+              {teamMembers.map((member) => (
+                <Stack
+                  key={member.id}
+                  direction="row"
+                  alignItems="center"
+                  spacing={2}
+                  sx={{
+                    padding: 2,
+                    borderRadius: 1,
+                    "&:hover": {
+                      backgroundColor: "grey.100",
+                    },
+                  }}
+                >
+                  <Avatar
+                    alt={`${member.firstName} ${member.lastName}`}
+                    src={member.profilePic || null} // Ensure `profilePicture` is a valid URL or use null
+                    sx={{ width: 48, height: 48 }}
+                  >
+                    {member.firstName[0]}
+                  </Avatar>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      flexGrow: 1,
+                      fontWeight: "bold",
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {member.firstName} {member.lastName}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                    }}
+                  >
+                    {member.role || "Team Member"}
+                  </Typography>
+                </Stack>
+              ))}
+            </Stack>
+          </Paper>
+        )}
+      </Stack>
+    </Item>
+  </Grid>
+)}
               <Stack spacing={2}>
                 {selectedDepartment === null && (
                   <Typography variant="caption" align="center" paddingBlock={8}>
@@ -422,6 +563,7 @@ export default function CompanyEmployeeManagementPage() {
                       className={`px-4 bg-gray-100 rounded-md
                                   cursor-default text-lg font-semibold hover:bg-gray-200
                                 `}
+                                onClick={() => setSelectedTeam(team)}
                     >
                       <div className="text-left">
                         <Typography variant="h5" marginBlock={1}>
