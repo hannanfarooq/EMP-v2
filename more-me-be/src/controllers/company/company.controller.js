@@ -250,3 +250,14 @@ export const FetchCompanyDataByid = async (id) => {
     throw error;
   }
 };
+
+//GetAllCompaniesForCompanyAdmin
+export const GetAllCompaniesForCompanyAdmin = async (req, res) => {
+  console.log("get companissssss>>>>>>>>>");
+  try {
+    const companies = await Company.findAll();
+    return successResponse(req, res, companies);
+  } catch (error) {
+    return errorResponse(req, res, error);
+  }
+}; 

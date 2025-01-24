@@ -285,12 +285,26 @@ const ProfilePage = () => {
           </Grid>
           <Grid item xs={12} sm={6}>
             <Box mb={2}>
-              <TextField
+              {/* <TextField
                 label="Date of Birth"
                 variant="outlined"
                 type="date"
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
+                fullWidth
+                placeholder="Select your date of birth"
+                required
+                InputLabelProps={{ shrink: true }}
+              /> */}
+              <TextField
+                label="Date of Birth"
+                variant="outlined"
+                type="date"
+                value={dob}
+                onChange={(e) => {
+                  setDob(e.target.value);
+                  e.target.blur(); // Programmatically blur the input to close the date picker on Safari
+                }}
                 fullWidth
                 placeholder="Select your date of birth"
                 required
@@ -379,7 +393,7 @@ const ProfilePage = () => {
                 </Grid>
                 <Grid item xs={12} sm={5}>
                   <Box mb={2}>
-                    <TextField
+                    {/* <TextField
                       label="Child DOB"
                       variant="outlined"
                       type="date"
@@ -388,7 +402,21 @@ const ProfilePage = () => {
                       fullWidth
                       placeholder="Select child's date of birth"
                       InputLabelProps={{ shrink: true }}
+                    /> */}
+                    <TextField
+                      label="Child DOB"
+                      variant="outlined"
+                      type="date"
+                      value={childrenDOBs[index]}
+                      onChange={(e) => {
+                        handleChildChange(index, "dob", e.target.value);
+                        e.target.blur(); // Programmatically blur the input to close the date picker on Safari
+                      }}
+                      fullWidth
+                      placeholder="Select child's date of birth"
+                      InputLabelProps={{ shrink: true }}
                     />
+
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={2}>
@@ -445,7 +473,7 @@ const ProfilePage = () => {
                   </Grid>
                   <Grid item xs={12} sm={5}>
                     <Box mb={2}>
-                      <TextField
+                      {/* <TextField
                         label="Spouse DOB"
                         variant="outlined"
                         type="date"
@@ -454,7 +482,21 @@ const ProfilePage = () => {
                         fullWidth
                         placeholder="Select spouse's date of birth"
                         InputLabelProps={{ shrink: true }}
+                      /> */}
+                      <TextField
+                        label="Spouse DOB"
+                        variant="outlined"
+                        type="date"
+                        value={spouse.dob}
+                        onChange={(e) => {
+                          handleSpouseChange("dob", e.target.value);
+                          e.target.blur(); // Programmatically blur the input to close the date picker on Safari
+                        }}
+                        fullWidth
+                        placeholder="Select spouse's date of birth"
+                        InputLabelProps={{ shrink: true }}
                       />
+
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={2}>

@@ -684,7 +684,7 @@ const EditPreferencePage = () => {
               <TextField
                 {...params}
                 variant="outlined"
-                label="Search inspirations"
+                label="Search inspirations and life principles"
                 placeholder="Inspirations"
                 error={!!inspirationsError || maxError}
                 helperText={inspirationsError || (maxError ? 'You can select a maximum of 5 inspirations' : '')}

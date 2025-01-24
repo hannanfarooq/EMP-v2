@@ -281,36 +281,27 @@
 
 
 
-
+////////////////////////////////////////////////////////////
 
 import * as React from "react";
 import { styled } from "@mui/material/styles";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
-import MuiAccordion, { AccordionProps } from "@mui/material/Accordion";
-import MuiAccordionSummary, { AccordionSummaryProps } from "@mui/material/AccordionSummary";
+import MuiAccordion from "@mui/material/Accordion";
+import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import Alert from "@mui/material/Alert";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import Typography from "@mui/material/Typography";
-import { Container, TextField } from "@mui/material"; // Import TextField
+import { Container, TextField } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
-import AlertTitle from "@mui/material/AlertTitle";
+import Snackbar from "@mui/material/Snackbar";
 
 import Iconify from "../components/iconify";
 import CardContent from "@mui/material/CardContent";
-import TransitionsModal from "src/components/modal";
-import AddPolicy from "src/components/company/policyForm";
-import Snackbar from "@mui/material/Snackbar";
-import {
-  getUserCompanyPolicy,
-  getUserProfile,
-  markPolicyAsRead,
-  updateUserPoints,
-} from "src/api"; // Import your API functions
+import { getUserCompanyPolicy, getUserProfile, updateUserPoints } from "src/api"; // Import your API functions
 
 const Accordion = styled((props) => (
   <MuiAccordion disableGutters elevation={0} square {...props} />
@@ -352,7 +343,7 @@ export default function UserPolicyPage() {
   const [expanded, setExpanded] = React.useState("");
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState([]);
-  const [searchQuery, setSearchQuery] = React.useState(""); // Add search query state
+  const [searchQuery, setSearchQuery] = React.useState("");
   const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
 
   // Use an array to store the IDs of policies that the user has opened
@@ -371,6 +362,7 @@ export default function UserPolicyPage() {
       : [];
     setUserOpenedPolicies(policies);
   };
+
   const handleChange = (panel) => (event, newExpanded) => {
     setExpanded(newExpanded ? panel : false);
   };
@@ -391,37 +383,34 @@ export default function UserPolicyPage() {
 
   // Function to handle marking a policy as read
   const handlePolicyRead = async (policyId, rewardPoints) => {
-    // Make an API call here to mark the policy as read
-    // You need to implement this API call
     const isPolicyExists = userOpenedPolicies.includes(policyId);
     if (!isPolicyExists) {
-      // Example:
       try {
-        // Replace 'markPolicyAsRead' with your API call function
-        // await markPolicyAsRead(policyId);
         await updateUserPoints(
           rewardPoints,
           storedUserData.user.id,
           policyId,
           storedUserData.token
         );
-        // Add the policyId to the userOpenedPolicies array
-
         setUserOpenedPolicies([...userOpenedPolicies, policyId]);
-
         setOpen(true);
       } catch (error) {
-        // Handle the error here
+        console.error("Error marking policy as read:", error);
       }
     }
   };
 
-  // Filter policies based on the search query
-  const filteredPolicies = data.filter((policy) =>
-    policy.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    policy.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
+  // Filter policies based on the search query (name, description, or extractedText)
+  const filteredPolicies = data.filter((policy) => {
+    const extractedText = policy.extractedText || ""; // Use extractedText as-is since the backend sends it as a string.
+  
+    return (
+      policy.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      policy.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      extractedText.toLowerCase().includes(searchQuery.toLowerCase()) // Include extractedText in the search
+    );
+  });
+  
   return (
     <Card>
       <Snackbar
@@ -446,10 +435,9 @@ export default function UserPolicyPage() {
           mb={5}
         >
           <Typography variant="h4" gutterBottom>
-            Policies2 <Iconify icon="iconoir:privacy-policy" />
+            Policies <Iconify icon="iconoir:privacy-policy" />
           </Typography>
         </Stack>
-        {/* Add the search bar */}
         <TextField
           label="Search Policies"
           variant="outlined"
@@ -464,7 +452,7 @@ export default function UserPolicyPage() {
               {filteredPolicies &&
                 filteredPolicies.map((policy, index) => (
                   <>
-                    {index % 2 == 0 && (
+                    {index % 2 === 0 && (
                       <Accordion
                         key={policy.id}
                         sx={{ mt: 2, mb: 2, borderRadius: "5px" }}
@@ -475,9 +463,7 @@ export default function UserPolicyPage() {
                           aria-controls={`panel${policy.id}-content`}
                           id={`panel${policy.id}-header`}
                           sx={{
-                            backgroundColor: userOpenedPolicies.includes(
-                              policy.id
-                            )
+                            backgroundColor: userOpenedPolicies.includes(policy.id)
                               ? "#CDFFCD"
                               : "#F0F0F0",
                           }}
@@ -487,25 +473,20 @@ export default function UserPolicyPage() {
                         <AccordionDetails>
                           <Typography>{policy.description}</Typography>
                           {policy.documentUrl && (
-                        <a href={policy.documentUrl} target="_blank">
-                          Policy Document
-                        </a>
-                      )}
+                            <a href={policy.documentUrl} target="_blank" rel="noopener noreferrer">
+                              View Policy Document
+                            </a>
+                          )}
                           <div className="flex w-100 justify-center mt-5">
                             {userOpenedPolicies.includes(policy.id) ? (
-                              <>
-                                <div>You read this policy</div>
-                              </>
+                              <div>You read this policy</div>
                             ) : (
                               <FormControlLabel
                                 control={<Checkbox />}
                                 label=" I have read the policy!"
                                 value={userOpenedPolicies.includes(policy.id)}
                                 onChange={() =>
-                                  handlePolicyRead(
-                                    policy.id,
-                                    policy.rewardPoints
-                                  )
+                                  handlePolicyRead(policy.id, policy.rewardPoints)
                                 }
                               />
                             )}
@@ -533,9 +514,7 @@ export default function UserPolicyPage() {
                           aria-controls={`panel${policy.id}-content`}
                           id={`panel${policy.id}-header`}
                           sx={{
-                            backgroundColor: userOpenedPolicies.includes(
-                              policy.id
-                            )
+                            backgroundColor: userOpenedPolicies.includes(policy.id)
                               ? "#CDFFCD"
                               : "#F0F0F0",
                           }}
@@ -544,22 +523,21 @@ export default function UserPolicyPage() {
                         </AccordionSummary>
                         <AccordionDetails>
                           <Typography>{policy.description}</Typography>
-                          {policy.documentUrl && <a href={policy.documentUrl} target="_blank">View Policy Document</a>}
+                          {policy.documentUrl && (
+                            <a href={policy.documentUrl} target="_blank" rel="noopener noreferrer">
+                              View Policy Document
+                            </a>
+                          )}
                           <div className="flex w-100 justify-center mt-5">
                             {userOpenedPolicies.includes(policy.id) ? (
-                              <>
-                                <div>You read this policy</div>
-                              </>
+                              <div>You read this policy</div>
                             ) : (
                               <FormControlLabel
                                 control={<Checkbox />}
                                 label=" I have read the policy!"
                                 value={userOpenedPolicies.includes(policy.id)}
                                 onChange={() =>
-                                  handlePolicyRead(
-                                    policy.id,
-                                    policy.rewardPoints
-                                  )
+                                  handlePolicyRead(policy.id, policy.rewardPoints)
                                 }
                               />
                             )}
@@ -574,5 +552,5 @@ export default function UserPolicyPage() {
         </Grid>
       </CardContent>
     </Card>
-  );
+  );  
 }

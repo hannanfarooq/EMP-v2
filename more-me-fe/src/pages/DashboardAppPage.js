@@ -115,19 +115,20 @@ export default function DashboardAppPage() {
   const [hobbies, setHobbies] = useState([]);
   const [interestTopics, setInterestTopics] = useState([]);
   const [contentPreferences, setContentPreferences] = useState([]);
+  const [lifePrinciple, setLifePrinciple] = useState([]);
   const [expandedTopic, setExpandedTopic] = useState(null);
   const [articles, setArticles] = useState([]);
   const [courses, setCourses] = useState([]);
   const [books, setBooks] = useState([]);
   const [videos, setVideos] = useState([]);
   const [podcasts, setPodcasts] = useState([]);
-  const [webinars, setWebinarss] = useState([]);
+  const [webinars, setWebinars] = useState([]);
 
   const [courseStartIndex, setCourseStartIndex] = useState(1); // Added state for course start index
   const [booksStartIndex, setBookStartIndex] = useState(1);
   const [videosStartIndex, setVideosStartIndex] = useState(1);
   const [podcastsStartIndex, setPodcastsStartIndex] = useState(1);
-  const { webinarsStartIndex, setWebinarSetUp } = useProfileSetUp(1);
+  const { webinarsStartIndex, setWebinarStartIndex } = useProfileSetUp(1);
   const { profileSetUp, setProfileSetUp } = useProfileSetUp(1);
   const [preferences, setPreferences] = useState([]);
 
@@ -358,12 +359,12 @@ export default function DashboardAppPage() {
             isCompanyUser
           ).then((res) => res.data);
 
-          // console.log("questionData:", questionData);
+          console.log("questionData:", questionData);
 
           // Ensure questionData is an array and has at least one element
           if (Array.isArray(questionData) && questionData.length > 0) {
             const contentPreferences = questionData[0]?.contentPreferences || [];
-            // console.log("contentPreferences:", contentPreferences);
+            console.log("contentPreferences:", contentPreferences);
 
             // Set preferences state
             setPreferences(contentPreferences);
@@ -391,7 +392,7 @@ export default function DashboardAppPage() {
 
             if (contentPreferences.includes("Webinars or conferences")) {
               // console.log("User prefers Webinars or conferences.");
-              //fetchWebinars();
+              fetchWebinars();
             }
 
             // If no preferences are selected
@@ -400,6 +401,10 @@ export default function DashboardAppPage() {
             }
 
             // Extract hobbies, interest topics, and content preferences
+            const lifePrincipleData = questionData 
+              .map((q) => (Array.isArray(q.lifePrincipleInspirations) ? q.lifePrincipleInspirations : q.lifePrincipleInspirations.split(',')))
+              .flat()
+              .filter(Boolean);
             const hobbiesData = questionData
               .map((q) => (Array.isArray(q.hobbies) ? q.hobbies : q.hobbies.split(',')))
               .flat()
@@ -419,12 +424,13 @@ export default function DashboardAppPage() {
             setHobbies(hobbiesData);
             setInterestTopics(interestsData);
             setContentPreferences(contentPreferencesData);
-            console.log("hobbies>>>>>>>>>>", hobbies);
+            setLifePrinciple(lifePrincipleData);
 
             localStorage.setItem('userHobbies', JSON.stringify(hobbiesData));
             localStorage.setItem('userInterestTopics', JSON.stringify(interestsData));
             localStorage.setItem('userContentPreferences', JSON.stringify(contentPreferencesData));
-
+            localStorage.setItem('userLifePrinciples', JSON.stringify(lifePrincipleData));
+            
             // Profile setup check
             if (questionData.length > 0) {
               setProfileSetUp(true);
@@ -476,7 +482,6 @@ export default function DashboardAppPage() {
       return;
     }
     try {
-      console.log("hobbies>>>>>>>>>>>>>--------->>", hobbies)
       const result = await getArticlesFromTopicAndContentPref({ topic, contentPreferences, hobbies });
       if (result && result.items) {
         const filteredArticles = result.items.slice(0, 3);
@@ -491,12 +496,13 @@ export default function DashboardAppPage() {
   };
 
   const fetchCourses = async (startIndex = 1) => {
-    // console.log("topic---", interestTopics);
-    // console.log("contentPreferences", contentPreferences);
-    if (interestTopics.length > 0 && contentPreferences.length > 0) {
+    console.log("interestTopics->", interestTopics);
+    console.log("contentPreferences->", contentPreferences);
+    console.log("hobbies->", hobbies);
+    console.log("lifePrinciple->", lifePrinciple); 
+    if (interestTopics.length > 0 && contentPreferences.length > 0 && lifePrinciple.length > 0) {
       try {
-        console.log("hoobies data->->->->->", hobbies);
-        const result = await getArticlesFromTopicAndContentPref({ topic: interestTopics.join(' '), contentPreferences, hobbies, start: startIndex });
+        const result = await getArticlesFromTopicAndContentPref({ topic: interestTopics.join(',') +','+ lifePrinciple.join(','), contentPreferences, hobbies, start: startIndex });
         console.log("getArticlesFromTopicAndContentPref: ", result);
         if (result && result.items) {
           if (startIndex === 1) {
@@ -523,7 +529,7 @@ export default function DashboardAppPage() {
     if (interestTopics.length > 0) {
       try {
         // Combine the interest topics into a single search query
-        const topicQuery = interestTopics.join(' ');
+        const topicQuery = interestTopics.join(',') +','+ lifePrinciple.join(',') +','+ hobbies.join(',');
 
         // Call the getBooks function with the combined topic query
         const booksResult = await getBooks(topicQuery);
@@ -561,8 +567,8 @@ export default function DashboardAppPage() {
     if (interestTopics.length > 0) {
       try {
         // Combine the interest topics into a single search query
-        const topicQuery = interestTopics.join(' ');
-
+        const topicQuery = interestTopics.join(',') +','+ lifePrinciple.join(',') +','+ hobbies.join(',');
+        console.log("topicQuery for videos:>", topicQuery);
         // Call the getBooks function with the combined topic query
         const videosResult = await getVideos(topicQuery);
         console.log("Videos results", videosResult);
@@ -595,12 +601,50 @@ export default function DashboardAppPage() {
   };
 
   //fetch videosResult
+  const fetchWebinars = async (startIndex = 1) => {
+    console.log("podcasts fetcing..........");
+    if (interestTopics.length > 0) {
+      try {
+        // Combine the interest topics into a single search query
+        const topicQuery = interestTopics.join(',') +','+ lifePrinciple.join(',') +','+ hobbies.join(',');
+
+        // Call the getBooks function with the combined topic query
+        const webinarsResult = await getWebinars(topicQuery);
+        console.log("webinars results", webinarsResult);
+
+        if (webinarsResult && webinarsResult.length > 0) {
+          // If it's the first page of results, set the books directly
+          if (startIndex === 1) {
+            setWebinars(webinarsResult);
+          } else {
+            // Append new results to the existing list of books
+            setWebinars((prevWebinars) => [...prevWebinars, ...webinarsResult]);
+          }
+        } else {
+          toast.error('No podcasts found for the given topics.');
+        }
+      } catch (error) {
+        console.error('Error while fetching podcasts:', error);
+        toast.error('Error while fetching podcasts.');
+      }
+    } else {
+      // toast.error('No interest topics provided for video search.');
+    }
+  };
+  const handleLoadMoreWebinars = () => {
+    setWebinarStartIndex((prevStartIndex) => {
+      const newIndex = prevStartIndex + 10;
+      fetchWebinars(newIndex);
+      return newIndex;
+    });
+  };
+  //fetch videosResult
   const fetchPodcasts = async (startIndex = 1) => {
     console.log("podcasts fetcing..........");
     if (interestTopics.length > 0) {
       try {
         // Combine the interest topics into a single search query
-        const topicQuery = interestTopics.join(' ');
+        const topicQuery = interestTopics.join(',') +','+ lifePrinciple.join(',') +','+ hobbies.join(',');
 
         // Call the getBooks function with the combined topic query
         const podcastsResult = await getPodcasts(topicQuery);
@@ -632,44 +676,6 @@ export default function DashboardAppPage() {
       return newIndex;
     });
   };
-  //fetch videosResult
-  // const fetchWebinars = async (startIndex = 1) => {
-  //   console.log("podcasts fetcing..........");
-  //   if (interestTopics.length > 0) {
-  //     try {
-  //       // Combine the interest topics into a single search query
-  //       const topicQuery = interestTopics.join(' ');
-
-  //       // Call the getBooks function with the combined topic query
-  //       const webinarsResult = await getWebinars(topicQuery);
-  //       console.log("webinar results", webinarsResult);
-
-  //       if (webinarsResult && webinarsResult.length > 0) {
-  //         // If it's the first page of results, set the books directly
-  //         if (startIndex === 1) {
-  //           setPodcasts(webinarsResult);
-  //         } else {
-  //           // Append new results to the existing list of books
-  //           setPodcasts((prevWebinars) => [...prevWebinars, ...webinarsResult]);
-  //         }
-  //       } else {
-  //         toast.error('No webinars found for the given topics.');
-  //       }
-  //     } catch (error) {
-  //       console.error('Error while fetching webinars:', error);
-  //       toast.error('Error while fetching webinars.');
-  //     }
-  //   } else {
-  //     // toast.error('No interest topics provided for video search.');
-  //   }
-  // };
-  // const handleLoadMoreWebinars = () => {
-  //   setPodcastsStartIndex((prevStartIndex) => {
-  //     const newIndex = prevStartIndex + 10;
-  //     fetchWebinars(newIndex);
-  //     return newIndex;
-  //   });
-  // };
 
     // Function to handle opening the popover for a specific card
     const handleOpenMenu = (event, cardId) => {
@@ -796,7 +802,7 @@ export default function DashboardAppPage() {
       <Container maxWidth="xl">
         <Grid container spacing={3}>
           <Grid item xs={12} md={6} lg={12}>
-            {['admin', 'super-admin'].includes(user.role) ? (
+            {['admin', 'company-super-admin'].includes(user.role) ? (
               <AppWebsiteVisits
                 title="Employees Onboarded by Companies"
                 subheader="(+43%) than last year"
@@ -1190,7 +1196,10 @@ export default function DashboardAppPage() {
                             background={podcast.image || backgroundImagePath}
                             onClick={handleLinkClick} // Prevent link navigation when clicking IconButton
                           >
-                            <ArticleTitle variant="h6">{podcast.title}</ArticleTitle>
+                            <ArticleTitle style={{
+                              whiteSpace: "nowrap",
+                              overflow: "hidden", textOverflow: "ellipsis"
+                            }} variant="h6">{podcast.title}</ArticleTitle>
                           </ArticleCard>
                         </Card>
                       </Grid>
@@ -1202,6 +1211,80 @@ export default function DashboardAppPage() {
                     fullWidth
                     color="secondary"
                     onClick={handleLoadMorePodcasts}
+                    sx={{ mt: 2, mb: 1 }}
+                  >
+                    Load More
+                  </Button>
+
+                </Box>
+              </Card>
+            </Grid>
+          )}
+
+          {/* For Webinar */}
+          {preferences.includes("Webinars or conferences") && webinars.length > 0 && (
+            <Grid item xs={12} md={12} lg={6}>
+              <Card>
+                <CardHeader title="Webinars You Might Be Interested In" />
+                <Box sx={{ p: 4, pb: 4, flexWrap: 'wrap', alignItems: 'center' }} dir="ltr">
+                  <Grid container spacing={2}>
+                    {webinars.map((webinar, index) => (
+                      <Grid item xs={12} md={6} key={index}>
+                        <Card sx={{ textAlign: "end" }}>
+                          <IconButton onClick={(event) => handleOpenMenu(event, webinar.id || index)}>
+                            <Iconify icon="eva:more-vertical-fill" width={20} height={20} />
+                          </IconButton>
+
+                          {/* Popover with options outside the ArticleCard */}
+                          <Popover
+                            // open={Boolean(open)}
+                            // anchorEl={open}
+                            // onClose={handleCloseMenu}
+                            open={Boolean(anchorElMap[webinar.id || index])}
+                            anchorEl={anchorElMap[webinar.id || index]}
+                            onClose={() => handleCloseMenu(webinar.id || index)}
+                            anchorOrigin={{ vertical: "top", horizontal: "left" }}
+                            transformOrigin={{ vertical: "top", horizontal: "right" }}
+                            PaperProps={{
+                              sx: {
+                                boxShadow: "none",
+                                p: 1,
+                                // width: 140,
+                                "& .MuiMenuItem-root": {
+                                  typography: "body2",
+                                  borderRadius: 0.75,
+                                },
+                              },
+                            }}
+                          >
+                         <MenuItem onClick={() => handleShare(webinar.link, webinar.id || index)}>
+                              <Iconify icon={"eva:share-fill"} sx={{ mr: 2 }} />
+                              Share
+                            </MenuItem>
+                          </Popover>
+                          <ArticleCard
+                            component="a"
+                            href={webinar.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            background={webinar.image || backgroundImagePath}
+                            onClick={handleLinkClick} // Prevent link navigation when clicking IconButton
+                          >
+                            <ArticleTitle style={{
+                              whiteSpace: "nowrap",
+                              overflow: "hidden", textOverflow: "ellipsis"
+                            }} variant="h6">{webinar.title}</ArticleTitle>
+                          </ArticleCard>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+
+                  <Button
+                    type="button"
+                    fullWidth
+                    color="secondary"
+                    onClick={handleLoadMoreWebinars}
                     sx={{ mt: 2, mb: 1 }}
                   >
                     Load More

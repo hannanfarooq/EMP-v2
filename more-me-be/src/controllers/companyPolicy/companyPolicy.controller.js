@@ -12,17 +12,39 @@ export const createCompanyPolicy = async (req, res) => {
   }
 };
 
+// export const getCompanyPolicy = async (req, res) => {
+//   try {
+//     const { companyId } = req.body;
+//     // console.log("companyId in be controller", companyId)
+//     const companies = await CompanyPolicy.findAll({ where: { companyId } });
+//     return successResponse(req, res, companies);
+//   } catch (error) {
+//     return errorResponse(req, res, error);
+//     throw error;
+//   }
+// };
+
 export const getCompanyPolicy = async (req, res) => {
   try {
     const { companyId } = req.body;
-    // console.log("companyId in be controller", companyId)
+    
+    // Fetch policies from the database
     const companies = await CompanyPolicy.findAll({ where: { companyId } });
-    return successResponse(req, res, companies);
+
+    // Convert extractedText from binary (BLOB) to a UTF-8 string
+    const formattedCompanies = companies.map((policy) => ({
+      ...policy.toJSON(),
+      extractedText: policy.extractedText ? policy.extractedText.toString("utf-8") : "",
+    }));
+
+    // Return the formatted policies
+    return successResponse(req, res, formattedCompanies);
   } catch (error) {
     return errorResponse(req, res, error);
     throw error;
   }
 };
+
 
 export const updateCompanyPolicy = async (req, res) => {
   try {

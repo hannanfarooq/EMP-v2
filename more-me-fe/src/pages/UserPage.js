@@ -644,7 +644,7 @@ export default function UserPage() {
               gap={2}
               padding="10px"
               sx={{
-                background: "linear-gradient(90deg, #00796b, #004d40)", // Gradient background
+                background: "#2065D1", // Gradient background
                 borderRadius: "12px",
                 color: "white",
                 boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",

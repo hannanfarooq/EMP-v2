@@ -277,7 +277,7 @@ const Q5 = ({ handleNext, handleAnswerChange }) => {
                 helperText={error && childrenNames[index] === '' ? 'Name is required' : ''}
                 sx={error && childrenNames[index] === '' ? { animation: `${vibration} 0.3s ease` } : {}}
               />
-              <TextField
+              {/* <TextField
                 type='date'
                 label={`Child ${index + 1} Date of Birth`}
                 value={childrenDOBs[index]}
@@ -289,6 +289,22 @@ const Q5 = ({ handleNext, handleAnswerChange }) => {
                 error={error && childrenDOBs[index] === ''}
                 helperText={error && childrenDOBs[index] === '' ? 'Date of birth is required' : ''}
                 sx={error && childrenDOBs[index] === '' ? { animation: `${vibration} 0.3s ease` } : {}}
+              /> */}
+              <TextField
+                type="date"
+                label={`Child ${index + 1} Date of Birth`}
+                value={childrenDOBs[index]}
+                onChange={(e) => {
+                  handleDOBChange(index, e.target.value);
+                  e.target.blur(); // Programmatically blur the input to close the date picker on Safari
+                }}
+                InputLabelProps={{ shrink: true }}
+                inputProps={{ max: today }}
+                margin="normal"
+                required
+                error={error && childrenDOBs[index] === ""}
+                helperText={error && childrenDOBs[index] === "" ? "Date of birth is required" : ""}
+                sx={error && childrenDOBs[index] === "" ? { animation: `${vibration} 0.3s ease` } : {}}
               />
             </Box>
           ))}

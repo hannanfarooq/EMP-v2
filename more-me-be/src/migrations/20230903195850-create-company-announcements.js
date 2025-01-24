@@ -21,10 +21,10 @@ module.exports = {
       },
       documentUrls: {
         type: Sequelize.JSON,
-        allowNull: true,
+        allowNull: true, 
         defaultValue: [],
       },
-      imageUrls:{
+      imageUrls: {
         type: Sequelize.JSON,
         allowNull: true,
         defaultValue: [],

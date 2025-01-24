@@ -23,6 +23,7 @@ import {
 import { updateCompanyPolicyValidator } from "../controllers/companyPolicy/companyPolicy.validator";
 
 import { updateCompanyAnnouncementValidator } from "../controllers/companyAnnouncement/companyAnnouncement.validator";
+import { GetAllCompaniesForCompanyAdmin } from "../controllers/company/company.controller";
 
 const router = express.Router();
 
@@ -68,6 +69,8 @@ router.post("/updateUser", userController.updateUser);
 router.delete("/deleteUserById", userController.deleteUserById);
 //deleteDynamicQuestion
 router.delete("/deleteDynamicQuestion", questionController.deleteDynamicQuestion);
+router.get("/GetAllCompaniesForCompanyAdmin", GetAllCompaniesForCompanyAdmin);
+
 
 //get all questionnaire based on specific company
 router.get("/getQuestionnaire/:companyId", questionController.getQuestionnaire);

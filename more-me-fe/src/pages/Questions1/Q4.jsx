@@ -113,6 +113,25 @@
         <h2 className='text-l font-semibold text-slate-700 mt-3 mb-6'>Question No 4: Tell us your date of birth?</h2>
         <p className='text-l font-semibold text-slate-700 mt-3 mb-6'>Select your date of birth.</p>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          {/* <TextField
+            id="date"
+            label="Date of Birth"
+            type="date"
+            value={dateOfBirth}
+            onChange={(e) => {
+              setDateOfBirth(e.target.value);
+              setError(false);
+            }}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            inputProps={{
+              max: today, // Disable future dates
+            }}
+            error={error}
+            helperText={error ? "Date of birth is required" : ""}
+            sx={error ? { animation: `${vibration} 0.3s ease` } : {}}
+          /> */}
           <TextField
             id="date"
             label="Date of Birth"
@@ -121,6 +140,7 @@
             onChange={(e) => {
               setDateOfBirth(e.target.value);
               setError(false);
+              e.target.blur(); // Programmatically remove focus to close the date picker in Safari
             }}
             InputLabelProps={{
               shrink: true,

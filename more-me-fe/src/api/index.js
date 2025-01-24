@@ -1536,10 +1536,24 @@ export const inviteBulkUsers = async (token, usersData) => {
   return res.json();
 };
 
+export const GetAllCompaniesForCompanyAdmin = async (token) => {
+  const apiUrl = "/api/companyAdmin/GetAllCompaniesForCompanyAdmin";
+  console.log("token", token);
+
+  const res = await fetch(baseURL + apiUrl, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+  });
+  return res.json();
+};
+
 // create company policy
 export const createCompanyPolicy = async (data, token) => {
   const apiUrl = "/api/companyAdmin/createCompanyPolicy";
-
+  console.log("policy data", data);
   const res = await fetch(baseURL + apiUrl, {
     method: "POST",
     headers: {
@@ -3102,14 +3116,14 @@ export const getArticlesFromTopicAndContentPref = async ({ topic, contentPrefere
   //old api key=AIzaSyC3FVIBTpZUcwYI16HR1K9eu8TktccL6Dw
   //new cx=06a74ca2383b64e43
   //old cx=430d5a3e4f6f644f4
-  console.log("hobbiesData in index.js file", hobbies);
-  // console.log("topic", topic);
+  //console.log("hobbiesData in index.js file", hobbies);
+  console.log("topic for getArticlesFromTopicAndContentPref", topic);
   // console.log("contentPreferences", contentPreferences);
   const apiKey = "AIzaSyC3FVIBTpZUcwYI16HR1K9eu8TktccL6Dw";
   const cx = "430d5a3e4f6f644f4";
   const numResults = 10;
   // const searchParams = `${topic} ${contentPreferences.join(' ')}`;
-  const searchParams = `${topic} ${hobbies.join(' ')}`;
+  const searchParams = `${topic} ',' ${hobbies.join(',')}`;
   const url = `https://customsearch.googleapis.com/customsearch/v1?cx=${cx}&q=${encodeURIComponent(searchParams)}&key=${apiKey}&num=${numResults}&start=${start}`;
 
   const fetchWithRetry = async (url, retries = 3, delay = 1000) => {
@@ -3337,58 +3351,172 @@ export const getVideos = async (topic) => {
 };
 // Fetch Podcasts
 
-export const getPodcasts = async (topic, numResults = 10) => {
-  const graphqlUrl = "https://api.podchaser.com/graphql";
-  const BearerPodcastApi = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5ZDdhNGEzYS1iNDQwLTQ4M2YtYjI4Mi02OGU1NjRjNTA1ZWMiLCJqdGkiOiJiZDNlMDU0OWMxY2Y4YWQ1MGYyYzc4Y2Y5M2RmMDRlODU2ODEwZDY3YzM2ODUzZGYzNTQyMzVmZDljMzU4MjViZWE1M2FkNmZjM2VjMTE0NiIsImlhdCI6MTczMTUwNjY2Ni44NTE4MjYsIm5iZiI6MTczMTUwNjY2Ni44NTE4MjgsImV4cCI6MTc2MzA0MjY2Ni44NDE1OTIsInN1YiI6IiIsInNjb3BlcyI6WyIqIl19.nic6eB0G1INAv7RlzF5EzrffedLNsWJa4e8wxUCirf4178Ob4EnsMX2OtGyVifskgUFOJ27AqkS6mcy0QKLHWKbV7LqIjvVeyHcY8_6bSB9OIWyKxiSVoqYYz4g1JwT1b63p-F4ztH3l7GgVBBiaXq5g3TpnnAfw2KQ50IcNnztveiHfI3IK0H9gk1e2IQG3OBFwg790u7-d4YD3B1Iv_mc-m1X7yB2B3tPV5w7DMJB4ztxPBaFLSLElgnUbrkobRoTT6v4XIKempaKSYPpwlMsmP_9vl4Ds35y0kgqvH7-FM6jsAI8W9OQgGmUG7UEVyroJU5wAstauWgNE-OIfZvYS9yhBlVk70Hy2-Yo3m2xJLw4yZXvTFgpHl9ahTAO1J--d0oTsV0y5S4-q7vgRu5xh1CfNuq66OMUtYzw3BlLl-Q2Mlmxb0or0LQjarO8M-DdLcepK99mqvhRt29gmc0NZlo27foghduA9N-4zG2f0sJnZrM7l09D_OBuWoVVrY-BR2rUK-32RIKxnfx3GVZSwM9hgMIiXkulaxrxf0U-SRlRmV_yMC9gn7RRZSlpJukXIzyDbH6-4SlDDYzo3OG5JQn6NY6e5lgaQaG0g-hmBcQV-WwpJllnrPRxg7bbCqLZ4kV8RO4amCIdbL2-ivgmcWfeFLIEs98nrknIUWC8";
+// export const getPodcasts = async (topic, numResults = 10) => {
+//   console.log("topic for podcast", topic);
+//   const graphqlUrl = "https://api.podchaser.com/graphql";
+//   const BearerPodcastApi = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5ZDdhNGEzYS1iNDQwLTQ4M2YtYjI4Mi02OGU1NjRjNTA1ZWMiLCJqdGkiOiJiZDNlMDU0OWMxY2Y4YWQ1MGYyYzc4Y2Y5M2RmMDRlODU2ODEwZDY3YzM2ODUzZGYzNTQyMzVmZDljMzU4MjViZWE1M2FkNmZjM2VjMTE0NiIsImlhdCI6MTczMTUwNjY2Ni44NTE4MjYsIm5iZiI6MTczMTUwNjY2Ni44NTE4MjgsImV4cCI6MTc2MzA0MjY2Ni44NDE1OTIsInN1YiI6IiIsInNjb3BlcyI6WyIqIl19.nic6eB0G1INAv7RlzF5EzrffedLNsWJa4e8wxUCirf4178Ob4EnsMX2OtGyVifskgUFOJ27AqkS6mcy0QKLHWKbV7LqIjvVeyHcY8_6bSB9OIWyKxiSVoqYYz4g1JwT1b63p-F4ztH3l7GgVBBiaXq5g3TpnnAfw2KQ50IcNnztveiHfI3IK0H9gk1e2IQG3OBFwg790u7-d4YD3B1Iv_mc-m1X7yB2B3tPV5w7DMJB4ztxPBaFLSLElgnUbrkobRoTT6v4XIKempaKSYPpwlMsmP_9vl4Ds35y0kgqvH7-FM6jsAI8W9OQgGmUG7UEVyroJU5wAstauWgNE-OIfZvYS9yhBlVk70Hy2-Yo3m2xJLw4yZXvTFgpHl9ahTAO1J--d0oTsV0y5S4-q7vgRu5xh1CfNuq66OMUtYzw3BlLl-Q2Mlmxb0or0LQjarO8M-DdLcepK99mqvhRt29gmc0NZlo27foghduA9N-4zG2f0sJnZrM7l09D_OBuWoVVrY-BR2rUK-32RIKxnfx3GVZSwM9hgMIiXkulaxrxf0U-SRlRmV_yMC9gn7RRZSlpJukXIzyDbH6-4SlDDYzo3OG5JQn6NY6e5lgaQaG0g-hmBcQV-WwpJllnrPRxg7bbCqLZ4kV8RO4amCIdbL2-ivgmcWfeFLIEs98nrknIUWC8";
 
-  const headers = {
-    'Authorization': `Bearer ${BearerPodcastApi}`,
-    'Content-Type': 'application/json',
-  };
+//   const headers = {
+//     'Authorization': `Bearer ${BearerPodcastApi}`,
+//     'Content-Type': 'application/json',
+//   };
 
-  const query = `
-    query {
-      podcasts{
-        data {
-          title
-          description
-          imageUrl
-          url
-        }
-      }
-    }
-  `;
+//   const query = `
+//     query {
+//       podcasts{
+//         data {
+//           title
+//           description
+//           imageUrl
+//           url
+//         }
+//       }
+//     }
+//   `;
 
-  const body = JSON.stringify({ query });
+//   const body = JSON.stringify({ query });
 
+//   try {
+//     const response = await fetch(graphqlUrl, {
+//       method: 'POST',
+//       headers,
+//       body,
+//     });
+
+//     if (!response.ok) {
+//       console.error('Error response from Podchaser API:', response.status, response.statusText);
+//       return [];
+//     }
+
+//     const data = await response.json();
+//     console.log('API Response Data:', data);
+
+//     // Extract podcast data
+//     return data.data?.podcasts?.data?.map((item) => ({
+//       title: item.title,
+//       description: item.description,
+//       image: item.imageUrl,
+//       link: item.url,
+//       type: 'Podcast',
+//     })) || [];
+//   } catch (error) {
+//     console.error('Error fetching podcasts:', error);
+//     return [];
+//   }
+// };
+
+// Fetch Videos
+export const getPodcasts = async (topic) => {
+  // Add the word "podcast" to each topic
+  const topicsWithPodcast = topic
+    .split(",")
+    .map((topic) => `${topic.trim()} podcast`)
+    .join(" | "); // Use " | " for OR search in YouTube Data API
+    console.log("topics for podcasts:", topicsWithPodcast);
+  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topicsWithPodcast)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=${numResults}`;
   try {
-    const response = await fetch(graphqlUrl, {
-      method: 'POST',
-      headers,
-      body,
-    });
-
-    if (!response.ok) {
-      console.error('Error response from Podchaser API:', response.status, response.statusText);
-      return [];
-    }
-
-    const data = await response.json();
-    console.log('API Response Data:', data);
-
-    // Extract podcast data
-    return data.data?.podcasts?.data?.map((item) => ({
-      title: item.title,
-      description: item.description,
-      image: item.imageUrl,
-      link: item.url,
-      type: 'Podcast',
+    const response = await fetchWithRetry(youtubeSearchUrl);
+    console.log("podcast results", response);
+    console.log("video response", response);
+    return response.items?.map((item) => ({
+      title: item.snippet.title,
+      link: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+      image: item.snippet.thumbnails.default.url,
+      type: 'Video',
     })) || [];
   } catch (error) {
-    console.error('Error fetching podcasts:', error);
+    console.error('Error fetching videos:', error);
     return [];
   }
 };
+
+// Fetch webinars
+export const getWebinars = async (topic) => {
+  // Add the word "podcast" to each topic
+  const topicsWithWebinars = topic
+    .split(",")
+    .map((topic) => `${topic.trim()} webinar`)
+    .join(" | "); // Use " | " for OR search in YouTube Data API
+    console.log("topics for podcasts:", topicsWithWebinars);
+  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topicsWithWebinars)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=${numResults}`;
+  try {
+    const response = await fetchWithRetry(youtubeSearchUrl);
+    console.log("webinar results", response);
+    return response.items?.map((item) => ({
+      title: item.snippet.title,
+      link: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+      image: item.snippet.thumbnails.default.url,
+      type: 'Video',
+    })) || [];
+  } catch (error) {
+    console.error('Error fetching videos:', error);
+    return [];
+  }
+};
+// export const getPodcasts = async (topics, numResults = 10) => {
+//   const graphqlUrl = "https://api.podchaser.com/graphql";
+//   const BearerPodcastApi = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5ZDdhNGEzYS1iNDQwLTQ4M2YtYjI4Mi02OGU1NjRjNTA1ZWMiLCJqdGkiOiJiZDNlMDU0OWMxY2Y4YWQ1MGYyYzc4Y2Y5M2RmMDRlODU2ODEwZDY3YzM2ODUzZGYzNTQyMzVmZDljMzU4MjViZWE1M2FkNmZjM2VjMTE0NiIsImlhdCI6MTczMTUwNjY2Ni44NTE4MjYsIm5iZiI6MTczMTUwNjY2Ni44NTE4MjgsImV4cCI6MTc2MzA0MjY2Ni44NDE1OTIsInN1YiI6IiIsInNjb3BlcyI6WyIqIl19.nic6eB0G1INAv7RlzF5EzrffedLNsWJa4e8wxUCirf4178Ob4EnsMX2OtGyVifskgUFOJ27AqkS6mcy0QKLHWKbV7LqIjvVeyHcY8_6bSB9OIWyKxiSVoqYYz4g1JwT1b63p-F4ztH3l7GgVBBiaXq5g3TpnnAfw2KQ50IcNnztveiHfI3IK0H9gk1e2IQG3OBFwg790u7-d4YD3B1Iv_mc-m1X7yB2B3tPV5w7DMJB4ztxPBaFLSLElgnUbrkobRoTT6v4XIKempaKSYPpwlMsmP_9vl4Ds35y0kgqvH7-FM6jsAI8W9OQgGmUG7UEVyroJU5wAstauWgNE-OIfZvYS9yhBlVk70Hy2-Yo3m2xJLw4yZXvTFgpHl9ahTAO1J--d0oTsV0y5S4-q7vgRu5xh1CfNuq66OMUtYzw3BlLl-Q2Mlmxb0or0LQjarO8M-DdLcepK99mqvhRt29gmc0NZlo27foghduA9N-4zG2f0sJnZrM7l09D_OBuWoVVrY-BR2rUK-32RIKxnfx3GVZSwM9hgMIiXkulaxrxf0U-SRlRmV_yMC9gn7RRZSlpJukXIzyDbH6-4SlDDYzo3OG5JQn6NY6e5lgaQaG0g-hmBcQV-WwpJllnrPRxg7bbCqLZ4kV8RO4amCIdbL2-ivgmcWfeFLIEs98nrknIUWC8";
+
+//   const headers = {
+//     Authorization: `Bearer ${BearerPodcastApi}`,
+//     "Content-Type": "application/json",
+//   };
+
+//   const query = `
+//     query($filter: PodcastFilters, $first: Int!) {
+//       podcasts(filters: $filter, first: $first) {
+//         data {
+//           title
+//           description
+//           imageUrl
+//           url
+//         }
+//       }
+//     }
+//   `;
+
+//   const variables = {
+//     filter: { categories: topics.split(",") }, // Replace 'categories' with the correct field
+//     first: numResults,
+//   };
+
+//   const body = JSON.stringify({ query, variables });
+
+//   try {
+//     const response = await fetch(graphqlUrl, {
+//       method: "POST",
+//       headers,
+//       body,
+//     });
+
+//     if (!response.ok) {
+//       console.error(
+//         "Error response from Podchaser API:",
+//         response.status,
+//         response.statusText
+//       );
+//       return [];
+//     }
+
+//     const data = await response.json();
+//     console.log("API Response Data:", data);
+
+//     // Extract podcast data
+//     return (
+//       data.data?.podcasts?.data?.map((item) => ({
+//         title: item.title,
+//         description: item.description,
+//         image: item.imageUrl,
+//         link: item.url,
+//         type: "Podcast",
+//       })) || []
+//     );
+//   } catch (error) {
+//     console.error("Error fetching podcasts:", error);
+//     return [];
+//   }
+// };
+
 
 
 
