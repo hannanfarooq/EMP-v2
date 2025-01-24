@@ -487,25 +487,25 @@ const Q13 = ({ handleNext, handleAnswerChange }) => {
                   },
                 }}
               >
-                <CardMedia
+                {/* <CardMedia
                   component="img"
                   image={book.imageLink}
                   alt={book.title}
                   sx={{ height: 150, borderRadius: 2 }}
-                />
+                /> */}
                 <CardContent sx={{ flex: '1 0 auto', overflow: 'hidden' }}>
-                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {/* <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {book.title}
-                  </Typography>
+                  </Typography> */}
                   <Typography variant="body2">
                     <strong>Author:</strong> {book.author}
                   </Typography>
                   <Typography variant="body2">
                     <strong>Categories:</strong> {book.categories}
                   </Typography>
-                  <Typography variant="body2">
+                  {/* <Typography variant="body2">
                     <strong>Year:</strong> {book.year}
-                  </Typography>
+                  </Typography> */}
                 </CardContent>
                 <IconButton
                   onClick={(e) => {

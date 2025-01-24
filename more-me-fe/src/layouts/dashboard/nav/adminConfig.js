@@ -77,7 +77,7 @@ const adminConfig = [
   // },
   {
     title: "Chat",
-    path: "/dashboard/chat",
+    path: "/dashboard/chat-company",
     icon: <QuestionAnswerOutlinedIcon />,
   },
   {

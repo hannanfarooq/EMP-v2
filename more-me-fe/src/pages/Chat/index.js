@@ -176,6 +176,11 @@ export default function ChatPage() {
   const queryClient = useQueryClient();
   const { data: chatRequests, isLoading: chatRequestsLoading } = useQuery('chatRequests', () => getChatRequests(currentUser.token));
 
+  const [tooltipOpengroup, setTooltipOpengroup] = useState(false);
+  const [tooltipOpenchat, setTooltipOpenchat] = useState(false);
+  const [tooltipOpenrequest, setTooltipOpenrequest] = useState(false);
+  const [tooltipOpenblock, setTooltipOpenblock] = useState(false);
+
   const handleOpengroup = () => setOpenTransitongroup(true);
   const handleClosegroup = () => setOpenTransitongroup(false);
   const handleOpenuser = () => setOpenTransitonuser(true);
@@ -244,18 +249,31 @@ export default function ChatPage() {
               </Badge>
               </Grid>
               <Grid item>
-                <Tooltip style={{color:"red"}} title="Create Group Chat">
+  <Tooltip
+    title="Create Group Chat"
+    open={tooltipOpengroup}
+    onClose={() => setTooltipOpengroup(false)}
+    onOpen={() => setTooltipOpengroup(true)}
+  >
+                 <div onClick={() => setTooltipOpengroup(false)}>
                   <ChatTransitionsModal
+                  
                     icon={<Iconify icon="el:group" style={{ color: `#625555` }} />}
                     open={openTransitiongroup}
                     handleClose={handleClosegroup}
                     handleOpen={handleOpengroup}
                     component={<CreateGroupChat fetchGroupChats={getAllCompanyUser} handleClosegroup={handleClosegroup}/>}
                   />
+                  </div>
                 </Tooltip>
               </Grid>
               <Grid item>
-                <Tooltip title="Add User">
+                <Tooltip title="Contact User"
+                open={tooltipOpenchat}
+                onClose={() => setTooltipOpenchat(false)}
+                onOpen={() => setTooltipOpenchat(true)}
+              >
+                             <div onClick={() => setTooltipOpenchat(false)}>
                   <ChatTransitionsModal
                     icon={<Iconify icon="mdi:user-add" style={{ color: `#625555` }} />}
                     open={openTransitionuser}
@@ -263,10 +281,14 @@ export default function ChatPage() {
                     handleOpen={handleOpenuser}
                     component={<SingleUserChat fetchGroupChats={getAllCompanyUser}  handleCloseuser={handleCloseuser}/>}
                   />
+                  </div>
                 </Tooltip>
               </Grid>
               <Grid item>
-                <Tooltip title="Chat Requests">
+                <Tooltip title="Chat Requests"
+            
+             >
+                            <div >
                   <Badge badgeContent={chatRequests?.length} color="primary">
                     <ChatTransitionsModal
                       open={openTransitionrequest}
@@ -277,10 +299,14 @@ export default function ChatPage() {
                       maxWidth="sm"
                     />
                   </Badge>
+                  </div>
                 </Tooltip>
               </Grid>
               <Grid item>
-                <Tooltip title="Block User">
+                <Tooltip title="Block User"
+             
+             >
+                            <div >
                   <ChatTransitionsModal
                     open={openTransitionBlock}
                     icon={<Iconify icon="mdi:user-block" style={{ color: `#625555` }} />}
@@ -289,6 +315,7 @@ export default function ChatPage() {
                     component={<BLOCKUSER fetchGroupChats={getAllCompanyUser} />}
                     maxWidth="sm"
                   />
+                  </div>
                 </Tooltip>
               </Grid>
             </Grid>

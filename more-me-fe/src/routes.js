@@ -96,7 +96,7 @@ export default function Router() {
     },
     {
       path: "gamification",
-      element: isAuthenticated && !isSuperAdmin ? <GamificationPage /> : <Navigate to="/login" />,
+      element: isAuthenticated && isAdmin ? <GamificationPage /> : <GamificationAttempt />,
     },
   ];
 

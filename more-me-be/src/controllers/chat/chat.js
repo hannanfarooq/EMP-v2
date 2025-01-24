@@ -86,15 +86,15 @@ export const createConversation = async (req, res) => {
       try {
         // console.log(`Creating message for user ${userId}`);
         
-        const mess = await Message.create({
-          senderId: groupAdminId,
-          content: "",
-          chatId: conversation.id,
-          readBy: [],
-        });
-        await conversation.update({
-          latestMessageId: mess.id,
-        });
+        // const mess = await Message.create({
+        //   senderId: groupAdminId,
+        //   content: "",
+        //   chatId: conversation.id,
+        //   readBy: [],
+        // });
+        // await conversation.update({
+        //   latestMessageId: mess.id,
+        // });
         // console.log(`Message created: ${mess.id}`);
         const user = await User.findByPk(userId);
         let sender_email = `ahmadawais00786@gmail.com`;
