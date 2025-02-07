@@ -246,18 +246,60 @@
 
 
 import { LinearProgress, TextField, Avatar, Badge } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "react-query";
-import { getConversations, readmessage } from "src/api";
+import { getConversations, readmessage, updateMessageStatus } from "src/api";
 import { green } from "@mui/material/colors";
 import { format } from "date-fns";
 
 const getChatList = async () => await getConversations();
 
-function CustomChatItem({ chat, onClick, isSelected }) {
+function CustomChatItem({ chat, onClick, isSelected,blockeduser }) {
   const formattedTime = format(new Date(chat.date), "hh:mm a");
   const trimmedSubtitle =
     chat.subtitle.length > 30 ? chat.subtitle.slice(0, 30) + "..." : chat.subtitle;
+
+    const updatestatus =async()=>
+    {
+await updateMessageStatus(chat.id);
+    }
+    useEffect(()=>
+    {
+      let isBlocked = false;
+
+      // Ensure blockeduser and its blockedId are properly defined
+      if (blockeduser && blockeduser.blockedId && Array.isArray(blockeduser.blockedId)) {
+        // Check for blocked user in conversation.user2Id
+        if (!chat.isGroupChat && chat.user2Id && Array.isArray(chat.user2Id
+        )) {
+          isBlocked = chat.user2Id.some(userId => blockeduser.blockedId.includes(userId));
+        }
+        
+        // If not already blocked, check for blocked user in conversation.user1Id
+        if (!isBlocked && chat.user1Id) {
+          isBlocked = blockeduser.blockedId.includes(chat.user1Id);
+        }
+      }
+      if(isBlocked==false && !chat.isGroupChat )
+      {
+        updatestatus();
+      }
+    })
+    let isBlocked = false;
+
+    // Ensure blockeduser and its blockedId are properly defined
+    if (blockeduser && blockeduser.blockedId && Array.isArray(blockeduser.blockedId)) {
+      // Check for blocked user in conversation.user2Id
+      if (!chat.isGroupChat && chat.user2Id && Array.isArray(chat.user2Id
+      )) {
+        isBlocked = chat.user2Id.some(userId => blockeduser.blockedId.includes(userId));
+      }
+      
+      // If not already blocked, check for blocked user in conversation.user1Id
+      if (!isBlocked && chat.user1Id) {
+        isBlocked = blockeduser.blockedId.includes(chat.user1Id);
+      }
+    }
 
   return (
     <div
@@ -298,7 +340,8 @@ function CustomChatItem({ chat, onClick, isSelected }) {
           {chat.title}
         </div>
         <div className="chat-subtitle">
-          {trimmedSubtitle}
+          {isBlocked?"User has been Blocked":trimmedSubtitle}
+          
         </div>
       </div>
       <div className="chat-time" style={{ marginLeft: "auto"}}>
@@ -308,7 +351,7 @@ function CustomChatItem({ chat, onClick, isSelected }) {
   );
 }
 
-export default function ChatListComponent({ setCurrentConversation }) {
+export default function ChatListComponent({ setCurrentConversation,blockeduser }) {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedChatId, setSelectedChatId] = useState(null); // Track the selected chat
@@ -325,8 +368,31 @@ export default function ChatListComponent({ setCurrentConversation }) {
   const markMessagesAsRead = async (chatId) => {
     readmessage(chatId);
   };
-
+  const updatestatus =async(chat)=>
+    {
+await updateMessageStatus(chat.id);
+    }
   const handleChatClick = (chat) => {
+    let isBlocked = false;
+console.log("CLICKED CHAT : ",chat);
+    // Ensure blockeduser and its blockedId are properly defined
+    if (blockeduser && blockeduser.blockedId && Array.isArray(blockeduser.blockedId)) {
+      // Check for blocked user in conversation.user2Id
+      if (!chat.isGroupChat && chat.user2Id && Array.isArray(chat.user2Id
+      )) {
+        isBlocked = chat.user2Id.some(userId => blockeduser.blockedId.includes(userId));
+      }
+      
+      // If not already blocked, check for blocked user in conversation.user1Id
+      if (!isBlocked && chat.user1Id) {
+        isBlocked = blockeduser.blockedId.includes(chat.user1Id);
+      }
+    }
+    if(isBlocked==false && !chat.isGroupChat )
+    {
+      updatestatus(chat);
+    }
+  
     setCurrentConversation(chat);
     setSelectedChatId(chat.id); // Set the selected chat ID
     markMessagesAsRead(chat.id);
@@ -360,7 +426,8 @@ export default function ChatListComponent({ setCurrentConversation }) {
           unread = chat.readBy.includes(currentUser.user.id) ? 0 : 1;
         }
       }
-
+     
+     
       return {
         id: chat.id,
         avatar: !chat.isGroupChat ? chat.avatar : "",
@@ -368,12 +435,13 @@ export default function ChatListComponent({ setCurrentConversation }) {
         title: `${chat?.chatName}`,
         subtitle: `${messagesender}: ${recentMessage}`,
         date: new Date(chat.updatedAt),
-        text: messagesender === "" ? "" : `${messagesender}  ${recentMessage}`,
+        text:  (messagesender ? `${messagesender} ${recentMessage}` : ""),
         unread: parseInt(unread),
         user1Id: chat.groupAdminId,
         user2Id: chat.users,
         usermap: chat?.userMap,
         isGroupChat: chat.isGroupChat,
+        status:chat.status,
       };
     });
   } else {
@@ -404,6 +472,7 @@ export default function ChatListComponent({ setCurrentConversation }) {
                 chat={chat}
                 onClick={handleChatClick}
                 isSelected={chat.id === selectedChatId} // Pass selected state
+                blockeduser={blockeduser}
               />
               <div
                 style={{

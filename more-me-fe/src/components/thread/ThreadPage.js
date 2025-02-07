@@ -6,6 +6,7 @@ import { Divider, Stack, Typography } from "@mui/material";
 import PostsSort from "./Components/PostsSort";
 import { GetCompaniesAllThread, markAllThreadsAsViewed } from "src/api";
 import { socket } from "src/App";
+
 const ThreadPage = () => {
   const [companyThread, setCompanyThread] = useState([]);
   const [groupedThreads, setGroupedThreads] = useState([]);
@@ -14,7 +15,7 @@ const ThreadPage = () => {
     try {
       const companythread = await GetCompaniesAllThread();
       if (companythread) {
-        //console.log("Fetched Company Threads:", companythread);
+        console.log("Fetched Company Threads:", companythread);
         setCompanyThread(companythread); // Update companyThread
       }
     } catch (error) {
@@ -48,9 +49,9 @@ const ThreadPage = () => {
   }, []);
 
   useEffect(()=>
-    {
-      markAllThreadsAsViewed();
-    },[companyThread])
+  {
+    markAllThreadsAsViewed();
+  },[companyThread])
 
   const groupThreadsByParentId = (threads) => {
     const getLatestActivity = (thread) => {
@@ -93,7 +94,7 @@ const ThreadPage = () => {
 
     return standaloneThreads;
   };
-
+console.log("groupedThreads : ",groupedThreads);
   return (
     <div className="App">
       <AddComment buttonValue={"Post"} />
@@ -103,7 +104,8 @@ const ThreadPage = () => {
         ))
       ) : (
         <Typography variant="h6" color="textSecondary">
-          No threads available.
+          No-threads-available
+         
         </Typography>
       )}
     </div>

@@ -2774,6 +2774,25 @@ body:JSON.stringify(requestData),
   });
   return res.json();
 };
+
+
+export const updateMessageStatus = async (chatId) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/updateMessageStatus`;
+  const data = {
+    chatId: chatId,
+    userid:currentUser.user.id
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
 export const postMessage = async (data) => {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const apiUrl = `/api/messages`;

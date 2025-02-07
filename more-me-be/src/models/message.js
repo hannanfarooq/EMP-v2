@@ -23,6 +23,13 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ARRAY(DataTypes.INTEGER), 
       allowNull: true,
     },
+    status: { 
+      type: DataTypes.ENUM('sent', 'delivered','seen'), // Add status field
+      allowNull: false,
+      defaultValue: 'sent' // Default status is 'sent' (✓)
+    },
+  
+    
   }, {
     timestamps: true,
   });

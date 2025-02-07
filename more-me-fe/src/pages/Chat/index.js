@@ -321,7 +321,7 @@ export default function ChatPage() {
             </Grid>
 
             <ChatDivContainer>
-              <ChatListComponent setCurrentConversation={setCurrentConversation} />
+              <ChatListComponent setCurrentConversation={setCurrentConversation} blockeduser={users} />
             </ChatDivContainer>
           </LeftContainer>
           <RightContainer>

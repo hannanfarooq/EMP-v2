@@ -18,12 +18,23 @@ const CustomMessageList = ({ messages, currentUser }) => {
     return `${hours}:${formattedMinutes} ${ampm}`;
   };
 
+  // Function to determine tick marks and color
+  const getMessageStatus = (status) => {
+    if (status === 'seen') {
+      return <span style={{ color: 'blue' }}>✓✓</span>; // Blue ticks when seen
+    } else if (status === 'delivered') {
+      return <span>✓✓</span>; // Default color for delivered
+    } else {
+      return <span>✓</span>; // Single tick for sent
+    }
+  };
+
   return (
     <div style={{ padding: '15px', maxHeight: '80vh', overflowY: 'auto' }}>
       {messages && messages.length > 0 ? (
         messages.map((msg, index) => {
           const sender = msg.senderId === currentUser.user.id;
-
+          
           return (
             <Box
               key={index}
@@ -45,9 +56,19 @@ const CustomMessageList = ({ messages, currentUser }) => {
                 }}
               >
                 <Typography variant="body1" dangerouslySetInnerHTML={{ __html: msg.content }} />
-                <Typography variant="caption" color="textSecondary" sx={{ textAlign: "right", display: "block" }}>
-                  {formatTimestamp(msg.createdAt)} {/* Format the time here */}
-                </Typography>
+                
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Typography variant="caption" color="textSecondary" sx={{ textAlign: "right", display: "block" }}>
+                    {formatTimestamp(msg.createdAt)}
+                  </Typography>
+
+                  {/* Tick marks */}
+                  {sender && (
+                    <Typography variant="caption" sx={{ marginLeft: 1 }}>
+                      {getMessageStatus(msg.status)}
+                    </Typography>
+                  )}
+                </Box>
               </Box>
             </Box>
           );
@@ -60,7 +81,6 @@ const CustomMessageList = ({ messages, currentUser }) => {
     </div>
   );
 };
-
 const getMessages = async (id) => await getConversationMessages(id);
 
 export default function MessageListComponent({ conversation, blockeduser }) {

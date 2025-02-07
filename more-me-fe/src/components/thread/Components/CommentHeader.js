@@ -4,6 +4,8 @@ import Avatar from "@mui/material/Avatar";
 import Tooltip from "@mui/material/Tooltip";
 import CommentBtn from "./CommentBtn";
 import { toggleDislike, toggleLike } from "src/api";
+import { Typography } from "@mui/material";
+
 
 const CommentHeader = ({
   commentData,
@@ -12,6 +14,7 @@ const CommentHeader = ({
   setDeleteModalState,
   setEditing,
   time,
+  isdashboard=false
 }) => {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
 
@@ -24,8 +27,8 @@ const CommentHeader = ({
   const [dislikedUsers, setDislikedUsers] = useState({});
 
   // Check if the current user has liked or disliked
-  const hasLiked = likedUsers[currentUser?.user?.id];
-  const hasDisliked = dislikedUsers[currentUser?.user?.id];
+  const hasLiked = currentUser?.user?.id in likedUsers;
+  const hasDisliked = currentUser?.user?.id in dislikedUsers;
 
   // Update state when `commentData` changes
   useEffect(() => {
@@ -97,22 +100,27 @@ const CommentHeader = ({
 
   return (
     <div className="comment--header" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-      <Avatar
-        src={commentData?.companyThread?.User?.profilePic || ""}
-        alt={commentData?.companyThread?.User?.firstName || "User Avatar"}
-        sx={{ width: 40, height: 40 }}
-      >
+     
+          <Avatar
+          variant="rounded"
+          alt={commentData?.companyThread?.User?.firstName}
+          src={commentData?.companyThread?.User?.profilePic}
+          sx={{ width: 48, height: 48, flexShrink: 0 }}
+        >
         {commentData?.companyThread?.User?.firstName
           ? commentData.companyThread.User.firstName[0]
           : "U"}
       </Avatar>
       <div>
-        <div className="username" style={{ fontWeight: "bold" }}>
-          {commentData?.companyThread?.User?.firstName}
-        </div>
-        {commentData?.companyThread?.User?.id === currentUser?.user?.id ? (
-          <div className="you-tag" style={{ fontSize: "12px", color: "#ffffff" }}>You</div>
-        ) : null}
+      <Typography variant="subtitle1" noWrap>
+      {commentData?.companyThread?.User?.id === currentUser?.user?.id ? (
+          <div  >You</div>
+        ) :  commentData?.companyThread?.User?.firstName +" "+ commentData?.companyThread?.User?.lastName }
+          </Typography>
+         
+         
+    
+      
       </div>
       <div className="comment-posted-time" style={{ fontSize: "12px", color: "#888" }}>
         {`${time} ago`}
@@ -123,7 +131,7 @@ const CommentHeader = ({
         <div>
           <Tooltip title={Object.values(likedUsers).join(", ") || "No users have liked this yet"}>
             <div style={{ display: "flex", alignItems: "center", cursor: "pointer" }} onClick={handleLike}>
-              <ThumbUp sx={{ color: hasLiked ? "#1976d2" : "#ccc" }} />
+              <ThumbUp sx={{ color: hasLiked==true ? "#1976d2" : "#ccc" }} />
               <span style={{ marginLeft: "5px", fontSize: "14px" }}>{likeCount}</span>
             </div>
           </Tooltip>
@@ -139,13 +147,16 @@ const CommentHeader = ({
         </div>
       </div>
 
-      <CommentBtn
-        commentData={commentData}
-        setReplying={setReplying}
-        setDeleting={setDeleting}
-        setDeleteModalState={setDeleteModalState}
-        setEditing={setEditing}
-      />
+{!isdashboard &&
+  <CommentBtn
+  commentData={commentData}
+  setReplying={setReplying}
+  setDeleting={setDeleting}
+  setDeleteModalState={setDeleteModalState}
+  setEditing={setEditing}
+/>
+}
+    
     </div>
   );
 };

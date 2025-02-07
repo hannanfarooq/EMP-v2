@@ -62,7 +62,7 @@ export default function BLOCKUSER({ fetchGroupChats }) {
     try {
       await UnBlockUser( userId);
       toast.success("User unblocked successfully!");
-
+      window.location.reload();
     } catch (error) {
       console.error("Error unblocking user:", error);
       toast.error("Error unblocking user. Please try again.");

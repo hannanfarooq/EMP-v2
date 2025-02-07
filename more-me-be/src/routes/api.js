@@ -16,7 +16,7 @@ import { createDailyQuestions } from "../controllers/question/dailyquestions.con
 import {createStartUpQuestions} from "../controllers/question/startupquestions";
 import { getAllStartUpQuestionsByCompanyIdAndUserId } from "../controllers/question/startupquestions";
 import {createConversation,getConversationById,addUserToConversation,removeUserFromConversation,getConversationsForUser} from '../controllers/chat/chat';
-import {createMessage,getMessagesByConversationId,markMessageAsRead}  from '../controllers/message/message';
+import {createMessage,getMessagesByConversationId,markMessageAsRead, updateMessageStatus}  from '../controllers/message/message';
 import {createInvitation,respondToInvitation,getInvitationsByUserId}  from '../controllers/invitation/invitation';
 import { GetBlockUser, GetBlockedByUsers, blockUsers, unblockUsers } from "../controllers/chat/block";
 import { de } from "@faker-js/faker";
@@ -126,6 +126,7 @@ router.post('/messages', createMessage);
 router.get('/messages/:chatId', getMessagesByConversationId);
 router.post('/messages/read/:id', markMessageAsRead);
 router.post(`/getAllUserByCompanyId`,userController.getAllUserByCompanyId);
+router.post('/updateMessageStatus',updateMessageStatus);
 // Invitation routes
 router.post('/invitations', createInvitation);
 router.post('/invitations/:id', respondToInvitation);
