@@ -3146,7 +3146,7 @@ export const getArticlesFromTopicAndContentPref = async ({ topic, contentPrefere
   const cx = "430d5a3e4f6f644f4";
   const numResults = 10;
   // const searchParams = `${topic} ${contentPreferences.join(' ')}`;
-  const searchParams = `${topic} ',' ${hobbies.join(',')}`;
+  const searchParams = `${topic}`;
   const url = `https://customsearch.googleapis.com/customsearch/v1?cx=${cx}&q=${encodeURIComponent(searchParams)}&key=${apiKey}&num=${numResults}&start=${start}`;
 
   const fetchWithRetry = async (url, retries = 3, delay = 1000) => {

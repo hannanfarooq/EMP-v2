@@ -54,7 +54,11 @@ const CreateGamification = (props) => {
   const getMessages = async () => await getQuestionCategories();
   const { data, isLoading, error } = useQuery(["questionCategories"], getMessages);
 
- 
+  const [globalSelection, setGlobalSelection] = useState({
+    categoryId: "",
+    subCategoryId: "",
+    questionType: "",
+  });
   const fetchCategories = async () => {
     try {
       const response = await getAllCategories();
@@ -88,6 +92,12 @@ const CreateGamification = (props) => {
       list[index].subCategoryId = "";
       list[index].questionType = "";
     } 
+    if (name === "categoryId" || name === "subCategoryId" || name === "questionType") {
+      setGlobalSelection((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
 
     if (name === "type" && value === "yes-no") {
       list[index].options = ["Yes", "No"];
@@ -159,16 +169,17 @@ const CreateGamification = (props) => {
         optionImages: [],
         imageURLs: [],
         mediaType: "image",
-        questionType: "",
+        questionType: globalSelection.questionType, // Apply selected values
         correctAnswer: "",
         type: "",
         columnA: [""],
         columnB: [""],
         columnMatch: {},
+        categoryId: globalSelection.categoryId, // Apply selected values
+        subCategoryId: globalSelection.subCategoryId, // Apply selected values
       },
     ]);
   };
-
   const handleRemoveQuestion = (index) => {
     const list = [...questions];
     list.splice(index, 1);
