@@ -8,15 +8,18 @@ import {
   Box,
   Grid,
   CircularProgress,
+  useTheme,
 } from '@mui/material';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import './SliderStyles.css';
 
-const CategoryCards = ({ categories, subcategories, QuestionCategories, handleCategorySelect, completedCategories, retryTime }) => {
+const CategoryCards = ({ categories, subcategories, QuestionCategories,Games, handleCategorySelect, completedCategories, retryTime }) => {
   const [loadingImages, setLoadingImages] = useState({});
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
+  const [selectedGame, setSelectedGame] = useState(null);
+  const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
 console.log("questionCategories: ",QuestionCategories)
   const imagePaths = [
     '/assets/images/game-images/game-5.jpg',
@@ -39,12 +42,16 @@ console.log("questionCategories: ",QuestionCategories)
   return (
     <Box sx={{ padding: '20px' }}>
       {/* Show "Go Back" button when subcategories or question categories are visible */}
-      {(selectedCategory || selectedSubCategory) && (
+      {(selectedCategory || selectedSubCategory ||selectedGame) && (
         <Button
           variant="contained"
           color="secondary"
           onClick={() => {
-            if (selectedSubCategory) {
+            if(selectedGame)
+            {
+              setSelectedGame(null);
+            }
+            else if (selectedSubCategory) {
               setSelectedSubCategory(null); // Go back to Subcategories
             } else {
               setSelectedCategory(null); // Go back to Categories
@@ -56,7 +63,7 @@ console.log("questionCategories: ",QuestionCategories)
         </Button>
       )}
 
-      <Grid container spacing={2}>
+      <Grid container spacing={4}>
         {/* Show Categories */}
         {!selectedCategory &&
           categories.map((category, index) => {
@@ -64,7 +71,10 @@ console.log("questionCategories: ",QuestionCategories)
             const image = imagePaths[index % imagePaths.length];
 
             return (
-              <Grid item key={category.id} xs={12} sm={6} md={6} lg={4} xl={4} sx={{ height: '100%' }}>
+              <Grid item key={category.id} xs={12} sm={6} md={6} lg={4} xl={4} sx={{
+                height: categories.length > 1 ? '50%' : '100%'
+              }}
+              >
                 <Card className="category-card" sx={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
                   {loadingImages[category.id] !== false && (
                     <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
@@ -112,7 +122,9 @@ console.log("questionCategories: ",QuestionCategories)
           (subcategories[selectedCategory] || []).map((sub, index) => {
             const image = imagePaths[index % imagePaths.length]; // Loop through images
             return (
-              <Grid item key={sub.id} xs={12} sm={6} md={6} lg={4} xl={4} sx={{ height: '100%' }}>
+              <Grid item key={sub.id} xs={12} sm={6} md={6} lg={4} xl={4} sx={{
+                height: subcategories[selectedCategory].length > 1 ? '50%' : '100%'
+              }}>
                 <Card className="subcategory-card" sx={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <CardMedia
                     component="img"
@@ -140,15 +152,68 @@ console.log("questionCategories: ",QuestionCategories)
             );
           })}
 
+{selectedCategory &&
+          selectedSubCategory &&!selectedGame &&
+          (Games[selectedSubCategory] || []).map((sub, index) => {
+            const image = imagePaths[index % imagePaths.length]; // Loop through images
+            return (
+              <Grid item key={sub.id} xs={12} sm={6} md={6} lg={4} xl={4} sx={{
+                height: Games[selectedSubCategory].length > 1 ? '50%' : '100%'
+              }}>
+                <Card className="subcategory-card" sx={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <CardMedia
+                    component="img"
+                    alt={sub.name}
+                    className="responsive-image"
+                    height="200"
+                    image={image}
+                    title={"Subcategory: " + sub.name}
+                  />
+                  <CardContent sx={{ textAlign: 'center', flexGrow: 1 }}>
+                    <Typography gutterBottom variant="h6" component="div">
+                      {sub.name}
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => setSelectedGame(sub.id)}
+                      sx={{ margin: '10px auto 0' }}
+                    >
+                      Show Levels Categories
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })}
+
         {/* Show Question Categories when a subcategory is selected */}
-        {selectedSubCategory &&
+        {selectedGame &&
   QuestionCategories
-    .filter(qc => qc.subCategoryId === selectedSubCategory) // ✅ Filter Question Categories by subCategoryId
+    .filter(qc => qc.gameid === selectedGame) // Filter Question Categories by gameid
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) // Sort by createdAt (earliest first)
     .map((questionCategory, index) => {
-      const image = imagePaths[index % imagePaths.length]; // Loop through images// ✅ Use fallback image if no image
+      const image = imagePaths[index % imagePaths.length]; // Loop through images
+
+      // Check if the category is unlocked
+      let isUnlocked = questionCategory?.starting; // If starting is true, it's unlocked directly.
+
+      // If not starting, check the previous category's locked status
+      if (!isUnlocked && index > 0) {
+        const previousCategory = QuestionCategories
+        .filter(qc => qc.gameid === selectedGame) // Filter Question Categories by gameid
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[index - 1];
+        
+        // If the user is in the previous category's locked list, unlock the current category
+        if (previousCategory.locked.includes(storedUserData.user.id)) {
+          isUnlocked = true;
+        }
+      }
 
       return (
-        <Grid item key={questionCategory.id} xs={12} sm={6} md={6} lg={4} xl={4} sx={{ height: '100%' }}>
+        <Grid item key={questionCategory.id} xs={12} sm={6} md={6} lg={4} xl={4} sx={{
+          height: QuestionCategories.filter(qc => qc.gameid === selectedGame).length > 1 ? '50%' : '100%',
+        }}>
           <Card className="question-category-card" sx={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
             <CardMedia
               component="img"
@@ -162,22 +227,24 @@ console.log("questionCategories: ",QuestionCategories)
               <Typography gutterBottom variant="h6" component="div">
                 {questionCategory.name}
               </Typography>
-              <Typography variant="body2" color="textSecondary">
-                {questionCategory.description}
-              </Typography>
+              
+              {/* Show the Start Game button only if unlocked */}
               <Button
                 variant="contained"
-                color="primary"
-                onClick={() => handleCategorySelect(questionCategory.id)}
-                sx={{ margin: '10px auto 0' }}
+                color={isUnlocked ? "primary" : "secondary"} // Change color based on unlock status
+                onClick={() => isUnlocked && handleCategorySelect(questionCategory.id)} // Prevent click if locked
+                sx={{ margin: '10px auto 0', cursor: isUnlocked ? 'pointer' : 'not-allowed' }}
+                disabled={!isUnlocked} // Disable button if locked
               >
-                Start Game
+                {isUnlocked ? 'Start Game' : 'Locked'}
               </Button>
             </CardContent>
           </Card>
         </Grid>
       );
-    })}
+    })
+}
+
 
 
       </Grid>

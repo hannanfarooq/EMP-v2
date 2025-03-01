@@ -267,7 +267,7 @@ export const deleteDynamicQuestion = async (req, res) => {
 
 export const addQuestionCategory = async (req, res) => {
   try {
-    const { name, companyId, description, video, images,subCategoryId } = req.body;
+    const { name, companyId, description, video, images,subCategoryId,gameid,starting } = req.body;
 
     // Ensure name is a string
    console.log("ADDED DATA , ",req.body)
@@ -276,6 +276,7 @@ export const addQuestionCategory = async (req, res) => {
         name: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), name.toLowerCase()),
         companyId,
         subCategoryId,
+        gameid
       },
     });
 
@@ -290,6 +291,8 @@ export const addQuestionCategory = async (req, res) => {
       description: description || "",
       video: video || "",
       subCategoryId:subCategoryId,
+      gameid:gameid,
+      starting:starting,
     });
 
     return successResponse(req, res, newCategory);

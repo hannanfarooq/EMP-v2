@@ -19,7 +19,7 @@ import {
   RadioGroup,
   Radio,
 } from "@mui/material";
-import { createCompanyGamification, getAllCategories, getQuestionCategories, getSubCategories } from "src/api";
+import { createCompanyGamification, getAllCategories, getGamesBySubCategory, getQuestionCategories, getSubCategories } from "src/api";
 import { useAuth } from "src/context/AuthContext";
 import { areas, question_emojies } from "src/utils/baseURL";
 import { uploadImageAndGetURL } from "src/utils/uploadImageAndGetURL";
@@ -53,7 +53,8 @@ const CreateGamification = (props) => {
   const [subCategories, setSubCategories] = useState([]);
   const getMessages = async () => await getQuestionCategories();
   const { data, isLoading, error } = useQuery(["questionCategories"], getMessages);
-
+  const [gamesBySubCategory, setGamesBySubCategory] = useState({}); // Store games by subcategory ID
+  const [selectedgameid, setSelectedgameid] = useState('');
   const [globalSelection, setGlobalSelection] = useState({
     categoryId: "",
     subCategoryId: "",
@@ -77,12 +78,30 @@ const CreateGamification = (props) => {
       if (!categoryId) return;
       const response = await getSubCategories(categoryId);
       if (response?.data) {
+        for (const subcategory of response.data) {
+          await  fetchGamesForSubCategory(subcategory.id);
+          }
         setSubCategories(response.data);
       }
     } catch (error) {
       console.error("Failed to fetch subcategories:", error);
     }
   };
+
+     const fetchGamesForSubCategory = async (subCategoryId) => {
+        try {
+          const response = await getGamesBySubCategory(subCategoryId);
+          if (response?.data) {
+            console.log("getGamesBySubCategory : ", response);
+            setGamesBySubCategory((prevState) => ({
+              ...prevState,
+              [subCategoryId]: response.data, // Save games by subcategory ID
+            }));
+          }
+        } catch (error) {
+          console.error('Failed to fetch games for subcategory:', error);
+        }
+      };
   const handleQuestionChange = (e, index) => {
     const { name, value } = e.target;
     const list = [...questions];
@@ -369,8 +388,28 @@ const CreateGamification = (props) => {
                   </FormControl>
                 </div>
               )}
+
+
+               {
+              question.subCategoryId && gamesBySubCategory[question.subCategoryId] && gamesBySubCategory[question.subCategoryId].length > 0 && (
+                      <FormControl fullWidth className='mt-4'>
+                        <InputLabel>Select Game</InputLabel>
+                        <Select
+                          value={selectedgameid}
+                          onChange={(e) => setSelectedgameid(e.target.value)}
+                        >
+                          {gamesBySubCategory[question.subCategoryId].map((game) => (
+                            <MenuItem key={game.id} value={game.id}>
+                              {game.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    )
+              
+                    }
                {/* Question Category Selection (filtered based on SubCategory) */}
-               {question.subCategoryId && data?.data.length > 0 && (
+               {selectedgameid && data?.data.length > 0 && (
   <div className="mb-2 mt-2">
     <FormControl fullWidth>
       <InputLabel>Select Question Category</InputLabel>
@@ -382,7 +421,7 @@ const CreateGamification = (props) => {
       >
         {/* ✅ Filtered Question Categories Based on Selected SubCategory */}
         {data?.data
-          .filter((qc) => qc.subCategoryId === question.subCategoryId)
+          .filter((qc) => qc.gameid === selectedgameid)
           .map((questionCategory) => (
             <MenuItem key={questionCategory.id} value={questionCategory.id}>
               {questionCategory.name}
@@ -628,7 +667,39 @@ const CreateGamification = (props) => {
                   </>
                 )}
               </div>
-
+              <div className="mt-4">
+                <Typography variant="h6">
+                  {'Upload'} {question.mediaType.toUpperCase()}
+                </Typography>
+                <RadioGroup
+                  row
+                  value={question.mediaType}
+                  onChange={(e) => handleQuestionChange(e, questionIndex)}
+                  name="mediaType"
+                >
+                  <FormControlLabel
+                    value="image"
+                    control={<Radio />}
+                    label={"Image"}
+                  />
+                  <FormControlLabel
+                    value="video"
+                    control={<Radio />}
+                    label={"Video"}
+                  />
+                </RadioGroup>
+                <input
+                  type="file"
+                  accept={
+                    question.mediaType === "image"
+                      ? "image/png, image/jpeg"
+                      : "video/*"
+                  }
+                  multiple={question.mediaType === "image"}
+                  onChange={(e) => handleImageChange(e, questionIndex)}
+                  className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500"
+                />
+              </div>
              
               <div className="text-center">
                 <Button
@@ -657,6 +728,7 @@ const CreateGamification = (props) => {
           <div className="text-center">
             <Button
               type="submit"
+              isdisabled={loading}
               className="submit-btn bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:bg-blue-600 mt-4"
             >
               {loading ? "Submitting..." : "Submit"}

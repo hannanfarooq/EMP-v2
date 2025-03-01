@@ -103,9 +103,20 @@ export const updateUserGamification = async (req, res) => {
     if (!user) {
       return errorResponse(req, res, new Error("User not found"));
     }
+const questioncategory = await QuestionCategory.findByPk(gamification);
+if (!questioncategory) {
+  return errorResponse(req, res, new Error("Question category not found"));
+}
+if (questioncategory.locked.includes(id)) {
+  return errorResponse(req, res, new Error("Question category is Unlocked")); 
+}
+else {
+  questioncategory.locked.push(id);
+}
+console.log("------------------------------GAMIFICATIONS1", questioncategory);
+questioncategory.changed('locked', true);
 
-
-
+await questioncategory.save();
     // Update the user's gamification and points
     if (gamification && points) {
       // Ensure user.gamification is an array and check for the existence of the gamification

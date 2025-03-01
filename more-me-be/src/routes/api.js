@@ -28,6 +28,7 @@ import { Create_SubTask, updateSubTaskStatus } from "../controllers/Task_Managem
 import { getNotificationsByUserId, markAllNotificationsAsRead } from "../controllers/Notification/notification.controller";
 import { createCategory, deleteCategory, getAllCategories, updateCategory } from "../controllers/gamifications/Category.controller";
 import { createSubCategory, deleteSubCategory, getSubCategoryById, updateSubCategory } from "../controllers/gamifications/SubCategory.controller";
+import { createGame, deleteGame, getGamesBySubCategory, updateGame } from "../controllers/gamifications/Game.controller";
 
 const router = express.Router();
 
@@ -97,6 +98,11 @@ router.post('/createSubCategory',createSubCategory);
 router.post('/getSubCategoryById',getSubCategoryById);
 router.post('/deleteSubCategory',deleteSubCategory);
 router.post('/updateSubCategory',updateSubCategory);
+//Game Routes 
+router.post('/createGame',createGame)
+router.post('/getGamesBySubCategory',getGamesBySubCategory);
+router.post('/updateGame',updateGame);
+router.post('/deleteGame',deleteGame);
 // function routes
 router.post("/createFunction", functionController.createFunction);
 router.post("/getCompanyFunctions", functionController.getCompanyFunctions);

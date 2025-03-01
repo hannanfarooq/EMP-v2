@@ -10,27 +10,38 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
-import { getCompanyGamifications, getAllCategories, getSubCategories, getQuestionCategories } from 'src/api';
+import { getCompanyGamifications, getAllCategories, getSubCategories, getQuestionCategories, getGamesBySubCategory } from 'src/api';
 import { useQuery } from 'react-query';
 
 const GamificationsList = () => {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState({});
   const [questions, setQuestions] = useState([]);
+  const [gamesBySubCategory, setGamesBySubCategory] = useState({});
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [expandedSubCategory, setExpandedSubCategory] = useState({});
   const [expandedQuestionCategory, setExpandedQuestionCategory] = useState({});
   const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
-
+  const [questionCategories, setQuestionCategories] = useState([]);
   // Fetch question categories using React Query
-  const getMessages = async () => await getQuestionCategories();
-  const { data: questionCategories, isLoading, error } = useQuery(["questionCategories"], getMessages);
-
+ 
+  
   useEffect(() => {
     fetchCategories();
     fetchQuestions();
+    fetchQuestionCategories();
   }, []);
-
+ const fetchQuestionCategories = async () => {
+    try {
+      const categoryList = await getQuestionCategories();
+      if (categoryList?.data) {
+        console.log("fetchQuestionCategories : ", categoryList);
+        setQuestionCategories(categoryList.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch question categories:', error);
+    }
+  };
   // Fetch categories and subcategories separately
   const fetchCategories = async () => {
     try {
@@ -66,11 +77,26 @@ const GamificationsList = () => {
     }
   };
 
+  // Fetch games for a given subcategory
+  const fetchGamesForSubCategory = async (subCategoryId) => {
+    try {
+      const response = await getGamesBySubCategory(subCategoryId);
+      if (response?.data) {
+        console.log("getGamesBySubCategory : ", response);
+        setGamesBySubCategory((prevState) => ({
+          ...prevState,
+          [subCategoryId]: response.data, // Save games by subcategory ID
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch games for subcategory:', error);
+    }
+  };
+
   return (
     <div>
       {/* Loading state */}
-      {isLoading && <CircularProgress />}
-      {error && <Typography color="error">Failed to fetch question categories.</Typography>}
+     
 
       {categories.length === 0 ? (
         <div className="no-content">Company has no gamifications</div>
@@ -94,87 +120,105 @@ const GamificationsList = () => {
                         <div className="flex justify-between items-center">
                           <Typography variant="h6">{subCategory.name}</Typography>
                           <IconButton
-                            onClick={() =>
+                            onClick={() => {
                               setExpandedSubCategory(prev => ({
                                 ...prev,
                                 [subCategory.id]: !prev[subCategory.id],
-                              }))
-                            }
+                              }));
+                              // Fetch games when subcategory is expanded
+                              if (!gamesBySubCategory[subCategory.id]) {
+                                fetchGamesForSubCategory(subCategory.id);
+                              }
+                            }}
                           >
                             {expandedSubCategory[subCategory.id] ? <ExpandLess /> : <ExpandMore />}
                           </IconButton>
                         </div>
 
-                        {/* Expand Question Categories */}
+                        {/* Expand Games */}
                         <Collapse in={expandedSubCategory[subCategory.id]}>
-                          {questionCategories?.data?.filter(qc => qc.subCategoryId === subCategory.id).length > 0 ? (
-                            questionCategories.data
-                              .filter(qc => qc.subCategoryId === subCategory.id)
-                              .map(questionCategory => (
-                                <Card key={questionCategory.id} className="ml-8 my-2 border border-gray-100 rounded-lg">
-                                  <CardContent>
-                                    <div className="flex justify-between items-center">
-                                      <Typography variant="subtitle1">{questionCategory.name}</Typography>
-                                      <IconButton
-                                        onClick={() =>
-                                          setExpandedQuestionCategory(prev => ({
-                                            ...prev,
-                                            [questionCategory.id]: !prev[questionCategory.id],
-                                          }))
-                                        }
-                                      >
-                                        {expandedQuestionCategory[questionCategory.id] ? <ExpandLess /> : <ExpandMore />}
-                                      </IconButton>
-                                    </div>
+                          {gamesBySubCategory[subCategory.id]?.length > 0 ? (
+                            gamesBySubCategory[subCategory.id].map(game => (
+                              <Card key={game.id} className="ml-8 my-2 border border-gray-100 rounded-lg">
+                                <CardContent>
+                                  <div className="flex justify-between items-center">
+                                    <Typography variant="subtitle1">{game.name}</Typography>
+                                  </div>
 
-                                    {/* Expand Questions */}
-                                    <Collapse in={expandedQuestionCategory[questionCategory.id]}>
-                                      {questions.filter(q => q.questionCategoryId === questionCategory.id).length > 0 ? (
-                                        questions
-                                          .filter(q => q.questionCategoryId === questionCategory.id)
-                                          .map((question, index) => (
-                                            <Card
-                                              key={question.id}
-                                              className="ml-12 my-2 border border-gray-50 rounded-lg p-3"
-                                            >
-                                              <Typography variant="body1" className="font-semibold">
-                                                Q{index + 1}: {question.text}
-                                              </Typography>
-                                              <Typography variant="body2" className="mt-2">
-                                                <strong>Type:</strong> {question.type}
-                                              </Typography>
+                                  {/* Expand Question Categories */}
+                                  {questionCategories.filter(qc =>  qc.gameid == game.id).length > 0 ? (
+                                    questionCategories
+                                      .filter(qc =>  qc.gameid === game.id)
+                                      .map(questionCategory => (
+                                        <Card key={questionCategory.id} className="ml-8 my-2 border border-gray-100 rounded-lg">
+                                          <CardContent>
+                                            <div className="flex justify-between items-center">
+                                              <Typography variant="subtitle2">{questionCategory.name}</Typography>
+                                              <IconButton
+                                                onClick={() =>
+                                                  setExpandedQuestionCategory(prev => ({
+                                                    ...prev,
+                                                    [questionCategory.id]: !prev[questionCategory.id],
+                                                  }))
+                                                }
+                                              >
+                                                {expandedQuestionCategory[questionCategory.id] ? <ExpandLess /> : <ExpandMore />}
+                                              </IconButton>
+                                            </div>
 
-                                              {/* Display Options */}
-                                              {["multiple-choice", "single-choice"].includes(question.type) && (
-                                                <div className="mt-2">
-                                                  <Typography variant="body2" className="font-semibold">Options:</Typography>
-                                                  {question.options.map((option, i) => (
-                                                    <Typography key={i} className="text-sm">
-                                                      {option}
-                                                    </Typography>
-                                                  ))}
-                                                </div>
+                                            {/* Expand Questions */}
+                                            <Collapse in={expandedQuestionCategory[questionCategory.id]}>
+                                              {questions.filter(q => q.questionCategoryId === questionCategory.id).length > 0 ? (
+                                                questions
+                                                  .filter(q => q.questionCategoryId === questionCategory.id)
+                                                  .map((question, index) => (
+                                                    <Card key={question.id} className="ml-12 my-2 border border-gray-50 rounded-lg p-3">
+                                                      <Typography variant="body1" className="font-semibold">
+                                                        Q{index + 1}: {question.text}
+                                                      </Typography>
+                                                      <Typography variant="body2" className="mt-2">
+                                                        <strong>Type:</strong> {question.type}
+                                                      </Typography>
+
+                                                      {/* Display Options */}
+                                                      {["multiple-choice", "single-choice"].includes(question.type) && (
+                                                        <div className="mt-2">
+                                                          <Typography variant="body2" className="font-semibold">Options:</Typography>
+                                                          {question.options.map((option, i) => (
+                                                            <Typography key={i} className="text-sm">
+                                                              {option}
+                                                            </Typography>
+                                                          ))}
+                                                        </div>
+                                                      )}
+
+                                                      {/* Display Correct Answer */}
+                                                      <div className="mt-2">
+                                                        <Typography variant="body2" className="font-semibold">Correct Answer:</Typography>
+                                                        <Typography className="text-sm">{question.correctOption}</Typography>
+                                                      </div>
+                                                    </Card>
+                                                  ))
+                                              ) : (
+                                                <Typography className="ml-12 mt-2 text-sm text-gray-500">
+                                                  No questions available.
+                                                </Typography>
                                               )}
-
-                                              {/* Display Correct Answer */}
-                                              <div className="mt-2">
-                                                <Typography variant="body2" className="font-semibold">Correct Answer:</Typography>
-                                                <Typography className="text-sm">{question.correctOption}</Typography>
-                                              </div>
-                                            </Card>
-                                          ))
-                                      ) : (
-                                        <Typography className="ml-12 mt-2 text-sm text-gray-500">
-                                          No questions available.
-                                        </Typography>
-                                      )}
-                                    </Collapse>
-                                  </CardContent>
-                                </Card>
-                              ))
+                                            </Collapse>
+                                          </CardContent>
+                                        </Card>
+                                      ))
+                                  ) : (
+                                    <Typography className="ml-8 mt-2 text-sm text-gray-500">
+                                      No question categories available.
+                                    </Typography>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            ))
                           ) : (
                             <Typography className="ml-8 mt-2 text-sm text-gray-500">
-                              No question categories available.
+                              No games available.
                             </Typography>
                           )}
                         </Collapse>

@@ -13,7 +13,7 @@ import {
   RadioGroup,
   Typography,
 } from "@mui/material";
-import { getCompanyGamifications, updateUserGamification, getUserGamifications, getAllCategories, getSubCategories } from "src/api";
+import { getCompanyGamifications, updateUserGamification, getUserGamifications, getAllCategories, getSubCategories, getGamesBySubCategory } from "src/api";
 import { Navigate, useNavigate } from "react-router-dom";
 import { QUESTIONS_ANSWERED, question_emojies } from "src/utils/baseURL";
 import { toast } from "react-toastify";
@@ -45,7 +45,7 @@ const AttemptGamifications = (props) => {
   const [toastShown, setToastShown] = useState(false);
   const navigate = useNavigate();
   const [completedCategories, setCompletedCategories] = useState([]);
- 
+  const [gamesBySubCategory, setGamesBySubCategory] = useState({}); // Store games by subcategory ID
   const [categories, setCategories] = useState([]);
   const [QuestionCategories, setQuestionCategories] = useState([]);
     const [subcategories, setSubcategories] = useState([]);
@@ -66,6 +66,21 @@ const AttemptGamifications = (props) => {
       console.error("Error fetching questions: ", error);
     }
   };
+
+   const fetchGamesForSubCategory = async (subCategoryId) => {
+          try {
+            const response = await getGamesBySubCategory(subCategoryId);
+            if (response?.data) {
+              console.log("getGamesBySubCategory : ", response);
+              setGamesBySubCategory((prevState) => ({
+                ...prevState,
+                [subCategoryId]: response.data, // Save games by subcategory ID
+              }));
+            }
+          } catch (error) {
+            console.error('Failed to fetch games for subcategory:', error);
+          }
+        };
   const fetchCategories = async () => {
       try {
         const response = await getAllCategories();
@@ -83,6 +98,9 @@ const AttemptGamifications = (props) => {
      const fetchSubCategories = async (categoryId) => {
         try {
           const response = await getSubCategories(categoryId);
+          for (const subcategory of response.data) {
+            await  fetchGamesForSubCategory(subcategory.id);
+            }
           console.log("getSubCategories : ", response);
           setSubcategories((prev) => ({ ...prev, [categoryId]: response.data }));
         } catch (err) {
@@ -354,7 +372,7 @@ const AttemptGamifications = (props) => {
         setCompletedCategories([completedCategories, selectedCategory]);
         console.log("SELECTED CATEGORY", selectedCategory);
         await updateUserGamification(selectedCategory, updatedPoints);
-
+      await  fetchCompanyQuestions();
         toast.success("Category completed successfully!", {
           position: "top-right",
           autoClose: 5000,
@@ -446,6 +464,7 @@ const AttemptGamifications = (props) => {
           categories={categories}
           subcategories={subcategories}
           QuestionCategories= {QuestionCategories}
+          Games ={gamesBySubCategory}
           completedCategories={completedCategories}
           handleCategorySelect={handleCategorySelect}
         />
@@ -457,37 +476,28 @@ const AttemptGamifications = (props) => {
             </Typography>
             <Typography className="question-text" variant="h4">{questions[questionCount] && questions[questionCount].text}</Typography>
           </center>
-         
-          {selectedCategoryData?.video ? (
-            <video className="video-container" width="800" height="200" controls>
-              <source src={selectedCategoryData?.video} />
-              Your browser does not support the video tag.
-            </video>
-          ) :(
-            <div className="slider-container">
-      {(() => {
-  let images = selectedCategoryData?.images || "[]";
-
-  try {
-    images = JSON.parse(images);
-    if (!Array.isArray(images)) {
-      images = [images]; // ✅ Convert single string to an array
-    }
-  } catch (error) {
-    images = []; // ✅ Default to an empty array if parsing fails
-  }
-
-  return images.length > 1 ? (
-    <Slider {...settings}>
-      {images.map((img, index) => (
-        <div key={index} className="slider-item" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-          <img src={img} style={{ maxWidth: "400px", width: "50%", height: "auto", margin: "auto", borderRadius: "10px" }} />
-        </div>
-      ))}
-    </Slider>
-  ) : (
-    images.length === 1 && (
-      <div
+          {
+  questions[questionCount]?.media ? (
+    // Display video if media is available
+    <video className="video-container" width="800" height="200" controls>
+      <source src={questions[questionCount].media} />
+      Your browser does not support the video tag.
+    </video>
+  ) : questions[questionCount]?.image.length >= 1 ? (
+    // If images are available, check if there are multiple images or just one
+    questions[questionCount]?.image.length > 1 ? (
+      <div className="slider-container">
+        <Slider {...settings}>
+          {questions[questionCount].image.map((img, index) => (
+            <div key={index} className="slider-item" style={{ height: 500 }}>
+              <img height={500} src={img} alt={`Question Image ${index}`} />
+            </div>
+          ))}
+        </Slider>
+      </div>
+    ) : (
+      <img
+        className="question-image"
         style={{
           display: "flex",
           justifyContent: "center",
@@ -498,26 +508,79 @@ const AttemptGamifications = (props) => {
           maxWidth: "1200px",
           margin: "auto",
         }}
-      >
-        <img
-          src={images[0]}
-          style={{
-            maxWidth: "100%",
-            width: "50%",
-            height: "auto",
-            borderRadius: "10px",
-          }}
-        />
+        src={questions[questionCount]?.image[0]} // Assuming `image` is an array
+        alt="Question"
+      />
+    )
+  ) : 
+    selectedCategoryData?.video ? (
+      <video className="video-container" width="800" height="200" controls>
+        <source src={selectedCategoryData?.video} />
+        Your browser does not support the video tag.
+      </video>
+    ) : (
+      // If no media or video, check for images in selectedCategoryData
+      <div className="slider-container">
+        {(() => {
+          let images = selectedCategoryData?.images || "[]";
+  
+          try {
+            images = JSON.parse(images);
+            if (!Array.isArray(images)) {
+              images = [images]; // Convert single string to an array
+            }
+          } catch (error) {
+            images = []; // Default to an empty array if parsing fails
+          }
+  
+          // Check if there are multiple images or just one
+          return images.length > 1 ? (
+            <Slider {...settings}>
+              {images.map((img, index) => (
+                <div key={index} className="slider-item" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                  <img
+                    src={img}
+                    alt={`Category Image ${index}`}
+                    style={{ maxWidth: "400px", width: "50%", height: "50%", margin: "auto", borderRadius: "10px" }}
+                  />
+                </div>
+              ))}
+            </Slider>
+          ) : (
+            images.length === 1 && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  border: "3px solid #4CAF50", // ✅ Green border
+                  borderRadius: "10px",
+                  padding: "10px", // ✅ Add some space inside the border
+                  maxWidth: "1200px",
+                  
+                }}
+              >
+                <img
+                  src={images[0]}
+                  alt="Category Image"
+                  style={{
+                  
+                    maxWidth: "100%",
+                    width: "50%",
+                    height: "auto",
+                    borderRadius: "10px",
+                  }}
+                />
+              </div>
+            )
+          );
+        })()}
       </div>
     )
-  );
-})()}
+  
+   // If none of the above conditions match, render nothing
+}
 
-
-
-          </div>
-          
-          )}
            <Typography  variant="h7">{selectedCategoryData.description}</Typography>
 
            <Divider sx={{ m: 3 }} />  {/* This adds a margin around the divider */}

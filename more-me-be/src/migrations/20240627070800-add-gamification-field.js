@@ -71,7 +71,7 @@ module.exports = {
         onDelete: 'SET NULL',
       },
       image: {
-        type: Sequelize.ARRAY(Sequelize.STRING),
+        type: Sequelize.JSON,
         allowNull: true,
       },
       columnA: {

@@ -2825,13 +2825,14 @@ export const createConversation = async (data,token) => {
   return res.json();
 };
 
-export const addQuestionCategory = async (name,description,images,video,subCategoryId) => {
+export const addQuestionCategory = async (name,description,images,video,subCategoryId,selectedgameid,startingLevel) => {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const apiUrl = `/api/addQuestionCategory`;
   const data = { name: name, companyId: currentUser.company.id,  images: images,
     description:description,
     video:video,
-    subCategoryId:subCategoryId, }
+    subCategoryId:subCategoryId,
+    gameid:selectedgameid,starting:startingLevel }
 
   const res = await fetch(baseURL + apiUrl, {
     method: "POST",
@@ -3915,6 +3916,86 @@ export const updateCategory = async (id,name) => {
   return res.json();
 };
 
+
+export const getGamesBySubCategory = async ( subCategoryId) => {
+  const apiUrl = "/api/getGamesBySubCategory";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    subCategoryId:subCategoryId,
+ 
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+
+
+export const deleteGame = async (id, name) => {
+  const apiUrl = "/api/deleteGame";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    id:id
+ 
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const updateGame = async (id, name) => {
+  const apiUrl = "/api/updateGame";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    id:id, name:name,
+ 
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const createGame = async (name, subCategoryId) => {
+  const apiUrl = "/api/createGame";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    name:name, subCategoryId:subCategoryId,
+ 
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
 export const getAllCategories = async (companyId) => {
   const apiUrl = "/api/getAllCategories";
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));

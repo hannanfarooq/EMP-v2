@@ -1,6 +1,6 @@
 .slider-container {
-  width: 100%; /* Ensures the slider takes full width */
-  max-width: 1200px; /* Adjust this based on your layout */
+  width: 50%; /* Ensures the slider takes full width */
+  max-width: 800px; /* Adjust this based on your layout */
   margin: auto;
 }
 .slider-item {

@@ -9,6 +9,7 @@ import GamificationsList from "./Gamifications/QuestionsList";
 import AddQuestionCategory from "./Gamifications/CreateQuestionCategory";
 import AddCategory from "./Gamifications/CreateCategory"; // Import new category component
 import ViewGamification from "./Gamifications/viewgamification";
+import AddGame from "./Gamifications/CreateGame";
 
 // ----------------------------------------------------------------------
 
@@ -28,6 +29,9 @@ export default function GamificationPage() {
   const [openTransition4, setOpenTransiton4] = useState(false);
   const handleOpen4 = () => setOpenTransiton4(true);
   const handleClose4 = () => setOpenTransiton4(false);
+  const [openTransition5, setOpenTransiton5] = useState(false);
+  const handleOpen5 = () => setOpenTransiton5(true);
+  const handleClose5 = () => setOpenTransiton5(false);
 
   return (
     <>
@@ -54,15 +58,24 @@ export default function GamificationPage() {
               title={"Add New Category"}
               component={<AddCategory />}
             />
-             <span className="mr-2"></span>
+             <span className="mr-1"></span>
+
+             <TransitionsModal
+              open={openTransition5}
+              handleClose={handleClose5}
+              handleOpen={handleOpen5}
+              title={"Add Game"}
+              component={<AddGame />}
+            />
+             <span className="mr-1"></span>
             <TransitionsModal
               open={openTransition2}
               handleClose={handleClose2}
               handleOpen={handleOpen2}
-              title={"Add Gamification Category"}
+              title={"Add Gamification Level"}
               component={<AddQuestionCategory />}
             />
-             <span className="mr-2"></span>
+             <span className="mr-1"></span>
             <TransitionsModal
               open={openTransition}
               handleClose={handleClose}
@@ -71,7 +84,7 @@ export default function GamificationPage() {
               component={<Gamifications />}
             />
            
-            <span className="mr-2"></span>
+            <span className="mr-1"></span>
             <TransitionsModal
               open={openTransition3}
               handleClose={handleClose3}
