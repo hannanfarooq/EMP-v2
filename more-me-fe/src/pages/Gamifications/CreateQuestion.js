@@ -13,6 +13,7 @@ import {
   LinearProgress,
   MenuItem,
   Select,
+  Checkbox,
   FormLabel,
   TextareaAutosize,
   Typography,
@@ -37,16 +38,17 @@ const CreateGamification = (props) => {
       imageURLs: [],
       mediaType: "image",
       questionType: "",
-      correctAnswer: "",
+      correctAnswer: [], // Change this to an array for multiple correct answers
       type: "",
       columnA: [""],
       columnB: [""],
       columnMatch: {},
       categoryId: "",
       subCategoryId: "",
+      optionPoints: {},
     },
   ]);
-
+  
   const { userData } = useAuth();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -130,36 +132,82 @@ const CreateGamification = (props) => {
 
     setQuestions(list);
   };
-  const setcorrectquestion = (e,index)=>
-  {
-    const { name, value } = e.target;
+  const setcorrectquestion = (e, index) => {
+    const { value } = e.target; // The value is an array of selected options
     const list = [...questions];
-    list[index][name] = value;
-    setQuestions(list);
-  }
+  
+    // Update the selected options (correctAnswer) for the given question
+    list[index].correctAnswer = value;  // value is an array of selected options
+  
+    setQuestions(list); // Update the state with the new list of questions
+  };
+  
+  
+  
+  
 
   const handleOptionChange = (e, questionIndex, optionIndex) => {
     const { value } = e.target;
     const list = [...questions];
+  
+    // Get the old option text
+    const oldOption = list[questionIndex].options[optionIndex];
+  
+    // Update the option text
     list[questionIndex].options[optionIndex] = value;
+  
+    // Update optionPoints: Remove old key & add new key with the same points
+    if (oldOption in list[questionIndex].optionPoints) {
+      list[questionIndex].optionPoints[value] = list[questionIndex].optionPoints[oldOption];
+      delete list[questionIndex].optionPoints[oldOption];
+    } else {
+      list[questionIndex].optionPoints[value] = 0; // Ensure a new key gets default 0 points
+    }
+  
     setQuestions(list);
   };
-
+  
   const handleAddOption = (questionIndex) => {
     const list = [...questions];
-    list[questionIndex].options.push("");
+  
+    // Generate a default unique option key
+    const newOption = `Option ${list[questionIndex].options.length + 1}`;
+  
+    // Add new option
+    list[questionIndex].options.push(newOption);
+  
+    // Ensure optionPoints has a default entry for the new option
+    list[questionIndex].optionPoints = {
+      ...list[questionIndex].optionPoints,
+      [newOption]: 0, // Default points set to 0
+    };
+  
     setQuestions(list);
   };
+  
 
   const handleRemoveOption = (questionIndex, optionIndex) => {
     const list = [...questions];
+  
+    // Get the option text before removing
+    const removedOption = list[questionIndex].options[optionIndex];
+  
+    // Remove the option
     list[questionIndex].options.splice(optionIndex, 1);
-    setQuestions(list);
+  
+    // Remove corresponding points entry
+    if (removedOption in list[questionIndex].optionPoints) {
+      delete list[questionIndex].optionPoints[removedOption];
+    }
+  
+    // Remove option image if it's an image choice
     if (list[questionIndex].type === "multiple-img-choice") {
       list[questionIndex].optionImages.splice(optionIndex, 1);
     }
+  
+    setQuestions(list);
   };
-
+  
   const handleImageChange = (e, questionIndex, optionIndex) => {
     const list = [...questions];
     if (list[questionIndex].type === "multiple-img-choice") {
@@ -189,11 +237,12 @@ const CreateGamification = (props) => {
         imageURLs: [],
         mediaType: "image",
         questionType: globalSelection.questionType, // Apply selected values
-        correctAnswer: "",
+        correctAnswer: [],
         type: "",
         columnA: [""],
         columnB: [""],
         columnMatch: {},
+        optionPoints: {},
         categoryId: globalSelection.categoryId, // Apply selected values
         subCategoryId: globalSelection.subCategoryId, // Apply selected values
       },
@@ -217,7 +266,7 @@ const CreateGamification = (props) => {
         let optionWithImages = [];
         let imgURLs = [];
         let mediaURL = null;
-
+console.log("question.optionPoints : ", question.optionPoints);
         if (question.type === "multiple-img-choice") {
           for (let i = 0; i < question.optionImages.length; i++) {
             const url = await uploadImageAndGetURL(question.optionImages[i]);
@@ -255,6 +304,7 @@ const CreateGamification = (props) => {
           columnA:question.columnA,
           columnB:question.columnB,
           columnMatch: question.columnMatch,
+          optionPoints:question.optionPoints,
         };
       })
     );
@@ -262,7 +312,7 @@ const CreateGamification = (props) => {
     await createCompanyGamification(questionsData, storedUserData.token).then(
       (response) => {
         if (response.code === 200) {
-          window.location.reload();
+        
         } else {
           toast.error(`Some error occurred`);
         }
@@ -330,7 +380,29 @@ const CreateGamification = (props) => {
     list[questionIndex].columnMatch[columnAItem] = value;
     setQuestions(list);
   };
-
+  const handleOptionPointsChange = (e, questionIndex, optionText) => {
+    const list = [...questions];
+  
+    // Update points for the given option key
+    list[questionIndex].optionPoints[optionText] = parseInt(e.target.value, 10) || 0;
+  
+    setQuestions(list);
+  };
+  const handleYesNoPointsChange = (e, questionIndex, optionText) => {
+    const list = [...questions];
+  
+    // Ensure optionPoints exists
+    if (!list[questionIndex].optionPoints) {
+      list[questionIndex].optionPoints = {};
+    }
+  
+    // Update points for "✅ Yes" or "❌ No"
+    list[questionIndex].optionPoints[optionText] = parseInt(e.target.value, 10) || 0;
+  
+    setQuestions(list);
+  };
+  
+  
   return (
     <StyledQuestion>
       <div className="main">
@@ -464,64 +536,67 @@ const CreateGamification = (props) => {
                   </Select>
                 </FormControl>
               </div>
-{(question.type!='column-matching')&&
-
+              {question.type !== 'column-matching' && (
   <div className="mb-2 mt-2">
-                <FormControl
-                  fullWidth
-                  sx={{ fieldset: { legend: { maxWidth: "100%" } } }}
-                >
-                  <InputLabel
-                    id={`correct-option-select-${questionIndex}`}
-                    inputlabelprops={{ shrink: true }}
-                  >
-                    Select Correct Option
-                  </InputLabel>
-                  <Select
-                    labelId={`correct-option-select-${questionIndex}`}
-                    id={`correct-option-select-${questionIndex}`}
-                    value={question.correctAnswer}
-                    onChange={(e) =>{
-                      
-                      setcorrectquestion(e, questionIndex)
-                    } }
-                    required
-                    className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500"
-                    name="correctAnswer"
-                  >
-                    {question.options.map((option, index) => (
-                      <MenuItem key={index} value={option}>
-                        {option}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </div>
+    <FormControl fullWidth sx={{ fieldset: { legend: { maxWidth: "100%" } } }}>
+      <InputLabel
+        id={`correct-option-select-${questionIndex}`}
+        inputlabelprops={{ shrink: true }}
+      >
+        Select Correct Options
+      </InputLabel>
+      <Select
+        labelId={`correct-option-select-${questionIndex}`}
+        id={`correct-option-select-${questionIndex}`}
+        value={question.correctAnswer} // This should be an array
+        onChange={(e) => setcorrectquestion(e, questionIndex)} // Update the correctAnswer array
+        required
+        multiple // Allow multiple selections
+        className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500"
+        name="correctAnswer"
+      >
+        {question.options.map((option, index) => (
+          <MenuItem key={index} value={option}>
+            {option}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  </div>
+)}
 
-}
+
+
+
+
             
 
               <div className="add-question-options">
-                {question.type === "yes-no" ? (
-                  <>
-                    <Divider className="m-3" />
-                    <Typography className="m-0 text-xl">
-                      Options visible to user:
-                    </Typography>
-                    <FormGroup className="justify-center flex-nowrap flex flex-row">
-                      {["✅ Yes", "❌ No"].map((emoji, index) => (
-                        <Card
-                          key={index}
-                          className="flex justify-center px-4 py-4 m-2 cursor-default border-solid border-slate-400"
-                        >
-                          <Typography className="m-0 text-3xl">
-                            {emoji}
-                          </Typography>
-                        </Card>
-                      ))}
-                    </FormGroup>
-                  </>
-                ) : question.type === "column-matching" ? (
+              {question.type === "yes-no" ? (
+  <>
+    <Divider className="m-3" />
+    <Typography className="m-0 text-xl">Options visible to user:</Typography>
+    <FormGroup className="justify-center flex-nowrap flex flex-row gap-4">
+      {["Yes", "No"].map((emoji, index) => (
+        <div key={index} className="flex flex-col items-center">
+          <Card className="flex justify-center px-4 py-4 m-2 cursor-default border-solid border-slate-400">
+            <Typography className="m-0 text-3xl">{emoji}</Typography>
+          </Card>
+          {/* Points Input for Yes/No */}
+          <Input
+            type="number"
+            name="yesNoPoints"
+            placeholder="Points"
+            value={question.optionPoints?.[emoji] || 0} // Default 0 if undefined
+            onChange={(e) => handleYesNoPointsChange(e, questionIndex, emoji)}
+            className="w-20 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500 mt-2"
+          />
+        </div>
+      ))}
+    </FormGroup>
+  </>
+) :
+ question.type === "column-matching" ? (
                   <>
                     <h3 className="text-xl font-medium text-gray-800 mb-4">
                       Column Matching
@@ -619,44 +694,50 @@ const CreateGamification = (props) => {
                   </>
                 ) : (
                   <>
-                    <h3 className="text-xl font-medium text-gray-800 mb-4">
-                      Options
-                    </h3>
-                    {question.options.map((option, optionIndex) => (
-                      <FormGroup key={optionIndex}>
-                        <Input
-                          type="text"
-                          name="option"
-                          placeholder={`Option ${optionIndex + 1}`}
-                          value={option}
-                          onChange={(e) =>
-                            handleOptionChange(e, questionIndex, optionIndex)
-                          }
-                          className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500 mb-2"
-                        />
-                        {question.type === "multiple-img-choice" && (
-                          <Input
-                            type="file"
-                            onChange={(e) =>
+                   <h3 className="text-xl font-medium text-gray-800 mb-4">Options</h3>
+{question.options.map((option, optionIndex) => (
+  <FormGroup key={optionIndex} className="flex gap-4 items-center">
+    {/* Option Text Input */}
+    <Input
+      type="text"
+      name="option"
+      placeholder={`Option ${optionIndex + 1}`}
+      value={option}
+      onChange={(e) => handleOptionChange(e, questionIndex, optionIndex)}
+      className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500 mb-2"
+    />
+
+    {/* Points Input for Option */}
+    <Input
+      type="number"
+      name="optionPoints"
+      placeholder="Points"
+      value={question.optionPoints[option]||0} // Default to 0 if undefined
+      onChange={(e) => handleOptionPointsChange(e, questionIndex, option)}
+      className="w-20 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500 mb-2"
+    />
+ {question.type === "multiple-img-choice" && (
+                       <Input
+                         type="file"
+                           onChange={(e) =>
                               handleImageChange(e, questionIndex, optionIndex)
                             }
                             required
                             className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500 mb-2"
                           />
                         )}
-                        {question.options.length !== 1 && (
-                          <Button
-                            type="button"
-                            onClick={() =>
-                              handleRemoveOption(questionIndex, optionIndex)
-                            }
-                            className="remove-btn bg-red-500 text-white font-semibold py-1 px-4 rounded hover:bg-red-600 focus:outline-none focus:bg-red-600 mb-2"
-                          >
-                            Remove
-                          </Button>
-                        )}
-                      </FormGroup>
-                    ))}
+    {/* Remove Option Button */}
+    {question.options.length !== 1 && (
+      <Button
+        type="button"
+        onClick={() => handleRemoveOption(questionIndex, optionIndex)}
+        className="remove-btn bg-red-500 text-white font-semibold py-1 px-4 rounded hover:bg-red-600 focus:outline-none focus:bg-red-600 mb-2"
+      >
+        Remove
+      </Button>
+    )}
+  </FormGroup>
+))}
                     <Button
                       type="button"
                       onClick={() => handleAddOption(questionIndex)}

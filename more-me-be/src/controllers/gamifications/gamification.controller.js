@@ -22,6 +22,7 @@ export const createGamifications = async (req, res) => {
         columnA: question.columnA,
         columnB: question.columnB,
         columnMatching: question.columnMatch,
+        optionPoints:question.optionPoints,
       })
     );
 
@@ -94,7 +95,7 @@ export const updateUserGamification = async (req, res) => {
     // Destructure required fields from the request body
     const { gamification, id, points } = req.body;
 
-    // console.log("------------------------------GAMIFICATIONS1", req.body);
+     console.log("------------------------------GAMIFICATIONS1", req.body);
 
     // Find the user by their ID
     const user = await User.findByPk(id);
@@ -107,10 +108,8 @@ const questioncategory = await QuestionCategory.findByPk(gamification);
 if (!questioncategory) {
   return errorResponse(req, res, new Error("Question category not found"));
 }
-if (questioncategory.locked.includes(id)) {
-  return errorResponse(req, res, new Error("Question category is Unlocked")); 
-}
-else {
+if (!questioncategory.locked.includes(id)) {
+  
   questioncategory.locked.push(id);
 }
 console.log("------------------------------GAMIFICATIONS1", questioncategory);

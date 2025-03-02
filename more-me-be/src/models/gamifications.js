@@ -9,8 +9,13 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     correctOption: {
-      type: DataTypes.STRING,
+      type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: false,
+    },
+    optionPoints: {
+      type: DataTypes.JSON, // Store points per option as a key-value object
+      allowNull: true,
+      defaultValue: {}, // Example: { "Answer 1": 100, "Answer 2": 50 }
     },
     companyId: {
       type: DataTypes.INTEGER,

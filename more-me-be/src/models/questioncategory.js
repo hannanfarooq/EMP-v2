@@ -51,6 +51,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BOOLEAN, // Lock/unlock the category
         defaultValue: false,
       },
+      canProceedToNextLevel: {
+        type: DataTypes.BOOLEAN, // Determines if the game can proceed to the next level
+        defaultValue: false,     // Default to false (No, the game cannot proceed)
+      },
     },
   );
 

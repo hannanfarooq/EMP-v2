@@ -2825,14 +2825,14 @@ export const createConversation = async (data,token) => {
   return res.json();
 };
 
-export const addQuestionCategory = async (name,description,images,video,subCategoryId,selectedgameid,startingLevel) => {
+export const addQuestionCategory = async (name,description,images,video,subCategoryId,selectedgameid,startingLevel,canProceedToNextLevel) => {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const apiUrl = `/api/addQuestionCategory`;
   const data = { name: name, companyId: currentUser.company.id,  images: images,
     description:description,
     video:video,
     subCategoryId:subCategoryId,
-    gameid:selectedgameid,starting:startingLevel }
+    gameid:selectedgameid,starting:startingLevel,canProceedToNextLevel:canProceedToNextLevel }
 
   const res = await fetch(baseURL + apiUrl, {
     method: "POST",

@@ -24,6 +24,7 @@ const AddQuestionCategory = () => {
   const [subcategories, setsubcategories] = useState([]);
   const [gamesBySubCategory, setGamesBySubCategory] = useState({});
   const [startingLevel, setStartingLevel] = useState(false);  // New state for starting level
+  const [canProceedToNextLevel, setCanProceedToNextLevel] = useState(false);  // New state for canProceedToNextLevel
 
   const handleCategoryExpand = (categoryId) => {
     setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
@@ -149,7 +150,7 @@ const AddQuestionCategory = () => {
         formData.append('images', JSON.stringify(imageURLs)); // ✅ Correctly stringify array
       }
   
-      const res = await addQuestionCategory(name, description, formData.get('images'), formData.get('video'), selectedSubCategory, selectedgameid, startingLevel);
+      const res = await addQuestionCategory(name, description, formData.get('images'), formData.get('video'), selectedSubCategory, selectedgameid, startingLevel,canProceedToNextLevel);
       if (res?.code === 200) {
         toast.success("Gamification Added Successfully");
         fetchQuestionCategories();
@@ -334,6 +335,11 @@ selectedSubCategory && gamesBySubCategory[selectedSubCategory] && gamesBySubCate
         className="mt-4"
         onChange={(e) => setDescription(e.target.value)}
       />
+<FormControlLabel
+  control={<Switch checked={canProceedToNextLevel} onChange={() => setCanProceedToNextLevel(!canProceedToNextLevel)} />}
+  label="Allow Proceed to Next Level"
+  className="mt-4"
+/>
 
       {/* Upload Type Switch */}
       <FormControlLabel

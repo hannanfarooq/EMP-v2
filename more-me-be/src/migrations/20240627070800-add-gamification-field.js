@@ -37,7 +37,7 @@ module.exports = {
         allowNull: false,
       },
       correctOption: {
-        type: Sequelize.STRING,
+        type: Sequelize.ARRAY(Sequelize.STRING),  // Change this to store multiple correct options
         allowNull: false,
       },
       media: {

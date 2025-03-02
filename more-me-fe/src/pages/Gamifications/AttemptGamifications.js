@@ -198,8 +198,8 @@ const AttemptGamifications = (props) => {
   const submitAnswer = async (answer1) => {
     console.log("answer1", answer1);
     const currentQuestion = questions[questionCount];
-    console.log("questions", questions[questionCount])
-
+    console.log("questions", questions[questionCount]);
+  
     if (currentQuestion.type === "multiple-choice" || currentQuestion.type === "multiple-img-choice") {
       if (selectedAnswer.length === 0) {
         toast.error("Please select at least one option.", {
@@ -213,7 +213,7 @@ const AttemptGamifications = (props) => {
         return;
       }
     }
-
+  
     if (currentQuestion.type === "single-choice") {
       if (selected === null) {
         toast.error("Please select at least one option.", {
@@ -229,86 +229,84 @@ const AttemptGamifications = (props) => {
       answer1 = selected;
       setSelected(null);
     }
-
+  
     const answer = {
       id: currentQuestion.id,
       type: currentQuestion.type,
       title: currentQuestion.text,
       selectedOption: answer1 ? answer1 : selectedAnswer,
     };
-
+  
     console.log("selectedAnswer", selectedAnswer);
     console.log("answer1", answer1);
     console.log("currentQuestion.correctOption", currentQuestion.correctOption);
-
+  
     let updatedPoints = points;
     let wrongAnswers = 0;
-
-    // Calculate points
-    if (currentQuestion.type === "multiple-choice") {
-      selectedAnswer.forEach((obj) => {
-        if (isJsonString(obj)) {
-          let jsonString = JSON.parse(obj);
-          if (currentQuestion.correctOption.toLowerCase() === jsonString?.text.toLowerCase()) {
-            updatedPoints += 10;
-
-          } else {
-            updatedPoints -= 10;
-            wrongAnswers += 1;
+  
+    // Calculate points based on the selected answers
+    if (currentQuestion.type === "multiple-choice" || currentQuestion.type === "multiple-img-choice") {
+      let find = false;
+      selectedAnswer.forEach((selected) => {
+        const optionPoint = currentQuestion.optionPoints[selected] || 0; // Get points for selected option
+    
+        if (Array.isArray(currentQuestion.correctOption)) {
+          // Check if selected answer is in the correct options list
+          if (currentQuestion.correctOption.some((correct) => correct.toLowerCase() === selected.toLowerCase())) {
+            updatedPoints += optionPoint; // Add dynamic points
+            find =true;
           }
         } else {
-          if (currentQuestion.correctOption.toLowerCase() === obj.toLowerCase()) {
-            updatedPoints += 10;
-          } else {
-            updatedPoints -= 10;
-            wrongAnswers += 1;
+          if (currentQuestion.correctOption.toLowerCase() === selected.toLowerCase()) {
+            updatedPoints += optionPoint;
+            find =true;
           }
         }
       });
+      if(!find)
+      {
+        wrongAnswers += 1;
+      }
     } else if (currentQuestion.type === "single-choice") {
-      console.log("ur ans:", answer1);
-      console.log("correct ans: ", currentQuestion.correctOption)
       if (answer1 !== undefined) {
-        if (answer1.toLowerCase() === currentQuestion.correctOption.toLowerCase()) {
-          updatedPoints += 10;
+        const optionPoint = currentQuestion.optionPoints[answer1] || 0; // Get points from optionPoints
+    
+        if (Array.isArray(currentQuestion.correctOption)) {
+          // If multiple correct options exist
+          if (currentQuestion.correctOption.some((correct) => correct.toLowerCase() === answer1.toLowerCase())) {
+            updatedPoints += optionPoint; // Add dynamic points
+          }
+          else
+        {
+          wrongAnswers += 1;
+        }
         } else {
-          updatedPoints -= 10;
+          if (answer1.toLowerCase() === currentQuestion.correctOption.toLowerCase()) {
+            updatedPoints += optionPoint;
+          }
+          else
+        {
+          wrongAnswers += 1;
+        }
+        }
+      }
+    }
+    else if (currentQuestion.type === "yes-no") {
+      if (selected !== undefined) {
+        const optionPoint = currentQuestion.optionPoints[selected] || 0; // Get points from optionPoints
+    
+        if (currentQuestion.correctOption.includes(selected)) {
+          updatedPoints += optionPoint; // Add dynamic points from optionPoints
+         
+        }
+        else
+        {
+          toast.error("Wrong Answer : ",selected);
           wrongAnswers += 1;
         }
       }
-    } else if (currentQuestion.type === "multiple-img-choice") {
-      console.log("IMG CHOICE ", selectedAnswer);
-      selectedAnswer.forEach((obj) => {
-        if (isJsonString(obj)) {
-          let jsonString = JSON.parse(obj);
-          if (currentQuestion.correctOption.toLowerCase() === jsonString?.text.toLowerCase()) {
-            updatedPoints += 10;
-          } else {
-            updatedPoints -= 10;
-            wrongAnswers += 1;
-          }
-        } else {
-          if (currentQuestion.correctOption.toLowerCase() === obj.toLowerCase()) {
-            updatedPoints += 10;
-          } else {
-            updatedPoints -= 10;
-            wrongAnswers += 1;
-          }
-        }
-      });
-    } else if (currentQuestion.type === "yes-no") {
-      if (answer1 !== undefined) {
-        if (answer1.toLowerCase() === currentQuestion.correctOption.toLowerCase()) {
-          updatedPoints += 10;
-        } else {
-          updatedPoints -= 10;
-          wrongAnswers += 1;
-        }
-      }
-    } else if (currentQuestion.type === "column-matching") {
-      console.log("REAL ANWSER", currentQuestion.columnMatching);
-      console.log("SELECTED AWNSER", answer1);
-
+    }
+     else if (currentQuestion.type === "column-matching") {
       let isCorrect = true;
       for (const key in currentQuestion.columnMatching) {
         if (answer1[key] !== currentQuestion.columnMatching[key]) {
@@ -317,32 +315,31 @@ const AttemptGamifications = (props) => {
         }
       }
       if (isCorrect) {
-        console.log("AWNSER IS CORRECT");
         updatedPoints += 10;
       } else {
         updatedPoints -= 10;
         wrongAnswers += 1;
       }
     }
-
+  
     setPoints(updatedPoints);
     setWrongAnswersCount(wrongAnswers);
     userAnswers.push(answer);
 
     const halfQuestions = Math.ceil(questions.length / 2);
     setShowCorrectAnswer(true); // Show correct answer
-
+  
     setTimeout(() => {
       setShowCorrectAnswer(false); // Hide correct answer when moving to next question
     }, 2000);
-    if (wrongAnswers >= halfQuestions) {
+  
+    if (wrongAnswers >= halfQuestions && !selectedCategoryData.canProceedToNextLevel) {
       const retryAfterMinutes = 15;
       const retryDate = new Date();
       retryDate.setMinutes(retryDate.getMinutes() + retryAfterMinutes);
       setRetryTime(retryDate);
       localStorage.setItem(storedUserData.user.id, retryDate);
-
-
+  
       toast.error(`You have answered Half of questions incorrectly. Please wait for ${retryAfterMinutes} minute(s) before trying again.`, {
         position: "top-right",
         autoClose: 5000,
@@ -355,24 +352,18 @@ const AttemptGamifications = (props) => {
       setSelectedCategory(null);
       return;
     }
-    console.log("Running");
+  
     setSelectedAnswer([]);
     setTimeout(() => {
-    
-        setQuestionCount(questionCount + 1);
-     setShowCorrectAnswer(false);
-    
+      setQuestionCount(questionCount + 1);
+      setShowCorrectAnswer(false);
     }, 2000);
+  
     if (questions?.length - 1 <= questionCount) {
       try {
-        console.log("Running");
-        console.log("POINTS IN TOTAL", points);
-        console.log("SELECTED CATEGORY", selectedCategory);
-        console.log("completedCategories", completedCategories)
         setCompletedCategories([completedCategories, selectedCategory]);
-        console.log("SELECTED CATEGORY", selectedCategory);
         await updateUserGamification(selectedCategory, updatedPoints);
-      await  fetchCompanyQuestions();
+        await fetchCompanyQuestions();
         toast.success("Category completed successfully!", {
           position: "top-right",
           autoClose: 5000,
@@ -381,23 +372,17 @@ const AttemptGamifications = (props) => {
           pauseOnHover: true,
           draggable: true,
         });
-          const userGamificationResponse = await getUserGamifications(storedUserData.token, storedUserData.user.id);
-      const completedCategoriesFromServer = userGamificationResponse.data.gamification || [];
-      setPoints(userGamificationResponse.data.points);
-      console.log("userGamificationResponse.data.points", userGamificationResponse.data.points);
-      setCompletedCategories(completedCategoriesFromServer);
+        const userGamificationResponse = await getUserGamifications(storedUserData.token, storedUserData.user.id);
+        const completedCategoriesFromServer = userGamificationResponse.data.gamification || [];
+        setPoints(userGamificationResponse.data.points);
+        setCompletedCategories(completedCategoriesFromServer);
         setTimeout(() => {
-    
-          setQuestionCount(questionCount + 1);
           setQuestionCount(0);
           setSelectedAnswer([]);
           setIsAnswering(false);
           setSelectedCategory(null);
-      
-      }, 2000);
-      
+        }, 2000);
       } catch (error) {
-        console.log("Error");
         console.error("Error updating user gamification: ", error);
         toast.error("Failed to update user gamification. Please try again.", {
           position: "top-right",
@@ -408,17 +393,9 @@ const AttemptGamifications = (props) => {
           draggable: true,
         });
       }
-      setTimeout(() => {
-    
-        setQuestionCount(questionCount + 1);
-        setQuestionCount(0);
-        setSelectedAnswer([]);
-        setIsAnswering(false);
-        setSelectedCategory(null);
-    
-    }, 2000);
     }
   };
+  
   const goToDashboard = () => {
     localStorage.setItem(QUESTIONS_ANSWERED, true);
     navigate("/dashboard/app");
@@ -450,6 +427,7 @@ const AttemptGamifications = (props) => {
     ],
   };
   return (
+    
     <StyledQuestion>
       {
         !isAnswering && (
@@ -580,8 +558,21 @@ const AttemptGamifications = (props) => {
   
    // If none of the above conditions match, render nothing
 }
+<div 
+  style={{
+    maxHeight: '300px', // Adjust the height as needed
+    overflowY: 'auto',  // Enables vertical scrolling if content overflows
+    border: '1px solid #ccc', // Optional border to visually define the box
+    padding: '10px', // Optional padding for better readability
+    borderRadius: '8px', // Optional rounded corners
+    backgroundColor: '#f9f9f9', // Optional background color
+  }}
+>
+  <Typography variant="h7" style={{ whiteSpace: 'pre-line' }}>
+    {selectedCategoryData.description}
+  </Typography>
+</div>
 
-           <Typography  variant="h7">{selectedCategoryData.description}</Typography>
 
            <Divider sx={{ m: 3 }} />  {/* This adds a margin around the divider */}
           {questions[questionCount] && questions[questionCount].type === "single-choice" && (
@@ -705,8 +696,8 @@ const AttemptGamifications = (props) => {
                     value={selected}
                     onChange={(e) => setSelected(e.target.value)}
                   >
-                    <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-                    <FormControlLabel value="no" control={<Radio />} label="No" />
+                    <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+                    <FormControlLabel value="No" control={<Radio />} label="No" />
                   </RadioGroup>
                 </FormControl>
                 <div>

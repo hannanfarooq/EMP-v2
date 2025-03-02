@@ -267,7 +267,7 @@ export const deleteDynamicQuestion = async (req, res) => {
 
 export const addQuestionCategory = async (req, res) => {
   try {
-    const { name, companyId, description, video, images,subCategoryId,gameid,starting } = req.body;
+    const { name, companyId, description, video, images,subCategoryId,gameid,starting,canProceedToNextLevel } = req.body;
 
     // Ensure name is a string
    console.log("ADDED DATA , ",req.body)
@@ -293,6 +293,7 @@ export const addQuestionCategory = async (req, res) => {
       subCategoryId:subCategoryId,
       gameid:gameid,
       starting:starting,
+      canProceedToNextLevel:canProceedToNextLevel
     });
 
     return successResponse(req, res, newCategory);
