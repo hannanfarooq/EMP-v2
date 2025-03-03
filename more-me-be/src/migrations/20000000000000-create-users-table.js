@@ -48,6 +48,10 @@ module.exports = {
         type: Sequelize.ARRAY(Sequelize.INTEGER),
         allowNull: true,
       },
+      readAnnouncements: {
+        type: Sequelize.ARRAY(Sequelize.INTEGER),
+        allowNull: true,
+      },
       verifyToken: {
         type: Sequelize.STRING,
         defaultValue: null,

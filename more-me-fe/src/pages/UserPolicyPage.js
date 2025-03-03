@@ -573,7 +573,7 @@ import Snackbar from "@mui/material/Snackbar";
 
 import Iconify from "../components/iconify";
 import CardContent from "@mui/material/CardContent";
-import { getUserCompanyPolicy, getUserProfile, updateUserPoints } from "src/api"; // API calls
+import { getUserCompanyPolicy, getUserProfile, updateUserPoints, updateUserPointsPolicy } from "src/api"; // API calls
 
 const Accordion = styled((props) => (
   <MuiAccordion disableGutters elevation={0} square {...props} />
@@ -644,7 +644,7 @@ export default function UserPolicyPage() {
   const handlePolicyRead = async (policyId, rewardPoints) => {
     if (!userOpenedPolicies.includes(policyId)) {
       try {
-        await updateUserPoints(rewardPoints, storedUserData.user.id, policyId, storedUserData.token);
+        await updateUserPointsPolicy(rewardPoints, storedUserData.user.id, policyId, storedUserData.token);
         setUserOpenedPolicies([...userOpenedPolicies, policyId]);
         setOpen(true);
       } catch (error) {
@@ -748,6 +748,7 @@ export default function UserPolicyPage() {
                       View Policy Document
                     </a>
                   )}
+                  <br></br>
                   <FormControlLabel
                     control={<Checkbox />}
                     label="I have read the policy!"

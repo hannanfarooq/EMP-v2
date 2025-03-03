@@ -2321,8 +2321,28 @@ export const saveAnswers = async (answers, userId, token) => {
   });
   return res.json();
 };
-export const updateUserPoints = async (point, userId, policyId, token) => {
+
+export const updateUserPointsPolicy = async (point, userId, policyId, token) => {
   const apiUrl = "/api/updateUserPoints";
+  const data = {
+    userPolicyId: policyId,
+    userRewards: point,
+    userId: userId,
+  };
+
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const updateUserPoints = async (point, userId, policyId, token) => {
+  const apiUrl = "/api/updateUserPointsAnnouncement";
   const data = {
     userPolicyId: policyId,
     userRewards: point,

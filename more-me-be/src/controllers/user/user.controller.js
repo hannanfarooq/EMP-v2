@@ -487,7 +487,38 @@ export const deleteUserById = async (req, res) => {
     return errorResponse(req, res, error.message);
   }
 };
+export const updateUserPointsAnnouncement = async (req, res) => {
+  try {
+    // Find the user by their ID
+    const user = await User.findByPk(req.body.userId);
 
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Update the user's points
+    if (req.body.userRewards) {
+      user.userRewards = user.userRewards + req.body.userRewards;
+    }
+
+    // Update the readPolicies data (assuming readPolicies is an array)
+    if (req.body.userPolicyId) {
+      // console.log("is trye");
+      let userpolicy = [];
+      userpolicy = user.readAnnouncements ? user.readAnnouncements : [];
+      userpolicy.push(req.body.userPolicyId);
+      user.readAnnouncements = userpolicy;
+    }
+
+    // console.log(user.readPolicies);
+    // Save the changes to the database
+    const resp = await user.save();
+    return successResponse(req, res, resp);
+  } catch (error) {
+    return errorResponse(req, res, error);
+    throw error;
+  }
+};
 export const updateUserPoints = async (req, res) => {
   try {
     // Find the user by their ID

@@ -130,7 +130,7 @@ export default function Router() {
     },
     {
       path: "questionnaire",
-      element: role == "user" && <Questions />,
+      element: (role == "user"||role == "manager"||role == "admin"||role == "lead") && <Questions />,
     },
     {
       path: "dynamicQuestionnaire",

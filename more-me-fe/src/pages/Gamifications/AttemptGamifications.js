@@ -569,7 +569,7 @@ const AttemptGamifications = (props) => {
   }}
 >
   <Typography variant="h7" style={{ whiteSpace: 'pre-line' }}>
-    {selectedCategoryData.description}
+    {questions[questionCount]?.description!=""?questions[questionCount]?.description:selectedCategoryData.description}
   </Typography>
 </div>
 

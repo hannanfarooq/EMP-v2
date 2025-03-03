@@ -59,7 +59,7 @@ export const getCompanyAnnouncement = async (req, res) => {
       where: { 
         companyId,
        // Compare in UTC format
-        isVisible: true, // Ensuring that only visible announcements are fetched
+     
       },
       include: [
         {

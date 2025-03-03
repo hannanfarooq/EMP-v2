@@ -45,6 +45,7 @@ router.post("/inviteUsersCSV", userController.bulkInviteUsers);
 router.post("/getCompanyPolicy", getCompanyPolicy);
 router.post("/getCompanyAnnouncement", getCompanyAnnouncement);
 router.post("/getCompanyAnnouncementforuser", getCompanyAnnouncementforuser);
+router.post("/updateUserPointsAnnouncement", userController.updateUserPointsAnnouncement);
 router.post("/updateUserPoints", userController.updateUserPoints);
 router.post("/updateUserQuestionnaire", userController.updateUserQuestionnaire);
 router.post("/updateStartUpQuestions", userController.updateStartUpQuestions);

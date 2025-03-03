@@ -349,6 +349,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.ARRAY(DataTypes.INTEGER),
         allowNull: true
       },
+      readAnnouncements: {
+        type: DataTypes.ARRAY(DataTypes.INTEGER),
+        allowNull: true 
+      },
       verifyToken: {
         type: DataTypes.STRING,
         defaultValue: null,

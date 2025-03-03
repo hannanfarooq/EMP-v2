@@ -35,7 +35,8 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import Questionnaire from 'src/components/feedback/dailyQuestions';
 import {
   getAllDailyQuestions, getUserStartUpQuestions, getArticlesFromTopicAndContentPref, getresultsArticlesForInterestTopics, 
-  getBooks, getVideos, getPodcasts, getWebinars, getCompanyAnnouncement, CreateThread
+  getBooks, getVideos, getPodcasts, getWebinars, getCompanyAnnouncement, CreateThread,
+  getUserProfile
 } from 'src/api';
 import { toast } from 'react-toastify';
 import Chip from '@mui/material/Chip';
@@ -201,9 +202,26 @@ export default function DashboardAppPage() {
       try {
         const companyAnnouncement = await getCompanyAnnouncement(userObj.token, userObj.company.id,userObj.user.id);
         console.log("announcement data::", companyAnnouncement);
+      const UserData = await getUserProfile(
+        userObj?.user?.id,
+        userObj.token
+        );
+    
+        const announcements = UserData?.data?.user?.readAnnouncements || [];
+
+      
         
-        // Set the announcement message to state
-        setAnnouncementMessage(companyAnnouncement.data[0]);
+        // Find the first announcement that hasn't been read
+        const unreadAnnouncement = companyAnnouncement.data.find(
+          (announce) => !announcements.includes(announce.id)
+        );
+        
+        if (unreadAnnouncement) {
+          setAnnouncementMessage(unreadAnnouncement);
+        }
+        
+     
+       
       } catch (error) {
         console.error("Error fetching company announcement:", error);
       }
@@ -350,7 +368,7 @@ export default function DashboardAppPage() {
         const userObj = JSON.parse(localStorage.getItem('currentUser') ?? '{}');
 
         // Check if user object and role are defined
-        if (userObj?.user?.role === 'user') {
+        if (userObj?.user?.role === 'user' ||userObj?.user?.role === 'manager'||userObj?.user?.role === 'lead'||userObj?.user?.role === 'admin') {
           const isCompanyUser = userObj.user.role === 'user';
 
           // Fetch user startup questions
@@ -358,7 +376,7 @@ export default function DashboardAppPage() {
             userObj?.token,
             userObj?.company?.id,
             userObj?.user?.id,
-            isCompanyUser
+   
           ).then((res) => res.data);
 
           console.log("questionData:", questionData);
@@ -815,7 +833,7 @@ export default function DashboardAppPage() {
       <Container maxWidth="xl">
         <Grid container spacing={3}>
           <Grid item xs={12} md={6} lg={12}>
-            {['admin', 'company-super-admin'].includes(user.role) ? (
+            {[ 'company-super-admin'].includes(user.role) ? (
               <AppWebsiteVisits
                 title="Employees Onboarded by Companies"
                 subheader="(+43%) than last year"
@@ -859,7 +877,7 @@ export default function DashboardAppPage() {
           </Grid>
 
           {/* New Section for Hobbies and Interest */}
-          {user.role === 'user' && (
+          {(user.role === 'user'||user.role === "manager"||user.role === "admin"||user.role === "lead") && (
             <Grid item xs={12} md={12} lg={6}>
               <Card>
                 <CardHeader title="Selected Areas" subheader="Your Hobbies and Interests" />

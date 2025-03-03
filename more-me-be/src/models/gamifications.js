@@ -1,6 +1,12 @@
+const { description } = require("joi");
+
 module.exports = (sequelize, DataTypes) => {
   const Gamification = sequelize.define("Gamification", {
     text: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    description: {
       type: DataTypes.STRING,
       allowNull: false,
     },

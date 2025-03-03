@@ -45,6 +45,7 @@ const CreateGamification = (props) => {
       columnMatch: {},
       categoryId: "",
       subCategoryId: "",
+      description: "",
       optionPoints: {},
     },
   ]);
@@ -243,6 +244,7 @@ const CreateGamification = (props) => {
         columnB: [""],
         columnMatch: {},
         optionPoints: {},
+        description: "",
         categoryId: globalSelection.categoryId, // Apply selected values
         subCategoryId: globalSelection.subCategoryId, // Apply selected values
       },
@@ -291,6 +293,7 @@ console.log("question.optionPoints : ", question.optionPoints);
 
         return {
           text: question.question,
+          description:question.description,
           options:
             question.type === "multiple-img-choice"
               ? optionWithImages
@@ -312,7 +315,8 @@ console.log("question.optionPoints : ", question.optionPoints);
     await createCompanyGamification(questionsData, storedUserData.token).then(
       (response) => {
         if (response.code === 200) {
-        
+        window.location.reload();
+          toast.success(`Gamification created successfully`);
         } else {
           toast.error(`Some error occurred`);
         }
@@ -420,6 +424,17 @@ console.log("question.optionPoints : ", question.optionPoints);
                 onChange={(e) => handleQuestionChange(e, questionIndex)}
                 placeholder="Enter Gamification Headline"
                 required="required"
+                minRows={3}
+                className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500"
+              />
+
+<TextareaAutosize
+                type="text"
+                name="description"
+                value={question.description}
+                onChange={(e) => handleQuestionChange(e, questionIndex)}
+                placeholder="Enter Gamification Description  (Optional)"
+              
                 minRows={3}
                 className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500"
               />

@@ -12,6 +12,7 @@ export const createGamifications = async (req, res) => {
     const gamificationData = await data.map((question) =>
       Gamification.create({
         type: question.type,
+        description:question.description,
         text: question.text,
         options: question.options,
         companyId: question.companyId,
