@@ -53,6 +53,30 @@ const Comment = ({ threadData, isdashboard = false }) => {
     return null;
   };
 
+  const renderVideos = () => {
+    if (threadData?.companyThread?.videos && threadData.companyThread.videos.length > 0) {
+      return (
+        <div className="videos-container">
+          {threadData.companyThread.videos.map((video, index) => (
+            <video
+              key={index}
+              src={video}
+              controls
+              style={{
+                width: "100%",
+                maxWidth: "850px",
+                height: "auto",
+                borderRadius: "8px",
+                border: "1px solid #ddd",
+              }}
+            />
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+  
   const renderPDFs = () => {
     return (
       <div className="pdfs-container">
@@ -122,6 +146,9 @@ const Comment = ({ threadData, isdashboard = false }) => {
           {renderImages()}
           {renderPDFs()}
           {renderLinks()}
+          {
+          renderVideos()
+          }
 
           {editing && (
             <button className="update-btn" onClick={updateComment}>

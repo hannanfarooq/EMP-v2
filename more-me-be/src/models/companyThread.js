@@ -32,6 +32,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ARRAY(DataTypes.TEXT),
       defaultValue: [],
     },
+    videos:{
+      type: DataTypes.ARRAY(DataTypes.TEXT),
+      defaultValue: [],
+    },
     pdfs: {
       type: DataTypes.ARRAY(DataTypes.TEXT),
       defaultValue: [], // Store PDF URLs here

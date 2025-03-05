@@ -250,7 +250,8 @@ import Filter from "bad-words";
 import { uploadImageAndGetURL } from "src/utils/uploadImageAndGetURL";
 import { uploadPDFAndGetURL } from "src/utils/uploadPDFAndGetURL";
 import Microlink from '@microlink/react';
-import { FaCamera, FaFilePdf, FaLink, FaTimes, FaEye, FaPlus } from 'react-icons/fa'; // Importing FaPlus for Add button icon
+import { FaCamera, FaFilePdf, FaLink, FaTimes, FaEye, FaPlus, FaVideo } from 'react-icons/fa'; // Importing FaPlus for Add button icon
+import { set } from "lodash";
 
 
 const AddComment = ({ threadData, buttonValue = "Post",setReplying }) => {
@@ -263,7 +264,7 @@ const AddComment = ({ threadData, buttonValue = "Post",setReplying }) => {
   const [error, setError] = useState(""); // State for error handling
   const { userData } = useAuth();
   const filter = new Filter();
-
+  const [videos, setVideos] = useState([]); // ✅ Add video state
   // Utility function to validate URLs
   const isValidURL = (string) => {
     try {
@@ -304,6 +305,7 @@ const AddComment = ({ threadData, buttonValue = "Post",setReplying }) => {
       heading: "POST",
       images,
       pdfs,
+      videos, // ✅ Include videos in the data
       links,
       parentId: threadData ? threadData.companyThread.id : null,
     };
@@ -316,6 +318,7 @@ const AddComment = ({ threadData, buttonValue = "Post",setReplying }) => {
       setImages([]);
       setPdfs([]);
       setLinks([]);
+      setVideos([]); // ✅ Clear videos
       setReplying(false);
     } catch (error) {
       console.error("Error creating thread:", error);
@@ -389,7 +392,20 @@ const AddComment = ({ threadData, buttonValue = "Post",setReplying }) => {
     setCurrentLink(e.target.value);
     if (error && e.target.value.trim() !== "") setError("");
   };
-
+  const handleVideoUpload = async (e) => {
+    if (e.target.files.length === 0) return;
+    setIsUploading(true);
+    try {
+      const uploadUrl = await uploadImageAndGetURL(e.target.files[0]); // ✅ Upload video
+      setVideos([...videos, uploadUrl]); // ✅ Update state
+      e.target.value = "";
+    } catch (error) {
+      console.error("Video upload failed:", error);
+      setError("Video upload failed. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
   return (
     <div className="add-comment-container">
       <div className="add-comment">
@@ -410,13 +426,17 @@ const AddComment = ({ threadData, buttonValue = "Post",setReplying }) => {
               : ""}
           </p>
         )} {/* Error message */}
+      
         <div className="file-inputs">
-          <label htmlFor="image-upload" className="file-label">
+        {
+          buttonValue== "Post" &&
+          (<>  <label htmlFor="image-upload" className="file-label">
             <FaCamera />
             <input
               type="file"
               id="image-upload"
               accept="image/*"
+       
               onChange={handleImageUpload}
               style={{ display: "none" }}
             />
@@ -427,10 +447,18 @@ const AddComment = ({ threadData, buttonValue = "Post",setReplying }) => {
               type="file"
               id="pdf-upload"
               accept="application/pdf"
+          
               onChange={handlePDFUpload}
               style={{ display: "none" }}
             />
           </label>
+          
+          <label htmlFor="video-upload" className="file-label"> {/* ✅ Add video input */}
+                <FaVideo />
+                <input type="file" id="video-upload" accept="video/*" onChange={handleVideoUpload} style={{ display: "none" }} />
+              </label></>)
+        }
+        
           <div className="link-input-wrapper">
             <FaLink className="link-icon" />
             <input
@@ -510,6 +538,24 @@ const AddComment = ({ threadData, buttonValue = "Post",setReplying }) => {
             </ul>
           </div>
         )}
+
+<div className="attachments">
+        {videos.length > 0 && (
+          <div className="attachment-section video-section">
+            <h4>Videos</h4>
+            <div className="video-grid">
+              {videos.map((video, index) => (
+                <div key={index} className="video-wrapper">
+                  <video src={video} controls width="250"></video> {/* ✅ Display video */}
+                  <button className="remove-btn" onClick={() => removeAttachment(index, "video")}>
+                    <FaTimes />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
         {links.length > 0 && (
           <div className="attachment-section link-section">
             <h4>Links</h4>
