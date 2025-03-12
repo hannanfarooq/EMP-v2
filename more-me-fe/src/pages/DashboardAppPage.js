@@ -36,7 +36,9 @@ import Questionnaire from 'src/components/feedback/dailyQuestions';
 import {
   getAllDailyQuestions, getUserStartUpQuestions, getArticlesFromTopicAndContentPref, getresultsArticlesForInterestTopics, 
   getBooks, getVideos, getPodcasts, getWebinars, getCompanyAnnouncement, CreateThread,
-  getUserProfile
+  getUserProfile,
+  createArticle,
+  getUrlsByTitle
 } from 'src/api';
 import { toast } from 'react-toastify';
 import Chip from '@mui/material/Chip';
@@ -147,7 +149,7 @@ export default function DashboardAppPage() {
 
   const [isScrolling, setIsScrolling] = useState(false);
   const [anchorElMap, setAnchorElMap] = useState({});
-
+  const [visibleCourses, setVisibleCourses] = useState(10);
   const AnimatedAvatar = styled(Avatar)`
   cursor: pointer;
   position: fixed !important;
@@ -525,33 +527,123 @@ export default function DashboardAppPage() {
       toast.error('Error while fetching articles');
     }
   };
-
-  const fetchCourses = async (startIndex = 1) => {
-    console.log("interestTopics->", interestTopics);
-    console.log("contentPreferences->", contentPreferences);
-    console.log("hobbies->", hobbies);
-    console.log("lifePrinciple->", lifePrinciple); 
-    if (interestTopics.length > 0 && contentPreferences.length > 0 && lifePrinciple.length > 0) {
-      try {
-        const result = await getArticlesFromTopicAndContentPref({ topic: interestTopics.join(',') +','+ lifePrinciple.join(','), contentPreferences, hobbies, start: startIndex });
-        console.log("getArticlesFromTopicAndContentPref: ", result);
-        if (result && result.items) {
-          if (startIndex === 1) {
-            setCourses(result.items);
-          } else {
-            setCourses((prevCourses) => [...prevCourses, ...result.items]);
-          }
-        } else {
-          toast.error('No courses found');
-        }
-      } catch (error) {
-        // console.error('Error while fetching courses', error);
-        toast.error('Error while fetching courses');
-      }
-    } else {
-      // toast.error('No interest topics or content preferences provided');
+  const shuffleArray = (array) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]]; // Swap elements
     }
   };
+  const fetchCourses = async (startIndex = 1) => {
+    console.log("Fetching courses for interestTopics, hobbies, and lifePrinciple separately...");
+  
+    const allTopics = [...interestTopics, ...hobbies, ...lifePrinciple];
+    const now = new Date(); // Get current timestamp
+  
+    try {
+      // Fetch all topics from the database in a single call
+      const dbResults = await getUrlsByTitle({ titles: allTopics });
+  
+      let allResults = [];
+      const topicsToFetch = [];
+  
+      // Process database results
+      allTopics.forEach(topic => {
+        const data = dbResults[topic]; // Get data for the topic
+  
+        if (data) {
+          const { urls, updatedAt } = data;
+          const lastUpdated = new Date(updatedAt);
+  
+          // Check if data is still fresh (less than 24 hours old)
+          const hoursPassed = (now - lastUpdated) / (1000 * 60 * 60);
+  
+          if (hoursPassed < 24 && urls && urls.length > 0) {
+            console.log(`Using cached data for ${topic}`);
+            allResults = [...allResults, ...JSON.parse(urls)];
+          } else {
+            console.log(`Data expired for ${topic}, fetching new data...`);
+            topicsToFetch.push(topic);
+          }
+        } else {
+          console.log(`No data found for ${topic}, fetching new data...`);
+          topicsToFetch.push(topic);
+        }
+      });
+  
+      // If all topics were found and up-to-date, return early
+      if (topicsToFetch.length === 0) {
+        shuffleArray(allResults);
+        setCourses(allResults);
+        return;
+      }
+  
+      console.log(`Fetching results for ${topicsToFetch.length} topics from API...`);
+  
+      // Fetch missing/expired topics in parallel
+      const fetchResults = await Promise.all(
+        topicsToFetch.map(topic =>
+          getArticlesFromTopicAndContentPref({
+            topic,
+            contentPreferences,
+            start: 1
+          }).then(result => ({ topic, result }))
+        )
+      );
+  
+      // Process and store the newly fetched results
+      for (const { topic, result } of fetchResults) {
+        if (result && result.items && result.items.length > 0) {
+          await createArticle(topic, result.items); // Store new data in database
+          console.log("Fetched new articles:", result.items);
+          allResults = [...allResults, ...result.items];
+        } else {
+          console.warn(`No results found for topic: ${topic}`);
+        }
+      }
+  
+      // Store final results in state
+      if (allResults.length > 0) {
+        shuffleArray(allResults);
+        setCourses(allResults);
+      }
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    }
+  };
+  
+  
+  
+
+  // const fetchCourses = async (startIndex = 1) => {
+  //   console.log("interestTopics->", interestTopics);
+  //   console.log("contentPreferences->", contentPreferences);
+  //   console.log("hobbies->", hobbies);
+  //   console.log("lifePrinciple->", lifePrinciple); 
+  //   if (interestTopics.length > 0 && contentPreferences.length > 0 && lifePrinciple.length > 0) {
+  //     try {
+  //       const result = await getArticlesFromTopicAndContentPref({ topic: interestTopics.join(',') +','+ lifePrinciple.join(','), contentPreferences, hobbies, start: startIndex });
+  //       console.log("interestTopics.join(',') : ",interestTopics.join(','))
+  //       console.log("contentPreferences : ",contentPreferences)
+  //       console.log("hobbies : ",hobbies)
+  //       console.log("lifePrinciple.join(','): ",  lifePrinciple.join(','))
+  //       console.log("getArticlesFromTopicAndContentPref: ", result);
+  //       if (result && result.items) {
+  //         if (startIndex === 1) {
+  //           setCourses(result.items);
+  //         } else {
+  //           setCourses((prevCourses) => [...prevCourses, ...result.items]);
+  //         }
+  //       } else {
+  //         toast.error('No courses found');
+  //       }
+  //     } catch (error) {
+  //       // console.error('Error while fetching courses', error);
+  //       toast.error('Error while fetching courses');
+  //     }
+  //   } else {
+  //     // toast.error('No interest topics or content preferences provided');
+  //   }
+  // };
 
   //fetch books
   const fetchBooks = async (startIndex = 1) => {
@@ -765,11 +857,11 @@ export default function DashboardAppPage() {
   };
 
   const handleLoadMore = () => {
-    setCourseStartIndex((prevStartIndex) => {
-      const newIndex = prevStartIndex + 10;
-      fetchCourses(newIndex);
-      return newIndex;
-    });
+    if (visibleCourses + 10 >= courses.length) {
+      setVisibleCourses(courses.length); // Show all courses if fewer than 10 remain
+    } else {
+      setVisibleCourses(visibleCourses + 10); // Load 10 more
+    }
   };
   const handleResponse = (responseString) => {
     if (responseString) {
@@ -957,80 +1049,75 @@ export default function DashboardAppPage() {
 
           {/* New Section for Courses You Might Be Interested In */}
           {courses.length > 0 && (
-            <Grid item xs={12} md={12} lg={6}>
-              <Card>
-                <CardHeader title="Articles You Might Be Interested In" />
-                <Box sx={{ p: 4, pb: 4, flexWrap: 'wrap', alignItems: 'center' }} dir="ltr">
-                  <Grid container spacing={2}>
-                    {courses.map((course, index) => (
-                      <Grid item xs={12} md={6} key={index}>
-                        {/* Add ellipsis button here */}
-                        <Card sx={{ textAlign: "end" }}>
-                          <IconButton onClick={(event) => handleOpenMenu(event, course.id || index)}>
-                            <Iconify icon="eva:more-vertical-fill" width={20} height={20} />
-                          </IconButton>
+  <Grid item xs={12} md={12} lg={6}>
+    <Card>
+      <CardHeader title="Articles You Might Be Interested In" />
+      <Box sx={{ p: 4, pb: 4, flexWrap: "wrap", alignItems: "center" }} dir="ltr">
+        <Grid container spacing={2}>
+          {courses.slice(0, visibleCourses).map((course, index) => (
+            <Grid item xs={12} md={6} key={index}>
+              <Card sx={{ textAlign: "end" }}>
+                <IconButton onClick={(event) => handleOpenMenu(event, course.id || index)}>
+                  <Iconify icon="eva:more-vertical-fill" width={20} height={20} />
+                </IconButton>
 
-                          {/* Popover with options outside the ArticleCard */}
-                          <Popover
-                            // open={Boolean(open)}
-                            // anchorEl={open}
-                            // onClose={handleCloseMenu}
-                            open={Boolean(anchorElMap[course.id || index])}
-                            anchorEl={anchorElMap[course.id || index]}
-                            onClose={() => handleCloseMenu(course.id || index)}
-                            anchorOrigin={{ vertical: "top", horizontal: "left" }}
-                            transformOrigin={{ vertical: "top", horizontal: "right" }}
-                            PaperProps={{
-                              sx: {
-                                boxShadow: "none",
-                                p: 1,
-                                // width: 140,
-                                "& .MuiMenuItem-root": {
-                                  typography: "body2",
-                                  borderRadius: 0.75,
-                                },
-                              },
-                            }}
-                          >
-                            <MenuItem onClick={() => handleShare(course.link, course.id || index)}>
-                              <Iconify icon={"eva:share-fill"} sx={{ mr: 2 }} />
-                              Share
-                            </MenuItem>
-                          </Popover>
-                          <ArticleCard
-                            sx={{ borderRadius: "0", margin: "0" }}
-                            component="a"
-                            href={course.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            background={course.pagemap?.cse_image?.[0]?.src || backgroundImagePath}
-                            onClick={handleLinkClick} // Prevent link navigation when clicking IconButton
-                          >
-                            <ArticleTitle
-                              style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                              variant="h6"
-                            >
-                              {course.title}
-                            </ArticleTitle>
+                <Popover
+                  open={Boolean(anchorElMap[course.id || index])}
+                  anchorEl={anchorElMap[course.id || index]}
+                  onClose={() => handleCloseMenu(course.id || index)}
+                  anchorOrigin={{ vertical: "top", horizontal: "left" }}
+                  transformOrigin={{ vertical: "top", horizontal: "right" }}
+                  PaperProps={{
+                    sx: {
+                      boxShadow: "none",
+                      p: 1,
+                      "& .MuiMenuItem-root": {
+                        typography: "body2",
+                        borderRadius: 0.75,
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem onClick={() => handleShare(course.link, course.id || index)}>
+                    <Iconify icon={"eva:share-fill"} sx={{ mr: 2 }} />
+                    Share
+                  </MenuItem>
+                </Popover>
 
-                          </ArticleCard>
-                        </Card>
-                      </Grid>
-                    ))}
-                  </Grid>
-                  <Button
-                    type="button"
-                    fullWidth
-                    color="secondary"
-                    onClick={handleLoadMore}
-                    sx={{ mt: 2, mb: 1 }}
+                <ArticleCard
+                  sx={{ borderRadius: "0", margin: "0" }}
+                  component="a"
+                  href={course.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  background={course.pagemap?.cse_image?.[0]?.src || backgroundImagePath}
+                  onClick={handleLinkClick}
+                >
+                  <ArticleTitle
+                    style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                    variant="h6"
                   >
-                    Load More
-                  </Button>
-                </Box>
+                    {course.title}
+                  </ArticleTitle>
+                </ArticleCard>
               </Card>
             </Grid>
-          )}
+          ))}
+        </Grid>
+
+        {/* Show Load More Button Until All Articles Are Displayed */}
+        {visibleCourses < courses.length ? (
+          <Button type="button" fullWidth color="secondary" onClick={handleLoadMore} sx={{ mt: 2, mb: 1 }}>
+            Load More
+          </Button>
+        ) : (
+          <Typography sx={{ textAlign: "center", mt: 2 }}>No more articles</Typography>
+        )}
+      </Box>
+    </Card>
+  </Grid>
+)}
+
           {/* For books */}
           {preferences.includes("Reading Books") && books.length > 0 && (
             <Grid item xs={12} md={12} lg={6}>

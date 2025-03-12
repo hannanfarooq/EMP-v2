@@ -29,6 +29,7 @@ import { getNotificationsByUserId, markAllNotificationsAsRead } from "../control
 import { createCategory, deleteCategory, getAllCategories, updateCategory } from "../controllers/gamifications/Category.controller";
 import { createSubCategory, deleteSubCategory, getSubCategoryById, updateSubCategory } from "../controllers/gamifications/SubCategory.controller";
 import { createGame, deleteGame, getGamesBySubCategory, updateGame } from "../controllers/gamifications/Game.controller";
+import { createArticle, getUrlsByTitle } from "../controllers/Articles/Articles.controller";
 
 const router = express.Router();
 
@@ -205,4 +206,7 @@ router.post('/getteamuser',userole.getTeamWithUsers);
 router.post('/getTeamMembersbyteam',userole.getTeamMembers);
 
 
+//Articles Routes
+router.post('/createArticle',createArticle);
+router.post('/getUrlsByTitle',getUrlsByTitle)
 module.exports = router;

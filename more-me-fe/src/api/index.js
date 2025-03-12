@@ -3155,6 +3155,36 @@ export const getArticles = async (category) => {
 //   }
 // };
 
+export const getUrlsByTitle = async (title) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/getUrlsByTitle`;
+  const data = { titles: title }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const createArticle = async (title, urls) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/createArticle`;
+  const data = { title: title, urls:urls }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
 export const getArticlesFromTopicAndContentPref = async ({ topic, contentPreferences, hobbies, start = 1 }) => {
   //new api key=AIzaSyDS-x8lZ0vl_suQ11XB2ndkFiQTT-SlxR0
   //old api key=AIzaSyC3FVIBTpZUcwYI16HR1K9eu8TktccL6Dw
