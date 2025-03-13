@@ -83,7 +83,7 @@ const AttemptGamifications = (props) => {
         };
   const fetchCategories = async () => {
       try {
-        const response = await getAllCategories();
+        const response = await getAllCategories(storedUserData.company.id);
         if (response?.data) {
           setCategories(response.data);
           for (const category of response.data) {
@@ -454,54 +454,68 @@ const AttemptGamifications = (props) => {
             </Typography>
             <Typography className="question-text" variant="h4">{questions[questionCount] && questions[questionCount].text}</Typography>
           </center>
+
           {
-  questions[questionCount]?.media ? (
-    // Display video if media is available
-    <video className="video-container" width="800" height="200" controls>
-      <source src={questions[questionCount].media} />
-      Your browser does not support the video tag.
-    </video>
-  ) : questions[questionCount]?.image.length >= 1 ? (
-    // If images are available, check if there are multiple images or just one
-    questions[questionCount]?.image.length > 1 ? (
-      <div className="slider-container">
-        <Slider {...settings}>
-          {questions[questionCount].image.map((img, index) => (
-            <div key={index} className="slider-item" style={{ height: 500 }}>
-              <img height={500} src={img} alt={`Question Image ${index}`} />
+  questions.length == 0 ? (
+    <div 
+      style={{
+        maxHeight: '300px',
+        overflowY: 'auto',
+        border: '1px solid #ccc',
+        padding: '10px',
+        borderRadius: '8px',
+        backgroundColor: '#f9f9f9',
+      }}
+    >
+      <Typography variant="h7" style={{ whiteSpace: 'pre-line' }}>
+        No Question Available for this Level, Coming Soon
+      </Typography>
+    </div>
+  ) : (
+    <>
+      {
+        questions[questionCount]?.media ? (
+          // Display video if media is available
+          <video className="video-container" width="800" height="200" controls>
+            <source src={questions[questionCount].media} />
+            Your browser does not support the video tag.
+          </video>
+        ) : questions[questionCount]?.image?.length > 0 ? (
+          // If images are available, check if there are multiple images or just one
+          questions[questionCount].image.length > 1 ? (
+            <div className="slider-container">
+              <Slider {...settings}>
+                {questions[questionCount].image.map((img, index) => (
+                  <div key={index} className="slider-item" style={{ height: 500 }}>
+                    <img height={500} src={img} alt={`Question Image ${index}`} />
+                  </div>
+                ))}
+              </Slider>
             </div>
-          ))}
-        </Slider>
-      </div>
-    ) : (
-      <img
-        className="question-image"
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          border: "3px solid #4CAF50", // ✅ Green border
-          borderRadius: "10px",
-          padding: "10px", // ✅ Add some space inside the border
-          maxWidth: "1200px",
-          margin: "auto",
-        }}
-        src={questions[questionCount]?.image[0]} // Assuming `image` is an array
-        alt="Question"
-      />
-    )
-  ) : 
-    selectedCategoryData?.video ? (
-      <video className="video-container" width="800" height="200" controls>
-        <source src={selectedCategoryData?.video} />
-        Your browser does not support the video tag.
-      </video>
-    ) : (
-      // If no media or video, check for images in selectedCategoryData
-      <div className="slider-container">
-        {(() => {
+          ) : (
+            <img
+              className="question-image"
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                border: "3px solid #4CAF50", // ✅ Green border
+                borderRadius: "10px",
+                padding: "10px", // ✅ Add some space inside the border
+                maxWidth: "1200px",
+                margin: "auto",
+              }}
+              src={questions[questionCount]?.image[0]} // Assuming `image` is an array
+              alt="Question"
+            />
+          )
+        ) : selectedCategoryData?.video ? (
+          <video className="video-container" width="800" height="200" controls>
+            <source src={selectedCategoryData.video} />
+            Your browser does not support the video tag.
+          </video>
+        ) : (() => {
           let images = selectedCategoryData?.images || "[]";
-  
           try {
             images = JSON.parse(images);
             if (!Array.isArray(images)) {
@@ -510,69 +524,70 @@ const AttemptGamifications = (props) => {
           } catch (error) {
             images = []; // Default to an empty array if parsing fails
           }
-  
-          // Check if there are multiple images or just one
-          return images.length > 1 ? (
-            <Slider {...settings}>
-              {images.map((img, index) => (
-                <div key={index} className="slider-item" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                  <img
-                    src={img}
-                    alt={`Category Image ${index}`}
-                    style={{ maxWidth: "400px", width: "50%", height: "50%", margin: "auto", borderRadius: "10px" }}
-                  />
-                </div>
-              ))}
-            </Slider>
-          ) : (
-            images.length === 1 && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  border: "3px solid #4CAF50", // ✅ Green border
-                  borderRadius: "10px",
-                  padding: "10px", // ✅ Add some space inside the border
-                  maxWidth: "1200px",
-                  
-                }}
-              >
-                <img
-                  src={images[0]}
-                  alt="Category Image"
-                  style={{
-                  
-                    maxWidth: "100%",
-                    width: "50%",
-                    height: "auto",
-                    borderRadius: "10px",
-                  }}
-                />
-              </div>
-            )
-          );
-        })()}
-      </div>
-    )
-  
-   // If none of the above conditions match, render nothing
-}
-<div 
-  style={{
-    maxHeight: '300px', // Adjust the height as needed
-    overflowY: 'auto',  // Enables vertical scrolling if content overflows
-    border: '1px solid #ccc', // Optional border to visually define the box
-    padding: '10px', // Optional padding for better readability
-    borderRadius: '8px', // Optional rounded corners
-    backgroundColor: '#f9f9f9', // Optional background color
-  }}
->
-  <Typography variant="h7" style={{ whiteSpace: 'pre-line' }}>
-    {questions[questionCount]?.description!=""?questions[questionCount]?.description:selectedCategoryData.description}
-  </Typography>
-</div>
 
+          return images.length > 1 ? (
+            <div className="slider-container">
+              <Slider {...settings}>
+                {images.map((img, index) => (
+                  <div key={index} className="slider-item" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                    <img
+                      src={img}
+                      alt={`Category Image ${index}`}
+                      style={{ maxWidth: "400px", width: "50%", height: "50%", margin: "auto", borderRadius: "10px" }}
+                    />
+                  </div>
+                ))}
+              </Slider>
+            </div>
+          ) : images.length === 1 ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                border: "3px solid #4CAF50", // ✅ Green border
+                borderRadius: "10px",
+                padding: "10px", // ✅ Add some space inside the border
+                maxWidth: "1200px",
+              }}
+            >
+              <img
+                src={images[0]}
+                alt="Category Image"
+                style={{
+                  maxWidth: "100%",
+                  width: "50%",
+                  height: "auto",
+                  borderRadius: "10px",
+                }}
+              />
+            </div>
+          ) : null;
+        })()
+      }
+
+      {/* Description Section */}
+      <div 
+        style={{
+          maxHeight: '300px',
+          overflowY: 'auto',
+          border: '1px solid #ccc',
+          padding: '10px',
+          borderRadius: '8px',
+          backgroundColor: '#f9f9f9',
+        }}
+      >
+        <Typography variant="h7" style={{ whiteSpace: 'pre-line' }}>
+          {questions[questionCount]?.description?.trim()
+            ? questions[questionCount].description
+            : selectedCategoryData?.description || ""}
+        </Typography>
+      </div>
+    </>
+  )
+}
+
+    
 
            <Divider sx={{ m: 3 }} />  {/* This adds a margin around the divider */}
           {questions[questionCount] && questions[questionCount].type === "single-choice" && (

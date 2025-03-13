@@ -58,6 +58,7 @@ const CreateGamification = (props) => {
   const { data, isLoading, error } = useQuery(["questionCategories"], getMessages);
   const [gamesBySubCategory, setGamesBySubCategory] = useState({}); // Store games by subcategory ID
   const [selectedgameid, setSelectedgameid] = useState('');
+  const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
   const [globalSelection, setGlobalSelection] = useState({
     categoryId: "",
     subCategoryId: "",
@@ -65,7 +66,7 @@ const CreateGamification = (props) => {
   });
   const fetchCategories = async () => {
     try {
-      const response = await getAllCategories();
+      const response = await getAllCategories(storedUserData.company.id);
       if (response?.data) {
         setCategories(response.data);
       }

@@ -133,7 +133,7 @@ export default function DashboardAppPage() {
   const [booksStartIndex, setBookStartIndex] = useState(1);
   const [videosStartIndex, setVideosStartIndex] = useState(1);
   const [podcastsStartIndex, setPodcastsStartIndex] = useState(1);
-  const { webinarsStartIndex, setWebinarStartIndex } = useProfileSetUp(1);
+  const { webinarsStartIndex, setWebinarStartIndex } = useState(1);
   const { profileSetUp, setProfileSetUp } = useProfileSetUp(1);
   const [preferences, setPreferences] = useState([]);
 

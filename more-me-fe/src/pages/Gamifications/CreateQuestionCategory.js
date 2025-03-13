@@ -25,7 +25,7 @@ const AddQuestionCategory = () => {
   const [gamesBySubCategory, setGamesBySubCategory] = useState({});
   const [startingLevel, setStartingLevel] = useState(false);  // New state for starting level
   const [canProceedToNextLevel, setCanProceedToNextLevel] = useState(false);  // New state for canProceedToNextLevel
-
+  const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
   const handleCategoryExpand = (categoryId) => {
     setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
   };
@@ -42,7 +42,7 @@ const AddQuestionCategory = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await getAllCategories();
+      const response = await getAllCategories(storedUserData.company.id);
       if (response?.data) {
         setCategories(response.data);
         for (const category of response.data) {

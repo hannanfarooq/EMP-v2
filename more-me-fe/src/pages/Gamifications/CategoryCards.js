@@ -144,7 +144,7 @@ console.log("questionCategories: ",QuestionCategories)
                       onClick={() => setSelectedSubCategory(sub.id)}
                       sx={{ margin: '10px auto 0' }}
                     >
-                      Show Question Categories
+                      Show Games 
                     </Button>
                   </CardContent>
                 </Card>
@@ -179,7 +179,7 @@ console.log("questionCategories: ",QuestionCategories)
                       onClick={() => setSelectedGame(sub.id)}
                       sx={{ margin: '10px auto 0' }}
                     >
-                      Show Levels Categories
+                      Show Levels 
                     </Button>
                   </CardContent>
                 </Card>
