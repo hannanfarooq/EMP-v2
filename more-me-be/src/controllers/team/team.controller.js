@@ -128,7 +128,7 @@ export const getTeamMembers = async (req, res) => {
     const { teamId } = req.body;
     const id=teamId;
     const teamData = await Team.findByPk(id);
-    return successResponse(req, res, teamData.userIds);
+    return successResponse(req, res, teamData.userIds?teamData.userIds:[]);
   } catch (error) {
     throw error;
   }

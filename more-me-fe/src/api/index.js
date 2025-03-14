@@ -3155,10 +3155,102 @@ export const getArticles = async (category) => {
 //   }
 // };
 
+export const getpodcastUrlsByTitle = async (title) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/getpodcastUrlsByTitle`;
+  const data = { titles: title }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const getWebinarsUrlsByTitle = async (title) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/getWebinarsUrlsByTitle`;
+  const data = { titles: title }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const getVideosByTitle = async (title) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/getVideoUrlsByTitle`;
+  const data = { titles: title }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
 export const getUrlsByTitle = async (title) => {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const apiUrl = `/api/getUrlsByTitle`;
   const data = { titles: title }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const createwebinars = async (title, urls) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/createwebinars`;
+  const data = { title: title, urls:urls }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const createPosdcast = async (title, urls) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/createPosdcast`;
+  const data = { title: title, urls:urls }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const createVideos = async (title, urls) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/createVideos`;
+  const data = { title: title, urls:urls }
  
   const res = await fetch(baseURL + apiUrl, {
     method: "POST",
@@ -3444,7 +3536,7 @@ export const getBooks = async (topic) => {
 };
 // Fetch Videos
 export const getVideos = async (topic) => {
-  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topic)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=${numResults}`;
+  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topic)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=40`;
   try {
     const response = await fetchWithRetry(youtubeSearchUrl);
     console.log("video response", response);
@@ -3523,7 +3615,7 @@ export const getPodcasts = async (topic) => {
     .map((topic) => `${topic.trim()} podcast`)
     .join(" | "); // Use " | " for OR search in YouTube Data API
     console.log("topics for podcasts:", topicsWithPodcast);
-  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topicsWithPodcast)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=${numResults}`;
+  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topicsWithPodcast)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=40`;
   try {
     const response = await fetchWithRetry(youtubeSearchUrl);
     console.log("podcast results", response);
@@ -3548,7 +3640,7 @@ export const getWebinars = async (topic) => {
     .map((topic) => `${topic.trim()} webinar`)
     .join(" | "); // Use " | " for OR search in YouTube Data API
     console.log("topics for podcasts:", topicsWithWebinars);
-  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topicsWithWebinars)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=${numResults}`;
+  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topicsWithWebinars)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=40`;
   try {
     const response = await fetchWithRetry(youtubeSearchUrl);
     console.log("webinar results", response);

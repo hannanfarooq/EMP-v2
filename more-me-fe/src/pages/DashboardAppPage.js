@@ -38,7 +38,13 @@ import {
   getBooks, getVideos, getPodcasts, getWebinars, getCompanyAnnouncement, CreateThread,
   getUserProfile,
   createArticle,
-  getUrlsByTitle
+  getUrlsByTitle,
+  getVideosByTitle,
+  createVideos,
+  getpodcastUrlsByTitle,
+  createPosdcast,
+  getWebinarsUrlsByTitle,
+  createwebinars
 } from 'src/api';
 import { toast } from 'react-toastify';
 import Chip from '@mui/material/Chip';
@@ -150,6 +156,9 @@ export default function DashboardAppPage() {
   const [isScrolling, setIsScrolling] = useState(false);
   const [anchorElMap, setAnchorElMap] = useState({});
   const [visibleCourses, setVisibleCourses] = useState(10);
+  const [visibleVideos, setVisibleVideos] = useState(10);
+  const [visiblepodcast, setvisiblepodcast] = useState(10);
+  const [visiblewebinars, setVisiblewebinars] = useState(10);
   const AnimatedAvatar = styled(Avatar)`
   cursor: pointer;
   position: fixed !important;
@@ -414,7 +423,7 @@ export default function DashboardAppPage() {
 
             if (contentPreferences.includes("Webinars or conferences")) {
               // console.log("User prefers Webinars or conferences.");
-              fetchWebinars();
+             fetchWebinars();
             }
 
             // If no preferences are selected
@@ -686,118 +695,256 @@ export default function DashboardAppPage() {
   };
   //fetch videosResult
   const fetchVideos = async (startIndex = 1) => {
-    console.log("videos fetcing..........");
-    if (interestTopics.length > 0) {
-      try {
-        // Combine the interest topics into a single search query
-        const topicQuery = interestTopics.join(',') +','+ lifePrinciple.join(',') +','+ hobbies.join(',');
-        console.log("topicQuery for videos:>", topicQuery);
-        // Call the getBooks function with the combined topic query
-        const videosResult = await getVideos(topicQuery);
-        console.log("Videos results", videosResult);
-
-        if (videosResult && videosResult.length > 0) {
-          // If it's the first page of results, set the books directly
-          if (startIndex === 1) {
-            setVideos(videosResult);
+    console.log("Fetching videos for interestTopics, hobbies, and lifePrinciple separately...");
+  
+    const allTopics = [...interestTopics, ...hobbies, ...lifePrinciple];
+    const now = new Date(); // Get current timestamp
+  
+    try {
+      // Fetch existing videos from the database
+      const dbResults = await getVideosByTitle({ titles: allTopics });
+  
+      let allResults = [];
+      const topicsToFetch = [];
+  
+      // Process database results
+      allTopics.forEach(topic => {
+        const data = dbResults[topic]; // Get stored data for the topic
+  
+        if (data) {
+          const { urls, updatedAt } = data;
+          const lastUpdated = new Date(updatedAt);
+  
+          // Check if data is fresh (less than 24 hours old)
+          const hoursPassed = (now - lastUpdated) / (1000 * 60 * 60);
+  
+          if (hoursPassed < 24 && urls && urls.length > 0) {
+            console.log(`Using cached data for ${topic}`);
+            allResults = [...allResults, ...JSON.parse(urls)];
           } else {
-            // Append new results to the existing list of books
-            setVideos((prevVideos) => [...prevVideos, ...videosResult]);
+            console.log(`Data expired for ${topic}, fetching new videos...`);
+            topicsToFetch.push(topic);
           }
         } else {
-          toast.error('No Videos found for the given topics.');
+          console.log(`No data found for ${topic}, fetching new videos...`);
+          topicsToFetch.push(topic);
         }
-      } catch (error) {
-        console.error('Error while fetching Videos:', error);
-        toast.error('Error while fetching Videos.');
+      });
+  
+      // If all topics are already up-to-date, return early
+      if (topicsToFetch.length === 0) {
+        console.log('Total videos:', allResults.length);
+        shuffleArray(allResults);
+        setVideos(allResults);
+        return;
       }
-    } else {
-      // toast.error('No interest topics provided for video search.');
+  
+      console.log(`Fetching results for ${topicsToFetch.length} topics from API...`);
+  
+      // Fetch missing/expired topics in parallel
+      const fetchResults = await Promise.all(
+        topicsToFetch.map(topic =>
+          getVideos(topic).then(result => ({ topic, result }))
+        )
+      );
+  
+      // Process and store the newly fetched results
+      for (const { topic, result } of fetchResults) {
+        if (result && result.length > 0) {
+          await createVideos(topic, result); // Store new data in the database
+          console.log("Fetched new videos:", result);
+          allResults = [...allResults, ...result];
+        } else {
+          console.warn(`No videos found for topic: ${topic}`);
+        }
+      }
+  
+      // Store final results in state
+      if (allResults.length > 0) {
+        shuffleArray(allResults);
+        setVideos(allResults);
+      }
+    } catch (error) {
+      console.error("Error fetching videos:", error);
+      toast.error("Error while fetching Videos.");
     }
   };
+  
   const handleLoadMoreVideos = () => {
-    setVideosStartIndex((prevStartIndex) => {
-      const newIndex = prevStartIndex + 10;
-      fetchVideos(newIndex);
-      return newIndex;
-    });
+    if (visibleVideos+ 10 >= videos.length) { 
+      setVisibleVideos(courses.length); // Show all courses if fewer than 10 remain 
+    } else {
+      setVisibleVideos(visibleVideos+ 10); // Load 10 more
+    }
   };
 
   //fetch videosResult
   const fetchWebinars = async (startIndex = 1) => {
-    console.log("podcasts fetcing..........");
-    if (interestTopics.length > 0) {
-      try {
-        // Combine the interest topics into a single search query
-        const topicQuery = interestTopics.join(',') +','+ lifePrinciple.join(',') +','+ hobbies.join(',');
-
-        // Call the getBooks function with the combined topic query
-        const webinarsResult = await getWebinars(topicQuery);
-        console.log("webinars results", webinarsResult);
-
-        if (webinarsResult && webinarsResult.length > 0) {
-          // If it's the first page of results, set the books directly
-          if (startIndex === 1) {
-            setWebinars(webinarsResult);
+    console.log("Fetching webinars for interestTopics, hobbies, and lifePrinciple separately...");
+  
+    const allTopics = [...interestTopics, ...hobbies, ...lifePrinciple];
+    const now = new Date(); // Get current timestamp
+  
+    try {
+      // Fetch existing webinars from the database
+      const dbResults = await getWebinarsUrlsByTitle({ titles: allTopics });
+  
+      let allResults = [];
+      const topicsToFetch = [];
+  
+      // Process database results
+      allTopics.forEach(topic => {
+        const data = dbResults[topic]; // Get stored data for the topic
+  
+        if (data) {
+          const { urls, updatedAt } = data;
+          const lastUpdated = new Date(updatedAt);
+  
+          // Check if data is fresh (less than 24 hours old)
+          const hoursPassed = (now - lastUpdated) / (1000 * 60 * 60);
+  
+          if (hoursPassed < 24 && urls && urls.length > 0) {
+            console.log(`Using cached data for ${topic}`);
+            allResults = [...allResults, ...JSON.parse(urls)];
           } else {
-            // Append new results to the existing list of books
-            setWebinars((prevWebinars) => [...prevWebinars, ...webinarsResult]);
+            console.log(`Data expired for ${topic}, fetching new webinars...`);
+            topicsToFetch.push(topic);
           }
         } else {
-          toast.error('No podcasts found for the given topics.');
+          console.log(`No data found for ${topic}, fetching new webinars...`);
+          topicsToFetch.push(topic);
         }
-      } catch (error) {
-        console.error('Error while fetching podcasts:', error);
-        toast.error('Error while fetching podcasts.');
+      });
+  
+      // If all topics are already up-to-date, return early
+      if (topicsToFetch.length === 0) {
+        console.log("total webinars", allResults.length);
+        shuffleArray(allResults);
+        setWebinars(allResults);
+        return;
       }
-    } else {
-      // toast.error('No interest topics provided for video search.');
+  
+      console.log(`Fetching results for ${topicsToFetch.length} topics from API...`);
+  
+      // Fetch missing/expired topics in parallel
+      const fetchResults = await Promise.all(
+        topicsToFetch.map(topic =>
+          getWebinars(topic).then(result => ({ topic, result }))
+        )
+      );
+  
+      // Process and store the newly fetched results
+      for (const { topic, result } of fetchResults) {
+        if (result && result.length > 0) {
+          await createwebinars(topic, result); // Store new data in the database
+          console.log("Fetched new webinars:", result);
+          allResults = [...allResults, ...result];
+        } else {
+          console.warn(`No webinars found for topic: ${topic}`);
+        }
+      }
+  
+      // Store final results in state
+      if (allResults.length > 0) {
+        shuffleArray(allResults);
+        setWebinars(allResults);
+      }
+    } catch (error) {
+      console.error("Error fetching webinars:", error);
+      toast.error("Error while fetching Webinars.");
     }
   };
+  
   const handleLoadMoreWebinars = () => {
-    setWebinarStartIndex((prevStartIndex) => {
-      const newIndex = prevStartIndex + 10;
-      fetchWebinars(newIndex);
-      return newIndex;
-    });
+    if (visiblewebinars+ 10 >= webinars.length) { 
+      setVisiblewebinars(webinars.length); // Show all courses if fewer than 10 remain 
+    } else {
+      setVisiblewebinars(visiblewebinars+ 10); // Load 10 more
+    }
   };
   //fetch videosResult
   const fetchPodcasts = async (startIndex = 1) => {
-    console.log("podcasts fetcing..........");
-    if (interestTopics.length > 0) {
-      try {
-        // Combine the interest topics into a single search query
-        const topicQuery = interestTopics.join(',') +','+ lifePrinciple.join(',') +','+ hobbies.join(',');
-
-        // Call the getBooks function with the combined topic query
-        const podcastsResult = await getPodcasts(topicQuery);
-        console.log("podcasts results", podcastsResult);
-
-        if (podcastsResult && podcastsResult.length > 0) {
-          // If it's the first page of results, set the books directly
-          if (startIndex === 1) {
-            setPodcasts(podcastsResult);
+    console.log("Fetching podcasts for interestTopics, hobbies, and lifePrinciple separately...");
+  
+    const allTopics = [...interestTopics, ...hobbies, ...lifePrinciple];
+    const now = new Date(); // Get current timestamp
+  
+    try {
+      // Fetch existing podcasts from the database
+      const dbResults = await getpodcastUrlsByTitle({ titles: allTopics });
+  
+      let allResults = [];
+      const topicsToFetch = [];
+  
+      // Process database results
+      allTopics.forEach(topic => {
+        const data = dbResults[topic]; // Get stored data for the topic
+  
+        if (data) {
+          const { urls, updatedAt } = data;
+          const lastUpdated = new Date(updatedAt);
+  
+          // Check if data is fresh (less than 24 hours old)
+          const hoursPassed = (now - lastUpdated) / (1000 * 60 * 60);
+  
+          if (hoursPassed < 24 && urls && urls.length > 0) {
+            console.log(`Using cached data for ${topic}`);
+            allResults = [...allResults, ...JSON.parse(urls)];
           } else {
-            // Append new results to the existing list of books
-            setPodcasts((prevPodcasts) => [...prevPodcasts, ...podcastsResult]);
+            console.log(`Data expired for ${topic}, fetching new podcasts...`);
+            topicsToFetch.push(topic);
           }
         } else {
-          toast.error('No podcasts found for the given topics.');
+          console.log(`No data found for ${topic}, fetching new podcasts...`);
+          topicsToFetch.push(topic);
         }
-      } catch (error) {
-        console.error('Error while fetching podcasts:', error);
-        toast.error('Error while fetching podcasts.');
+      });
+  
+      // If all topics are already up-to-date, return early
+      if (topicsToFetch.length === 0) {
+        console.log("TOTAL NO OF PODCASTS", allResults.length);
+        shuffleArray(allResults);
+        setPodcasts(allResults);
+        return;
       }
-    } else {
-      // toast.error('No interest topics provided for video search.');
+  
+      console.log(`Fetching results for ${topicsToFetch.length} topics from API...`);
+  
+      // Fetch missing/expired topics in parallel
+      const fetchResults = await Promise.all(
+        topicsToFetch.map(topic =>
+          getPodcasts(topic).then(result => ({ topic, result }))
+        )
+      );
+  
+      // Process and store the newly fetched results
+      for (const { topic, result } of fetchResults) {
+        if (result && result.length > 0) {
+          await createPosdcast(topic, result); // Store new data in the database
+          console.log("Fetched new podcasts:", result);
+          allResults = [...allResults, ...result];
+        } else {
+          console.warn(`No podcasts found for topic: ${topic}`);
+        }
+      }
+  
+      // Store final results in state
+      if (allResults.length > 0) {
+        shuffleArray(allResults);
+        setPodcasts(allResults);
+      }
+    } catch (error) {
+      console.error("Error fetching podcasts:", error);
+      toast.error("Error while fetching Podcasts.");
     }
   };
+  
   const handleLoadMorePodcasts = () => {
-    setPodcastsStartIndex((prevStartIndex) => {
-      const newIndex = prevStartIndex + 10;
-      fetchPodcasts(newIndex);
-      return newIndex;
-    });
+    if (visiblepodcast+ 10 >= podcasts.length) { 
+      setvisiblepodcast(podcasts.length); // Show all courses if fewer than 10 remain 
+    } else {
+      setvisiblepodcast(visiblepodcast+ 10); // Load 10 more
+    }
   };
 
     // Function to handle opening the popover for a specific card
@@ -1198,7 +1345,7 @@ export default function DashboardAppPage() {
                 <CardHeader title="Videos You Might Be Interested In" />
                 <Box sx={{ p: 4, pb: 4, flexWrap: 'wrap', alignItems: 'center' }} dir="ltr">
                   <Grid container spacing={2}>
-                    {videos.map((video, index) => (
+                  {videos.slice(0, visibleVideos).map((video, index) => (
                       <Grid item xs={12} md={6} key={index}>
                         <Card sx={{ textAlign: "end" }}>
                           <IconButton onClick={(event) => handleOpenMenu(event, video.id || index)}>
@@ -1249,16 +1396,14 @@ export default function DashboardAppPage() {
                       </Grid>
                     ))}
                   </Grid>
-
-                  <Button
-                    type="button"
-                    fullWidth
-                    color="secondary"
-                    onClick={handleLoadMoreVideos}
-                    sx={{ mt: 2, mb: 1 }}
-                  >
-                    Load More
-                  </Button>
+                  {visibleVideos < videos.length ? (
+          <Button type="button" fullWidth color="secondary" onClick={handleLoadMoreVideos} sx={{ mt: 2, mb: 1 }}>
+            Load More 
+          </Button>
+        ) : (
+          <Typography sx={{ textAlign: "center", mt: 2 }}>No more Videos</Typography>
+        )}
+               
 
                 </Box>
               </Card>
@@ -1272,7 +1417,7 @@ export default function DashboardAppPage() {
                 <CardHeader title="Podcasts You Might Be Interested In" />
                 <Box sx={{ p: 4, pb: 4, flexWrap: 'wrap', alignItems: 'center' }} dir="ltr">
                   <Grid container spacing={2}>
-                    {podcasts.map((podcast, index) => (
+                    {podcasts.slice(0, visiblepodcast).map((podcast, index) => (
                       <Grid item xs={12} md={6} key={index}>
                         <Card sx={{ textAlign: "end" }}>
                           <IconButton onClick={(event) => handleOpenMenu(event, podcast.id || index)}>
@@ -1324,15 +1469,13 @@ export default function DashboardAppPage() {
                     ))}
                   </Grid>
 
-                  <Button
-                    type="button"
-                    fullWidth
-                    color="secondary"
-                    onClick={handleLoadMorePodcasts}
-                    sx={{ mt: 2, mb: 1 }}
-                  >
-                    Load More
-                  </Button>
+                  {visiblepodcast < podcasts.length ? (
+          <Button type="button" fullWidth color="secondary" onClick={handleLoadMorePodcasts} sx={{ mt: 2, mb: 1 }}>
+            Load More 
+          </Button>
+        ) : (
+          <Typography sx={{ textAlign: "center", mt: 2 }}>No more Podcasts</Typography>
+        )}
 
                 </Box>
               </Card>
@@ -1346,7 +1489,7 @@ export default function DashboardAppPage() {
                 <CardHeader title="Webinars You Might Be Interested In" />
                 <Box sx={{ p: 4, pb: 4, flexWrap: 'wrap', alignItems: 'center' }} dir="ltr">
                   <Grid container spacing={2}>
-                    {webinars.map((webinar, index) => (
+                    {webinars.slice(0, visiblewebinars).map((webinar, index) => (
                       <Grid item xs={12} md={6} key={index}>
                         <Card sx={{ textAlign: "end" }}>
                           <IconButton onClick={(event) => handleOpenMenu(event, webinar.id || index)}>
@@ -1398,16 +1541,13 @@ export default function DashboardAppPage() {
                     ))}
                   </Grid>
 
-                  <Button
-                    type="button"
-                    fullWidth
-                    color="secondary"
-                    onClick={handleLoadMoreWebinars}
-                    sx={{ mt: 2, mb: 1 }}
-                  >
-                    Load More
-                  </Button>
-
+                  {visiblewebinars < webinars.length ? (
+          <Button type="button" fullWidth color="secondary" onClick={handleLoadMoreWebinars} sx={{ mt: 2, mb: 1 }}>
+            Load More 
+          </Button>
+        ) : (
+          <Typography sx={{ textAlign: "center", mt: 2 }}>No more Webinars</Typography>
+        )}
                 </Box>
               </Card>
             </Grid>

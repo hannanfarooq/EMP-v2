@@ -82,6 +82,11 @@ const Leadconfig = [
     icon: icon("ic_gamification"),
   },
   {
+    title: "articles",
+    path: "/dashboard/articles",
+    icon: icon("ic_blog"),
+  },
+  {
     title: "logout",
     path: "/login",
     icon: icon("ic_lock"),

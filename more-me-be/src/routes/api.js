@@ -30,6 +30,9 @@ import { createCategory, deleteCategory, getAllCategories, updateCategory } from
 import { createSubCategory, deleteSubCategory, getSubCategoryById, updateSubCategory } from "../controllers/gamifications/SubCategory.controller";
 import { createGame, deleteGame, getGamesBySubCategory, updateGame } from "../controllers/gamifications/Game.controller";
 import { createArticle, getUrlsByTitle } from "../controllers/Articles/Articles.controller";
+import { createVideos, getVideoUrlsByTitle } from "../controllers/Articles/Video.controller";
+import { createPodcast, getpodcastUrlsByTitle } from "../controllers/Articles/Podcasts.controller";
+import { createWebinars, getWebinarsUrlsByTitle } from "../controllers/Articles/Webinars.controller";
 
 const router = express.Router();
 
@@ -209,4 +212,13 @@ router.post('/getTeamMembersbyteam',userole.getTeamMembers);
 //Articles Routes
 router.post('/createArticle',createArticle);
 router.post('/getUrlsByTitle',getUrlsByTitle)
+//Video Routes
+router.post('/createVideos',createVideos);
+router.post('/getVideoUrlsByTitle',getVideoUrlsByTitle);
+//Podcast Routes
+router.post('/createPosdcast',createPodcast);
+router.post('/getpodcastUrlsByTitle',getpodcastUrlsByTitle);
+//Webinars Routes
+router.post('/createwebinars',createWebinars);
+router.post('/getwebinarsUrlsByTitle',getWebinarsUrlsByTitle);
 module.exports = router;

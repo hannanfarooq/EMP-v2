@@ -48,6 +48,11 @@ const managerconfig = [
     icon: <PolicyIcon />,
   },
   {
+    title: "articles",
+    path: "/dashboard/articles",
+    icon: icon("ic_blog"),
+  },
+  {
     title: "announccements",
     path: "/dashboard/announcements",
     icon: icon("ic_announcements"),

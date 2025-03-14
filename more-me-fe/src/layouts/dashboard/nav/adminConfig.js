@@ -36,6 +36,11 @@ const adminConfig = [
     icon: <CoPresentIcon />,
   },
   {
+    title: "articles",
+    path: "/dashboard/articles",
+    icon: icon("ic_blog"),
+  },
+  {
     title: "users",
     path: "/dashboard/user",
     icon: icon("ic_user"),
