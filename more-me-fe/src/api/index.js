@@ -3170,7 +3170,21 @@ export const getpodcastUrlsByTitle = async (title) => {
   });
   return res.json();
 };
-
+export const getBooksUrlsByTitle = async (title) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/getBooksUrlsByTitle`;
+  const data = { titles: title }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
 export const getWebinarsUrlsByTitle = async (title) => {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const apiUrl = `/api/getWebinarsUrlsByTitle`;
@@ -3220,6 +3234,21 @@ export const getUrlsByTitle = async (title) => {
 export const createwebinars = async (title, urls) => {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const apiUrl = `/api/createwebinars`;
+  const data = { title: title, urls:urls }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const createBooks = async (title, urls) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/createBooks`;
   const data = { title: title, urls:urls }
  
   const res = await fetch(baseURL + apiUrl, {
@@ -3518,7 +3547,7 @@ const fetchWithRetry = async (url, retries = 3, delay = 1000) => {
 
 // Fetch Books
 export const getBooks = async (topic) => {
-  const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(topic)}&key=${apiKeyForBooksAndVideos}&maxResults=${numResults}`;
+  const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(topic)}&key=${apiKeyForBooksAndVideos}&maxResults=40`;
   try {
     const response = await fetchWithRetry(googleBooksUrl);
     console.log("response books", response);

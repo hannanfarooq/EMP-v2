@@ -37,8 +37,7 @@ export const getWebinarsUrlsByTitle = async (req, res) => {
   try {
     const { titles } = req.body;
 
-    console.log("TITLES:", titles);
-
+  
     // Use Op.in to filter multiple titles
     const webinarss = await Webinars.findAll({
       where: { title: { [Op.in]: titles.titles } },
@@ -54,7 +53,7 @@ export const getWebinarsUrlsByTitle = async (req, res) => {
       return acc;
     }, {});
 
-    console.log("WebinarsS:", result);
+    
     return res.status(200).json(result);
   } catch (error) {
     console.error("Error fetching URLs by titles:", error);

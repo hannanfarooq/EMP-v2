@@ -14,18 +14,18 @@ export const createPodcast = async (req, res) => {
     }
 
     // Check if the Webinars already exists
-    let Webinars = await Podcasts.findOne({ where: { title } });
+    let podcast = await Podcasts.findOne({ where: { title } });
 
-    if (Webinars) {
+    if (podcast) {
       // Replace old URLs with new ones
-      await Podcasts.update({ urls: JSON.stringify(urls) });
+      await podcast.update({ urls: JSON.stringify(urls) });
 
-      return res.status(200).json({ message: "Webinars updated", Webinars });
+      return res.status(200).json({ message: "Podcast updated", podcast });
     } else {
       // Create a new Webinars
-      Webinars = await Podcasts.create({ title, urls: JSON.stringify(urls) });
+      podcast = await Podcasts.create({ title, urls: JSON.stringify(urls) });
 
-      return res.status(201).json({ message: "Webinars created", Webinars });
+      return res.status(201).json({ message: "Podcast created", podcast });
     }
   } catch (error) {
     console.error("Error creating/updating Webinars:", error);
@@ -38,24 +38,24 @@ export const getpodcastUrlsByTitle = async (req, res) => {
   try {
     const { titles } = req.body;
 
-    console.log("TITLES:", titles);
+    
 
     // Use Op.in to filter multiple titles
-    const webinarss = await Podcasts.findAll({
+    const podcasts = await Podcasts.findAll({
       where: { title: { [Op.in]: titles.titles } },
       attributes: ["title", "urls", "updatedAt"], // Include updatedAt
     });
 
     // Convert results into a mapping { title: { urls, updatedAt } }
-    const result = webinarss.reduce((acc, Webinars) => {
-      acc[Webinars.title] = {
-        urls: Webinars.urls,
-        updatedAt: Webinars.updatedAt, // Include updatedAt in response
+    const result = podcasts.reduce((acc, podcast) => {
+      acc[podcast.title] = {
+        urls: podcast.urls,
+        updatedAt: podcast.updatedAt, // Include updatedAt in response
       };
       return acc;
     }, {});
 
-    console.log("WebinarsS:", result);
+ 
     return res.status(200).json(result);
   } catch (error) {
     console.error("Error fetching URLs by titles:", error);

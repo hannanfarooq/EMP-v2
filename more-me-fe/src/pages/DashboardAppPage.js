@@ -44,7 +44,9 @@ import {
   getpodcastUrlsByTitle,
   createPosdcast,
   getWebinarsUrlsByTitle,
-  createwebinars
+  createwebinars,
+  createBooks,
+  getBooksUrlsByTitle
 } from 'src/api';
 import { toast } from 'react-toastify';
 import Chip from '@mui/material/Chip';
@@ -159,6 +161,7 @@ export default function DashboardAppPage() {
   const [visibleVideos, setVisibleVideos] = useState(10);
   const [visiblepodcast, setvisiblepodcast] = useState(10);
   const [visiblewebinars, setVisiblewebinars] = useState(10);
+  const [visibleBooks, setVisibleBooks] = useState(10);
   const AnimatedAvatar = styled(Avatar)`
   cursor: pointer;
   position: fixed !important;
@@ -656,42 +659,86 @@ export default function DashboardAppPage() {
 
   //fetch books
   const fetchBooks = async (startIndex = 1) => {
-    console.log("Fetching books with topics:", interestTopics);
-
-    if (interestTopics.length > 0) {
-      try {
-        // Combine the interest topics into a single search query
-        const topicQuery = interestTopics.join(',') +','+ lifePrinciple.join(',') +','+ hobbies.join(',');
-
-        // Call the getBooks function with the combined topic query
-        const booksResult = await getBooks(topicQuery);
-        // console.log("books results", booksResult);
-
-        if (booksResult && booksResult.length > 0) {
-          // If it's the first page of results, set the books directly
-          if (startIndex === 1) {
-            setBooks(booksResult);
+    console.log("Fetching books for interestTopics, hobbies, and lifePrinciple separately...");
+  
+    const allTopics = [...interestTopics, ...hobbies, ...lifePrinciple];
+    const now = new Date(); // Get current timestamp
+  
+    try {
+      // Fetch all topics from the database in a single call
+      const dbResults = await getBooksUrlsByTitle({ titles: allTopics });
+  
+      let allResults = [];
+      const topicsToFetch = [];
+  
+      // Process database results
+      allTopics.forEach(topic => {
+        const data = dbResults[topic]; // Get cached data for the topic
+  
+        if (data) {
+          const { urls, updatedAt } = data;
+          const lastUpdated = new Date(updatedAt);
+  
+          // Check if data is fresh (less than 24 hours old)
+          const hoursPassed = (now - lastUpdated) / (1000 * 60 * 60);
+  
+          if (hoursPassed < 24 && urls && urls.length > 0) {
+            console.log(`Using cached books for ${topic}`);
+            allResults = [...allResults, ...JSON.parse(urls)];
           } else {
-            // Append new results to the existing list of books
-            setBooks((prevBooks) => [...prevBooks, ...booksResult]);
+            console.log(`Data expired for ${topic}, fetching new books...`);
+            topicsToFetch.push(topic);
           }
         } else {
-          toast.error('No books found for the given topics.');
+          console.log(`No data found for ${topic}, fetching new books...`);
+          topicsToFetch.push(topic);
         }
-      } catch (error) {
-        console.error('Error while fetching books:', error);
-        toast.error('Error while fetching books.');
+      });
+  
+      // If all topics are up-to-date, return early
+      if (topicsToFetch.length === 0) {
+        shuffleArray(allResults);
+        setBooks(allResults);
+        return;
       }
-    } else {
-      // toast.error('No interest topics provided for book search.');
+  
+      console.log(`Fetching books for ${topicsToFetch.length} topics from API...`);
+  
+      // Fetch missing/expired topics in parallel
+      const fetchResults = await Promise.all(
+        topicsToFetch.map(topic =>
+          getBooks(topic).then(result => ({ topic, result }))
+        )
+      );
+  console.log("fetchResults", fetchResults);
+      // Process and store the newly fetched results
+      for (const { topic, result } of fetchResults) {
+        console.log(`result by ${topic}`, result);
+        if (result.length > 0) {
+          await createBooks(topic, result); // Store new data in the database
+          console.log("Fetched new books:", result);
+          allResults = [...allResults, ...result]; // Append new results
+        } else {
+          console.warn(`No books found for topic: ${topic}`);
+        }
+      }
+  
+      // Store final results in state
+      if (allResults.length > 0) {
+        shuffleArray(allResults);
+        setBooks(allResults);
+      }
+    } catch (error) {
+      console.error("Error fetching books:", error);
     }
   };
+  
   const handleLoadMoreBooks = () => {
-    setBookStartIndex((prevStartIndex) => {
-      const newIndex = prevStartIndex + 10;
-      fetchBooks(newIndex);
-      return newIndex;
-    });
+    if (visibleBooks+ 10 >= books.length) { 
+      setVisibleBooks(books.length); // Show all courses if fewer than 10 remain 
+    } else {
+      setVisibleBooks(visibleBooks+ 10); // Load 10 more
+    }
   };
   //fetch videosResult
   const fetchVideos = async (startIndex = 1) => {
@@ -1272,7 +1319,7 @@ export default function DashboardAppPage() {
                 <CardHeader title="Books You Might Be Interested In" />
                 <Box sx={{ p: 4, pb: 4, flexWrap: 'wrap', alignItems: 'center' }} dir="ltr">
                   <Grid container spacing={2}>
-                    {books.map((book, index) => (
+                  {books.slice(0, visibleBooks).map((book, index) => (
                       <Grid item xs={12} md={6} key={index}>
                         <Card sx={{ textAlign: "end" }}>
                           <IconButton onClick={(event) => handleOpenMenu(event, book.id || index)}>
@@ -1324,15 +1371,14 @@ export default function DashboardAppPage() {
                     ))}
                   </Grid>
 
-                  <Button
-                    type="button"
-                    fullWidth
-                    color="secondary"
-                    onClick={handleLoadMoreBooks}
-                    sx={{ mt: 2, mb: 1 }}
-                  >
-                    Load More
-                  </Button>
+                  {visibleBooks < books.length ? (
+          <Button type="button" fullWidth color="secondary" onClick={handleLoadMoreBooks} sx={{ mt: 2, mb: 1 }}>
+            Load More
+          </Button>
+        ) : (
+          <Typography sx={{ textAlign: "center", mt: 2 }}>No more articles</Typography>
+        )}
+                 
 
                 </Box>
               </Card>

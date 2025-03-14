@@ -33,6 +33,7 @@ import { createArticle, getUrlsByTitle } from "../controllers/Articles/Articles.
 import { createVideos, getVideoUrlsByTitle } from "../controllers/Articles/Video.controller";
 import { createPodcast, getpodcastUrlsByTitle } from "../controllers/Articles/Podcasts.controller";
 import { createWebinars, getWebinarsUrlsByTitle } from "../controllers/Articles/Webinars.controller";
+import { createBooks, getBooksUrlsByTitle } from "../controllers/Articles/Books.controller";
 
 const router = express.Router();
 
@@ -221,4 +222,7 @@ router.post('/getpodcastUrlsByTitle',getpodcastUrlsByTitle);
 //Webinars Routes
 router.post('/createwebinars',createWebinars);
 router.post('/getwebinarsUrlsByTitle',getWebinarsUrlsByTitle);
+//Books Routes
+router.post('/createBooks',createBooks);
+router.post('/getBooksUrlsByTitle',getBooksUrlsByTitle);
 module.exports = router;
