@@ -6,7 +6,7 @@ import { uploadImageAndGetURL } from 'src/utils/uploadImageAndGetURL';
 import { toast } from 'react-toastify';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-const AddQuestionCategory = () => {
+const AddQuestionCategory = ({setLoad}) => {
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -109,6 +109,24 @@ const AddQuestionCategory = () => {
     try {
       setLoading(true);
   
+      if (!selectedCategory) {
+        toast.error("Please select a category");
+        setLoading(false);
+        return;
+      }
+      if (!selectedSubCategory) {
+        toast.error("Please select a subcategory");
+        setLoading(false);
+        return;
+      }
+      if (!selectedgameid) {
+        toast.error("Please select a game");
+        setLoading(false);  
+        return;
+      }
+
+
+
       // Check if name or description is empty
       if (!name.trim() || !description.trim()) {
         toast.error("Name and Description are required");
@@ -153,6 +171,7 @@ const AddQuestionCategory = () => {
       const res = await addQuestionCategory(name, description, formData.get('images'), formData.get('video'), selectedSubCategory, selectedgameid, startingLevel,canProceedToNextLevel);
       if (res?.code === 200) {
         toast.success("Gamification Added Successfully");
+        setLoad(true);
         fetchQuestionCategories();
       }
   
@@ -181,6 +200,7 @@ const AddQuestionCategory = () => {
   const updateCategory = async (categoryId, categoryName) => {
     try {
       await updateQuestionCategory(categoryId, categoryName);
+      setLoad(true);
       fetchQuestionCategories();
     } catch (error) {
       console.error('Failed to update category:', error);
@@ -190,6 +210,7 @@ const AddQuestionCategory = () => {
   const handleDeleteCategory = async (category) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       await deleteQuestionCategory(category.id);
+      setLoad(true);
       fetchQuestionCategories();
     }
   };

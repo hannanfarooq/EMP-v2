@@ -32,6 +32,7 @@ export default function GamificationPage() {
   const [openTransition5, setOpenTransiton5] = useState(false);
   const handleOpen5 = () => setOpenTransiton5(true);
   const handleClose5 = () => setOpenTransiton5(false);
+  const [Load,setLoad] = useState(false);
 
   return (
     <>
@@ -56,7 +57,8 @@ export default function GamificationPage() {
               handleClose={handleClose4}
               handleOpen={handleOpen4}
               title={"Add New Category"}
-              component={<AddCategory />}
+              component={<AddCategory setLoad={setLoad} />}
+              
             />
              <span className="mr-1"></span>
 
@@ -65,7 +67,7 @@ export default function GamificationPage() {
               handleClose={handleClose5}
               handleOpen={handleOpen5}
               title={"Add Game"}
-              component={<AddGame />}
+              component={<AddGame setLoad={setLoad}/>}
             />
              <span className="mr-1"></span>
             <TransitionsModal
@@ -73,7 +75,7 @@ export default function GamificationPage() {
               handleClose={handleClose2}
               handleOpen={handleOpen2}
               title={"Add Gamification Level"}
-              component={<AddQuestionCategory />}
+              component={<AddQuestionCategory setLoad={setLoad}/>}
             />
              <span className="mr-1"></span>
             <TransitionsModal
@@ -81,7 +83,7 @@ export default function GamificationPage() {
               handleClose={handleClose}
               handleOpen={handleOpen}
               title={"Add New Gamification"}
-              component={<Gamifications />}
+              component={<Gamifications setLoad={setLoad} />}
             />
            
             <span className="mr-1"></span>
@@ -97,7 +99,8 @@ export default function GamificationPage() {
           </div>
         </Stack>
 
-        <GamificationsList />
+        <GamificationsList  load={Load} setLoad={setLoad}
+          />
       </Container>
     </>
   );

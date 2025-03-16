@@ -13,7 +13,7 @@ import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { getCompanyGamifications, getAllCategories, getSubCategories, getQuestionCategories, getGamesBySubCategory } from 'src/api';
 import { useQuery } from 'react-query';
 
-const GamificationsList = () => {
+const GamificationsList = ({load,setLoad}) => {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState({});
   const [questions, setQuestions] = useState([]);
@@ -31,6 +31,15 @@ const GamificationsList = () => {
     fetchQuestions();
     fetchQuestionCategories();
   }, []);
+  useEffect(() => {
+    if(load)  
+    {
+      fetchCategories();
+      fetchQuestions();
+      fetchQuestionCategories();
+      setLoad(false);
+    }
+  }, [load]);
  const fetchQuestionCategories = async () => {
     try {
       const categoryList = await getQuestionCategories();

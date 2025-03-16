@@ -5,7 +5,7 @@ import { getAllCategories, getSubCategories,  createGame, getGamesBySubCategory,
 import { toast } from 'react-toastify';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-const AddGame = () => {
+const AddGame = ({setLoad}) => {
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
   const [categories, setCategories] = useState([]);
@@ -16,13 +16,14 @@ const AddGame = () => {
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [expandedSubCategory, setExpandedSubCategory] = useState(null);
   const [subcategories,setsubcategories]=useState([]);
+  const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
   useEffect(() => {
     fetchCategories();
   }, []);
 
   const fetchCategories = async () => {
     try {
-      const response = await getAllCategories();
+      const response = await getAllCategories(storedUserData.company.id);
       if (response?.data) {
         setCategories(response.data);
         for (const category of response.data) {
@@ -99,6 +100,7 @@ const fetchsubCategories= async (categoryId)=>
       const res = await createGame(name, selectedSubCategory);
       if (res?.code === 200) {
         toast.success('Game added successfully');
+        setLoad(true);
         fetchGamesForSubCategory(selectedSubCategory); // Refresh games for the selected subcategory
       }
 
@@ -117,6 +119,7 @@ const fetchsubCategories= async (categoryId)=>
     const updatedGameName = prompt('Enter the updated game name:', game.name);
     if (updatedGameName !== null) {
      await  updateGame(game.id, updatedGameName); // Update game (not implemented)
+     setLoad(true);
    await  fetchCategories();
     }
   };
@@ -124,6 +127,7 @@ const fetchsubCategories= async (categoryId)=>
   const handleDeleteGame = async (game) => {
     if (window.confirm('Are you sure you want to delete this game?')) {
      await deleteGame(game.id); // Delete game (not implemented)
+     setLoad(true);
      await  fetchCategories();
     }
   };

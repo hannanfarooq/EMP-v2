@@ -260,10 +260,14 @@ const CreateGamification = (props) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("submitting:", e)
-
+if(!selectedgameid)
+{
+  toast.error("No Game Selected or Available for this Sub-Category");
+  return;
+}
     const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
     setLoading(true);
-
+let error=false;
     const questionsData = await Promise.all(
       questions.map(async (question) => {
         let optionWithImages = [];
@@ -291,7 +295,13 @@ console.log("question.optionPoints : ", question.optionPoints);
             console.log("MEDIA URL :", mediaURL);
           }
         }
-
+if(!question.questionType)
+{
+  toast.error("Please Select Question Category");
+  setLoading(false);
+  error=true;
+  return;
+}
         return {
           text: question.question,
           description:question.description,
@@ -312,7 +322,10 @@ console.log("question.optionPoints : ", question.optionPoints);
         };
       })
     );
-
+if(error)
+{
+  return;
+}
     await createCompanyGamification(questionsData, storedUserData.token).then(
       (response) => {
         if (response.code === 200) {
@@ -484,6 +497,7 @@ console.log("question.optionPoints : ", question.optionPoints);
                         <InputLabel>Select Game</InputLabel>
                         <Select
                           value={selectedgameid}
+                          required
                           onChange={(e) => setSelectedgameid(e.target.value)}
                         >
                           {gamesBySubCategory[question.subCategoryId].map((game) => (

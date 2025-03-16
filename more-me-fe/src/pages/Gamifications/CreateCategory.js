@@ -8,7 +8,7 @@ import axios from "axios";
 import { createCategory, deleteCategory, getAllCategories, updateCategory, createSubCategory, getSubCategories, deleteSubCategory, updateSubCategory } from "src/api";
 import { toast } from "react-toastify";
 
-export default function AddCategory({ onClose }) {
+export default function AddCategory({ onClose,setLoad }) {
   const [name, setName] = useState("");
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -67,6 +67,7 @@ export default function AddCategory({ onClose }) {
       if (response?.code === 200) {
         setCategories([...categories, response.data]);
         toast.success("Category Created Successfully");
+        setLoad(true);
       }
       setName(""); // Clear input field
     } catch (err) {
@@ -82,6 +83,7 @@ export default function AddCategory({ onClose }) {
       const response = await deleteCategory(id);
       if (response?.code === 200) {
         setCategories(categories.filter((cat) => cat.id !== id)); // Remove from UI
+        setLoad(true);
         toast.success("Category Deleted Successfully");
       }
     } catch (err) {
@@ -92,6 +94,7 @@ export default function AddCategory({ onClose }) {
   // Handle Edit Category
   const handleEdit = (id, currentName) => {
     setEditingId(id);
+
     setEditingName(currentName);
   };
 
@@ -102,6 +105,7 @@ export default function AddCategory({ onClose }) {
         setCategories(categories.map((cat) => (cat.id === id ? { ...cat, name: editingName } : cat)));
         setEditingId(null);
         setEditingName("");
+        setLoad(true);
         toast.success("Category Updated Successfully");
       }
     } catch (err) {
@@ -125,6 +129,7 @@ export default function AddCategory({ onClose }) {
           [categoryId]: [...(prev[categoryId] || []), response.data],
         }));
         toast.success("Subcategory Created Successfully");
+        setLoad(true);
         setNewSubcategory({ ...newSubcategory, [categoryId]: "" });
       }
     } catch (err) {
@@ -137,6 +142,7 @@ const handleDeleteSubcategory = async(id ,categoryid )=>
     if(response?.code==200)
     {
         fetchSubCategories(categoryid);
+        setLoad(true);
 toast.success("Sub-Category Deleted Successfully");
     }
 }
@@ -151,6 +157,7 @@ const handleEditSubcategory = (id, name) => {
         fetchSubCategories(categoryId);
         setEditingSubcategoryId(null);
         setEditingSubcategoryName("");
+        setLoad(true);
         toast.success("Subcategory Updated Successfully");
       }
     } catch (err) {
