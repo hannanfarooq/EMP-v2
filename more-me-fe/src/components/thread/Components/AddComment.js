@@ -480,7 +480,7 @@ const AddComment = ({ threadData, buttonValue = "Post",setReplying }) => {
           </div>
         </div>
         {isUploading && <p className="uploading-text">Uploading...</p>}
-        <button className="add-btn" onClick={clickHandler}>
+        <button className="add-btn" disabled={isUploading ||comment.trim() === ""} onClick={clickHandler}>
           {buttonValue}
         </button>
       </div>

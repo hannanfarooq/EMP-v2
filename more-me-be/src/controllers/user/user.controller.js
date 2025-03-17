@@ -501,19 +501,15 @@ export const updateUserPointsAnnouncement = async (req, res) => {
       user.userRewards = user.userRewards + req.body.userRewards;
     }
 
-    // Update the readPolicies data (assuming readPolicies is an array)
     if (req.body.userPolicyId) {
-      // console.log("is trye");
-      let userpolicy = [];
-      userpolicy = user.readAnnouncements ? user.readAnnouncements : [];
-      userpolicy.push(req.body.userPolicyId);
+      let userpolicy = Array.isArray(user.readAnnouncements) ? user.readAnnouncements : [];
+      userpolicy.push(Number(req.body.userPolicyId)); // Ensure it's an integer
       user.readAnnouncements = userpolicy;
     }
-
-    // console.log(user.readPolicies);
-    // Save the changes to the database
-    const resp = await user.save();
-    return successResponse(req, res, resp);
+    
+    // Save with explicit fields
+    await user.save({ fields: ['userRewards', 'readAnnouncements'] });
+    return successResponse(req, res, {});
   } catch (error) {
     return errorResponse(req, res, error);
     throw error;
