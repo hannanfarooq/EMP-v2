@@ -112,6 +112,13 @@ export const deleteDepartment = async (req, res) => {
             });
           }
 
+          const userData = await User.findByPk(departmentData.headId);
+          if (userData) {
+        
+              userData.role = "user";
+              await userData.save();
+          }
+
         const resp = await departmentData.destroy();
         return successResponse(req, res, resp);
     }

@@ -262,6 +262,14 @@ export const deleteFunction = async (req, res) => {
               where: { teamId: id },
             });
           }
+
+          const userData = await User.findByPk(functionData.headId);
+          if (userData) {
+       
+              userData.role = "user";
+              await userData.save();
+          }
+
         const resp = await functionData.destroy();
         return successResponse(req, res, resp);
     }

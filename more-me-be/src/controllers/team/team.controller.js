@@ -151,7 +151,14 @@ export const deleteTeam = async (req, res) => {
         where: { teamId: id },
       });
     }
+    const userData = await User.findByPk(teamData.leadId);
 
+    if (userData) {
+     
+        userData.role = "user";  // Or another role if needed
+        await userData.save();
+        console.log(`Updated user ${userData.id} role and department head status`);
+    }
     // Delete the team
     await teamData.destroy();
 
