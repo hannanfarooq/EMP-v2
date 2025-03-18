@@ -1,5 +1,5 @@
 import { errorResponse, successResponse } from "../../helpers";
-import { Department, User } from "../../models";
+import { Department, User,CompanyAnnouncement,AnnouncementQuestion,AnnouncementResponse } from "../../models";
 
 export const createDepartment = async (req, res) => {
     const data = req.body;
@@ -78,6 +78,39 @@ export const deleteDepartment = async (req, res) => {
         if (!departmentData) {
             throw new Error("Department not found");
         }
+        const companyAnnouncements = await CompanyAnnouncement.findAll({
+            where: { departmentId: id },
+          });
+      
+          if (companyAnnouncements.length > 0) {
+            // Extract announcement IDs
+            const announcementIds = companyAnnouncements.map((ann) => ann.id);
+      
+            // Fetch all related AnnouncementQuestions
+            const relatedQuestions = await AnnouncementQuestion.findAll({
+              where: { announcementId: announcementIds },
+            });
+      
+            if (relatedQuestions.length > 0) {
+              // Extract question IDs
+              const questionIds = relatedQuestions.map((q) => q.id);
+      
+              // Delete all related AnnouncementResponses
+              await AnnouncementResponse.destroy({
+                where: { questionId: questionIds },
+              });
+      
+              // Delete all related AnnouncementQuestions
+              await AnnouncementQuestion.destroy({
+                where: { announcementId: announcementIds },
+              });
+            }
+      
+            // Delete related CompanyAnnouncements
+            await CompanyAnnouncement.destroy({
+              where: { teamId: id },
+            });
+          }
 
         const resp = await departmentData.destroy();
         return successResponse(req, res, resp);

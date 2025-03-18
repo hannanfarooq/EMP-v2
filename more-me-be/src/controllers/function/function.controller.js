@@ -105,7 +105,7 @@
 // }
 
 import { errorResponse, successResponse } from "../../helpers";
-import { Function, User } from "../../models";
+import { Function, User,CompanyAnnouncement,AnnouncementQuestion,AnnouncementResponse } from "../../models";
 import { Op } from "sequelize";
 
 export const createFunction = async (req, res) => {
@@ -229,7 +229,39 @@ export const deleteFunction = async (req, res) => {
         if (!functionData) {
             return errorResponse(req, res, "Function not found");
         }
-
+        const companyAnnouncements = await CompanyAnnouncement.findAll({
+            where: { functionId: id },
+          });
+      
+          if (companyAnnouncements.length > 0) {
+            // Extract announcement IDs
+            const announcementIds = companyAnnouncements.map((ann) => ann.id);
+      
+            // Fetch all related AnnouncementQuestions
+            const relatedQuestions = await AnnouncementQuestion.findAll({
+              where: { announcementId: announcementIds },
+            });
+      
+            if (relatedQuestions.length > 0) {
+              // Extract question IDs
+              const questionIds = relatedQuestions.map((q) => q.id);
+      
+              // Delete all related AnnouncementResponses
+              await AnnouncementResponse.destroy({
+                where: { questionId: questionIds },
+              });
+      
+              // Delete all related AnnouncementQuestions
+              await AnnouncementQuestion.destroy({
+                where: { announcementId: announcementIds },
+              });
+            }
+      
+            // Delete related CompanyAnnouncements
+            await CompanyAnnouncement.destroy({
+              where: { teamId: id },
+            });
+          }
         const resp = await functionData.destroy();
         return successResponse(req, res, resp);
     }

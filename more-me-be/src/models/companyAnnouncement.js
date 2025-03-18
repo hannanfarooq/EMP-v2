@@ -57,10 +57,32 @@ module.exports = (sequelize, DataTypes) => {
 
   CompanyAnnouncement.associate = function (models) {
     CompanyAnnouncement.belongsTo(models.Company, { foreignKey: "companyId" });
-    CompanyAnnouncement.belongsTo(models.Function, { foreignKey: "functionId", as: "function" });
-    CompanyAnnouncement.belongsTo(models.Department, { foreignKey: "departmentId", as: "department" });
-    CompanyAnnouncement.belongsTo(models.Team, { foreignKey: "teamId", as: "team" });
-    CompanyAnnouncement.hasMany(models.AnnouncementQuestion, { foreignKey: "announcementId", as: "questions" });
+
+    CompanyAnnouncement.belongsTo(models.Function, {
+      foreignKey: "functionId",
+      as: "function",
+      onDelete: "SET NULL",
+      hooks: true, // Required for cascading updates
+    });
+
+    CompanyAnnouncement.belongsTo(models.Department, {
+      foreignKey: "departmentId",
+      as: "department",
+      onDelete: "SET NULL",
+      hooks: true,
+    });
+
+    CompanyAnnouncement.belongsTo(models.Team, {
+      foreignKey: "teamId",
+      as: "team",
+      onDelete: "SET NULL",
+      hooks: true,
+    });
+
+    CompanyAnnouncement.hasMany(models.AnnouncementQuestion, {
+      foreignKey: "announcementId",
+      as: "questions",
+    });
   };
 
   return CompanyAnnouncement;
