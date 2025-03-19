@@ -106,30 +106,44 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const { name, description, reward, announcementDate, questions } = formData;
-
+    const { name, description, reward, announcementDate, questions, announcementType, functionId, departmentId, teamId } = formData;
+  
     const formErrors = validateForm(name, description, reward);
     setErrors(formErrors);
-
+  
     if (!name || !description || !reward || !announcementDate) {
       toast.error("All fields are required! Please fill out all the fields.");
       return;
     }
-
+  
+    // Check required fields based on announcementType
+    if (announcementType === "function" && !functionId) {
+      toast.error("Function ID is required for function type announcements.");
+      return;
+    }
+    if (announcementType === "department" && !departmentId) {
+      toast.error("Department ID is required for department type announcements.");
+      return;
+    }
+    if (announcementType === "team" && !teamId) {
+      toast.error("Team ID is required for team type announcements.");
+      return;
+    }
+  
     if (Object.keys(formErrors).length === 0) {
       const uploadToastId = toast.info("Uploading files...", { autoClose: false, isLoading: true });
-
+  
       try {
         const documentUrls = await Promise.all(
           selectedDocuments.map((file) => uploadPDFAndGetURL(file))
         );
-
+  
         const imageUrls = await Promise.all(
           selectedImages.map((file) => uploadImageAndGetURL(file))
         );
-
+  
         toast.dismiss(uploadToastId);
-
+  
         const data = {
           name,
           description,
@@ -138,18 +152,19 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
           documentUrls,
           imageUrls,
           announcementDate,
-          questions, // Send questions to the API
-          announcementType:formData.announcementType,
-          functionId: formData.functionId,
-          departmentId: formData.departmentId,
-          teamId: formData.teamId,
+          questions,
+          announcementType,
+          functionId,
+          departmentId,
+          teamId,
         };
-   
+  
         setSubmitting(true);
         await createCompanyAnnouncement(data, storedUserData.token);
         fetchCompanyAnnouncements();
         setSubmitting(false);
         toast.success("Announcement created successfully!");
+  
         setFormData({
           name: "",
           description: "",
@@ -163,7 +178,7 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
         });
         setSelectedDocuments([]);
         setSelectedImages([]);
-
+  
         if (onClose) {
           onClose();
         }
@@ -173,6 +188,7 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
       }
     }
   };
+  
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;

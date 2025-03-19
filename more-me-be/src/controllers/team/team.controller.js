@@ -86,16 +86,14 @@ export const updateTeam = async (req, res) => {
         }
       }
     }
+    console.log("teamMembers : ", teamMembers);
 
+    // Directly assign the array of user IDs
+    teamData.userIds = Array.isArray(teamMembers) ? teamMembers : [];
+    
+    console.log("userIds stored: ", teamData.userIds);
 
-    // Extract user IDs from teamMembers array and update the userIds field
-    if (teamMembers && teamMembers.length > 0) {
-      // Extracting the `id` field from each team member object
-      const userIds = teamMembers.map(member => member);
-      teamData.userIds = userIds;  // Assuming userIds field stores an array of user IDs
-    } else {
-      teamData.userIds = [];  // If no members, set userIds to an empty array
-    }
+   
 
     // Save updated team data
     const resp = await teamData.save();
