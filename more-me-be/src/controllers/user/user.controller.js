@@ -540,6 +540,7 @@ export const updateUserPoints = async (req, res) => {
 
     // console.log(user.readPolicies);
     // Save the changes to the database
+    await user.save({ fields: ['userRewards', 'readPolicies'] });
     const resp = await user.save();
     return successResponse(req, res, resp);
   } catch (error) {

@@ -51,8 +51,8 @@ export default function Router() {
   const dashboardRoutes = [
     { element: <Navigate to="/dashboard/app" />, index: true },
     { path: "app", element: <DashboardAppPage /> },
-    { path: "invite", element: <InvitePage /> },
-    { path: "policy", element: <PolicyPage /> },
+    { path: "invite", element: role ==="company-super-admin"?<InvitePage />:<Navigate to="/404" /> },
+    { path: "policy", element: role ==="company-super-admin"?<PolicyPage />:<UserPolicyPage /> },
     {
       path: isSuperAdmin ? "company" : "*",
       element: isSuperAdmin ? <CompanyPage /> : <Navigate to="/404" />,
@@ -72,8 +72,8 @@ export default function Router() {
       element:  <ChatPage /> ,
     },
     {
-      path: isAdmin ? "all-questions" : undefined,
-      element: isAdmin ? <AllQuestion /> : <Navigate to="/login" />,
+      path: role ==="company-super-admin" ? "all-questions" : undefined,
+      element: role ==="company-super-admin" ? <AllQuestion /> : <Navigate to="/login" />,
     },
     {
       path:  "announcements" ,
@@ -88,7 +88,7 @@ export default function Router() {
     
     {
       path: "questionnaire",
-      element: isAuthenticated && !isSuperAdmin ? <QuestionnairePage /> : <Navigate to="/login" />,
+      element: isAuthenticated && role =="company-super-admin" ? <QuestionnairePage /> : <Navigate to="/login" />,
     },
     {
       path: "company/:id",
@@ -96,14 +96,15 @@ export default function Router() {
     },
     {
       path: "gamification",
-      element: isAuthenticated && isAdmin ? <GamificationPage /> : <GamificationAttempt />,
+      element: isAuthenticated && role ==="company-super-admin" ? <GamificationPage /> : <GamificationAttempt />,
     },
   ];
 
   const userDashBoardRoutes = [
     { element: <Navigate to="/dashboard/app" />, index: true },
     { path: "app", element: <DashboardAppPage /> },
-    { path: "invite", element: <InvitePage /> },
+    { path: "invite", element: role ==="company-super-admin"?<InvitePage />:null
+     },
     { path: "policy", element: <UserPolicyPage /> },
     { path: "chat", element: <ChatPage /> },
     { path: "gamification", element: <GamificationAttempt /> },

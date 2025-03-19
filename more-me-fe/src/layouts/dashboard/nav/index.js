@@ -30,6 +30,7 @@ import adminConfig from "./adminConfig";
 import userConfig from "./userConfig";
 import managerconfig from "./managerconfig";
 import Leadconfig from "./leadconfig";
+import functionhead from "./functionheadconfig";
 
 // ----------------------------------------------------------------------
 
@@ -119,7 +120,7 @@ export default function Nav({ openNav, onCloseNav }) {
       ) :role == "manager" ? (
         <NavSection data={managerconfig} />
       ):
-      role=="lead"?(  <NavSection data={Leadconfig} />):( <NavSection data={adminConfig} />)}
+      role=="lead"?(  <NavSection data={Leadconfig} />):( <NavSection data={functionhead} />)}
 
       <Box sx={{ flexGrow: 1 }} />
 
