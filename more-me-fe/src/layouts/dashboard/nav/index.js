@@ -120,7 +120,7 @@ export default function Nav({ openNav, onCloseNav }) {
       ) :role == "manager" ? (
         <NavSection data={managerconfig} />
       ):
-      role=="lead"?(  <NavSection data={Leadconfig} />):( <NavSection data={functionhead} />)}
+      role=="lead"?(  <NavSection data={Leadconfig} />): role == "admin"?( <NavSection data={functionhead} />):( <NavSection data={adminConfig} />)}
 
       <Box sx={{ flexGrow: 1 }} />
 

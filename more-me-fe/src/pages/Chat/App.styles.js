@@ -10,7 +10,7 @@ export const MessageInputWrapper = styled.div`
   align-items: center;
   padding: 12px 16px;
   border-top: 1px solid #ddd;
-  background-color: #f9f9f9;
+  background-color:rgb(255, 255, 255);
 
   /* Sticky positioning to keep it visible at the bottom */
   position: sticky;
@@ -53,10 +53,10 @@ export const Container = styled.div`
   display: flex;
   flex: 1;
   flex-direction: row; /* Default row layout for larger screens */
-  max-height: 110vh;
+  max-height: 74vh;
   background: #ffffff;
   border: 1px solid #ddd;
-  border-radius: 10px;
+  border-radius: 12px;
 
   /* Add responsiveness for smaller screens */
   @media (max-width: 1024px) {
@@ -106,7 +106,7 @@ export const RightContainer = styled.div`
   display: flex;
   flex-direction: column;
   background: #fff;
-
+ border-radius: 12px;
   /* Mobile responsiveness */
   @media (max-width: 768px) {
     padding: 8px;

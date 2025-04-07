@@ -238,22 +238,24 @@ export default function ChatPage() {
       
         <Container>
           <LeftContainer>
-            <Grid container spacing={2} alignItems="center">
+            <Grid container spacing={1} alignItems="center">
               <Grid item>
-              <Badge
-                badgeContent={'online'}
-                color="primary"
-                sx={{ '& .MuiBadge-badge': { backgroundColor: green[400] } }}
-              >
-                <Avatar alt="User Avatar" src={currentUser?.user?.profilePic || ""} />
-              </Badge>
-              </Grid>
-              <Grid item>
+             
+              <Avatar
+  alt="User Avatar"
+  src={currentUser?.user?.profilePic || ""}
+  sx={{ width: 56, height: 56 }} // Adjust size here
+/>
+
+            
+              </Grid >
+              <Grid  sx={{ ml: 18 }}  item>
   <Tooltip
     title="Create Group Chat"
     open={tooltipOpengroup}
     onClose={() => setTooltipOpengroup(false)}
     onOpen={() => setTooltipOpengroup(true)}
+   
   >
                  <div onClick={() => setTooltipOpengroup(false)}>
                   <ChatTransitionsModal

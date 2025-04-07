@@ -337,20 +337,21 @@ console.log("CLICKED CHAT : ",chat);
           unread = chat.readBy.includes(currentUser.user.id) ? 0 : 1;
         }
       }
-     
+    
      
       return {
         id: chat.id,
         avatar: !chat.isGroupChat ? chat.avatar : "",
         alt: `${chat?.chatName}`,
         title: `${chat?.chatName}`,
-        subtitle: `${messagesender}: ${recentMessage}`,
+        subtitle: `${messagesender} ${recentMessage}`,
+        senderId:chat.latestMessageSender,
         date: new Date(chat.updatedAt),
         text:  (messagesender ? `${messagesender} ${recentMessage}` : ""),
         unread: parseInt(unread),
         user1Id: chat.groupAdminId,
         user2Id: chat.users,
-        usermap: chat?.userMap,
+        userMap: chat.userMap,
         isGroupChat: chat.isGroupChat,
         status:chat.status,
       };
@@ -358,7 +359,7 @@ console.log("CLICKED CHAT : ",chat);
   } else {
     console.error("Error: Conversations data is undefined or null");
   }
- 
+
   const filteredChats = chatList.filter((chat) =>
     chat.title.toLowerCase().includes(searchQuery.toLowerCase())
   );

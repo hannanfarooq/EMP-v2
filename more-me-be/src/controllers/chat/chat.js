@@ -249,7 +249,7 @@ export const getConversationById = async (req, res) => {
           latestMessageSender: latestMessageSender,
           readBy: message?.readBy || [], // Handle readBy field properly
           updatedAt: conversation.updatedAt,  // Include updatedAt for sorting
-          avatar: userMap[conversation.groupAdminId]?.profilePic || 'https://example.com/default-avatar.jpg',
+          avatar: userMap[latestMessageSender]?.profilePic || 'https://example.com/default-avatar.jpg',
         };
       } catch (error) {
         console.error('Error fetching message:', error.message);

@@ -5,7 +5,7 @@ import { getConversationMessages } from "src/api";
 import {  Box, Avatar } from "@mui/material";
 import { MessageList } from "react-chat-elements";
 import { MessageListWrapper } from "./App.styles";
-const CustomMessageList = ({ messages, currentUser }) => {
+const CustomMessageList = ({ messages, currentUser,usermap }) => {
   // Function to format timestamp to 12-hour format (HH:mm AM/PM)
   const formatTimestamp = (createdAt) => {
     const date = new Date(createdAt);
@@ -34,7 +34,7 @@ const CustomMessageList = ({ messages, currentUser }) => {
       {messages && messages.length > 0 ? (
         messages.map((msg, index) => {
           const sender = msg.senderId === currentUser.user.id;
-          
+         
           return (
             <Box
               key={index}
@@ -43,7 +43,7 @@ const CustomMessageList = ({ messages, currentUser }) => {
               alignItems="center"
               marginBottom={2}
             >
-              <Avatar alt={msg.title} src={sender ? currentUser.user.pro : msg.senderAvatar} />
+              <Avatar alt={msg.title} src={sender ? currentUser.user.profilePic : usermap[msg.senderId].profilePic} />
               
               <Box
                 sx={{
@@ -138,7 +138,7 @@ export default function MessageListComponent({ conversation, blockeduser }) {
     const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
     return `${hours}:${formattedMinutes} ${ampm}`;
   };
-
+console.log("DATA : ",conversation)
   // Map over the data to prepare the chat list
   const chatList = data?.map((msg) => {
     const sender = msg.senderId === currentUser.user.id;
@@ -149,6 +149,7 @@ export default function MessageListComponent({ conversation, blockeduser }) {
         title: sender ? 'You' : msg?.senderName,
         text: msg?.content,  // No need to manually add line breaks, CSS will handle it
         date: msg?.createdAt, // Format and display the timestamp
+        usermap:conversation.usermap,
       };
     }
   });
@@ -181,7 +182,7 @@ export default function MessageListComponent({ conversation, blockeduser }) {
               No messages in this conversation.
             </Typography>
           ) : (
-            <CustomMessageList messages={data} currentUser={currentUser} />
+            <CustomMessageList messages={data} currentUser={currentUser}  usermap={conversation.userMap}/>
           )}
         </div>
       )}

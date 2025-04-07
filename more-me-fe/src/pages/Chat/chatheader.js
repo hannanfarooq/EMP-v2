@@ -257,10 +257,10 @@ console.log("REMAINGING USER AFTER LEAVING GROUP : ",remainingMemberIds);
   };
   return (
     <>
-      <AppBar position="static" color="default">
+      <AppBar position="static" color="transparent">
         <Toolbar>
           <Avatar alt={alt} src={avatar} style={{ marginRight: 10 }} />
-          <Typography variant="h6" style={{ flexGrow: 1 }}>
+          <Typography  style={{ flexGrow: 1 }}>
             {isGroup ? `Group: ${title}` : `${title}`}
           </Typography>
           <IconButton edge="end" color="inherit" onClick={handleClickOpen}>
