@@ -30,7 +30,7 @@ const CustomMessageList = ({ messages, currentUser,usermap }) => {
   };
 
   return (
-    <div style={{ padding: '15px', maxHeight: '80vh', overflowY: 'auto' }}>
+    <div style={{ padding: '15px', maxHeight: '50vh', overflowY: 'auto' }}>
       {messages && messages.length > 0 ? (
         messages.map((msg, index) => {
           const sender = msg.senderId === currentUser.user.id;
