@@ -21,7 +21,7 @@ import {createInvitation,respondToInvitation,getInvitationsByUserId}  from '../c
 import { GetBlockUser, GetBlockedByUsers, blockUsers, unblockUsers } from "../controllers/chat/block";
 import { de } from "@faker-js/faker";
 import { createProject, getProjectsByDepartmentId, getProjectsforUser } from "../controllers/Project/project.controller";
-import { ClearBoardAndAssociations, createboard, deleteBoardAndAssociations, getAllBoardsByCompanyId } from "../controllers/Task_Management/Board.controller";
+import { ClearBoardAndAssociations, createboard, deleteBoardAndAssociations, getAllBoardsByCompanyId, getBoardTaskProgress } from "../controllers/Task_Management/Board.controller";
 import { Create_Task, updateTaskBoardId } from "../controllers/Task_Management/task.controller";
 import { CreateTaskChat, gettaskchat } from "../controllers/Task_Management/taskchat.controller";
 import { Create_SubTask, updateSubTaskStatus } from "../controllers/Task_Management/subtask.controller";
@@ -123,7 +123,7 @@ router.post('/getDepartmentsyuserid',departmentController.getDepartmentsyuserid)
 router.post("/updateDepartment", departmentController.updateDepartment);
 router.delete("/deleteDepartment", departmentController.deleteDepartment);
 router.post("/getDepartmentTeamsbyLead", teamController.getDepartmentLead);
-
+router.post("/getallFunctionDepartments", departmentController.getFunctionDepartmentsall);
 // Team routes
 router.post("/createTeam", teamController.createTeam);
 router.post("/getDepartmentTeams", teamController.getDepartmentTeams);
@@ -178,7 +178,7 @@ router.post('/getProjectsByDepartmentId',getProjectsByDepartmentId);
 router.post('/getProjectsforUser',getProjectsforUser);
 
 //Board
-
+router.post('/Board_Progress', getBoardTaskProgress);
 router.post('/create-board',createboard);
 router.post('/getAllBoardsByCompanyId',getAllBoardsByCompanyId);
 router.post('/updateTaskBoard',updateTaskBoardId);

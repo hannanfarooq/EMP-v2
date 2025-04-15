@@ -46,7 +46,11 @@ import {
   getWebinarsUrlsByTitle,
   createwebinars,
   createBooks,
-  getBooksUrlsByTitle
+  getBooksUrlsByTitle,
+  getAllCompanyUser,
+  allgetFunctionDepartments,
+  GetCompaniesAllThread,
+  Board_Progress
 } from 'src/api';
 import { toast } from 'react-toastify';
 import Chip from '@mui/material/Chip';
@@ -69,6 +73,11 @@ import ThreadPage from 'src/components/thread/ThreadPage';
 import { QUESTIONS_ANSWERED, areas } from 'src/utils/baseURL';
 import { useProfileSetUp } from '../App';
 import "./Ticker.css"; // Import the CSS for styling
+import DashboardCard from './Dashboardcard';
+import { Apartment } from '@mui/icons-material';
+import { AppTopManagers } from 'src/layouts/dashboard/components/AppTopManager';
+import { DashboardConnects } from 'src/layouts/dashboard/components/DashboardConnect';
+import BoardProgressChart from 'src/layouts/dashboard/components/TaskProgressChart';
 
 
 // Add the path to the uploaded image
@@ -130,7 +139,7 @@ export default function DashboardAppPage() {
   const [expandedTopic, setExpandedTopic] = useState(null);
   const [articles, setArticles] = useState([]);
   const [articlesForInterestTopics, setArticlesForInterestTopics] = useState([]);
-
+  const [data, setData] = useState([]);
   const [courses, setCourses] = useState([]);
   const [books, setBooks] = useState([]);
   const [videos, setVideos] = useState([]);
@@ -144,7 +153,7 @@ export default function DashboardAppPage() {
   const { webinarsStartIndex, setWebinarStartIndex } = useState(1);
   const { profileSetUp, setProfileSetUp } = useProfileSetUp(1);
   const [preferences, setPreferences] = useState([]);
-
+  const [departments, setDepartments] = useState([]);
   const [open, setOpen] = useState(null);  // State to manage popover open/close
   const [editingCardOpen, setEditingCardOpen] = useState(false);
   const [showQuestion, setShowQuestion] = useState(false);
@@ -154,7 +163,7 @@ export default function DashboardAppPage() {
   const [openToast, setOpenToast] = useState(false);
   const [ responseString, updateResponseString ] = useState(''); // Using the custom hook
   const [announcementMessage, setAnnouncementMessage] = useState("");
-
+  const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
   const [isScrolling, setIsScrolling] = useState(false);
   const [anchorElMap, setAnchorElMap] = useState({});
   const [visibleCourses, setVisibleCourses] = useState(10);
@@ -162,6 +171,13 @@ export default function DashboardAppPage() {
   const [visiblepodcast, setvisiblepodcast] = useState(10);
   const [visiblewebinars, setVisiblewebinars] = useState(10);
   const [visibleBooks, setVisibleBooks] = useState(10);
+
+  const [chartLabels, setChartLabels] = useState([]);
+  const [chartData, setChartData] = useState([]);
+
+  const [companyThread, setCompanyThread] = useState([]);
+  const [groupedThreads, setGroupedThreads] = useState([]);
+  const [BoardProgess, setBoardProgess] = useState([]);
   const AnimatedAvatar = styled(Avatar)`
   cursor: pointer;
   position: fixed !important;
@@ -209,7 +225,48 @@ export default function DashboardAppPage() {
   const theme = useTheme();
   const navigate = useNavigate();
 
+
+  const fetchCompanyUser = async () => {
+    const companyData = await getAllCompanyUser(
+      storedUserData.token,
+      storedUserData.company.id
+    );
+    console.log("compan data b date:", companyData);
+
+    const sortedData = companyData.data
+      ?.filter(
+        (user) =>
+        
+          user.role != "company-super-admin"
+      ) // Filter out the logged-in user
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        //return dateA - dateB; // For ascending order
+        return dateB - dateA; // For descending order
+      });
+    // Log the sorted data
+    console.log("Sorted Data:", sortedData);
+    setData(sortedData);
+  };
+useEffect(()=>
+{
+  if(storedUserData.user.role!="super-super-admin")
+    {
+      fetchCompanyUser();
+      allgetFunctionDepartments(storedUserData.token, storedUserData.company.id)
+      .then((response) => {
+        console.log("DEPARTMENTS", response);
+        setDepartments(response.data);
+      })
+      .catch((error) => {
+        toast.error("Failed to fetch departments");
+      });
+    }
+},[])
   useEffect(() => {
+
+   
     const fetchData = async () => {
       const userObj = JSON.parse(localStorage.getItem('currentUser') ?? '{}');
       console.log("userObj", userObj);
@@ -1091,6 +1148,137 @@ export default function DashboardAppPage() {
     navigate("/dashboard/announcements");
   };
 
+
+  useEffect(() => {
+    const countsByMonth = {};
+  
+    // Step 1: Count users by month
+    data.forEach((user) => {
+      const date = new Date(user.createdAt);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      countsByMonth[key] = (countsByMonth[key] || 0) + 1;
+    });
+  
+    // Step 2: Generate last 12 months (from current month backwards)
+    const currentDate = new Date();
+    const last12Months = [];
+  
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      last12Months.push(key);
+    }
+  
+    // Step 3: Format labels and data
+    const formattedLabels = [];
+    const dataValues = [];
+  
+    last12Months.forEach((key) => {
+      const [year, month] = key.split('-');
+      const date = new Date(year, month - 1);
+      const label = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  
+      formattedLabels.push(label);
+      const count = countsByMonth[key];
+  
+      if (count === undefined) {
+        // If no data for that month, add random number between 1 and 10
+        dataValues.push(Math.floor(Math.random() * 10) + 1);
+      } else {
+        dataValues.push(count);
+      }
+    });
+  
+    setChartLabels(formattedLabels);
+    console.log('formattedLabels:', formattedLabels);
+    console.log('dataValues:', dataValues);
+  
+    setChartData(dataValues);
+  }, [data]);
+  
+
+  async function GetBoardProgress() {
+    try {
+      const boardprogress = await Board_Progress();
+      if (boardprogress) {
+        console.log("boardprogress : ", boardprogress);
+        setBoardProgess(boardprogress); // Update companyThread
+      }
+    } catch (error) {
+      console.error("Failed to fetch company threads:", error);
+    }
+  }
+
+  async function getCompanyThread() {
+    try {
+      const companythread = await GetCompaniesAllThread();
+      if (companythread) {
+        console.log("Fetched Company Threads:", companythread);
+        setCompanyThread(companythread); // Update companyThread
+      }
+    } catch (error) {
+      console.error("Failed to fetch company threads:", error);
+    }
+  }
+  const groupThreadsByParentId = (threads) => {
+    const getLatestActivity = (thread) => {
+      let latest = new Date(thread.companyThread.createdAt).getTime();
+      thread.replies.forEach((reply) => {
+        latest = Math.max(latest, getLatestActivity(reply));
+      });
+      return latest;
+    };
+
+    const allThreads = threads.reduce((map, thread) => {
+      map[thread.companyThread.id] = { ...thread, replies: [] };
+      return map;
+    }, {});
+
+    threads.forEach((thread) => {
+      const { parentId, id } = thread.companyThread;
+      if (parentId) {
+        if (allThreads[parentId]) {
+          allThreads[parentId].replies.push(allThreads[id]);
+        } else {
+          console.warn(
+            `Parent thread with id ${parentId} not found for thread ${id}`
+          );
+        }
+      }
+    });
+
+    const standaloneThreads = Object.values(allThreads).filter(
+      (thread) => thread.companyThread.parentId === null
+    );
+
+    standaloneThreads.sort((a, b) => {
+      const latestA = getLatestActivity(a);
+      const latestB = getLatestActivity(b);
+      return latestB - latestA; // Descending order
+    });
+
+    standaloneThreads.forEach((thread) => {
+      thread.replies.sort(
+        (a, b) =>
+          new Date(b.companyThread.createdAt) -
+          new Date(a.companyThread.createdAt)
+      );
+    });
+
+    return standaloneThreads;
+  };
+
+  useEffect(()=>
+  {
+    GetBoardProgress();
+    getCompanyThread();
+  },[])
+  // Group threads by parentId whenever companyThread changes
+  useEffect(() => {
+   
+    setGroupedThreads(groupThreadsByParentId(companyThread));
+  }, [companyThread]); // Dependency array ensures this runs when companyThread changes
+
   return (
     <>
       <Helmet>
@@ -1119,48 +1307,48 @@ export default function DashboardAppPage() {
       <Container maxWidth="xl">
         <Grid container spacing={3}>
           <Grid item xs={12} md={6} lg={12}>
-            {[ 'company-super-admin'].includes(user.role) ? (
-              <AppWebsiteVisits
-                title="Employees Onboarded by Companies"
-                subheader="(+43%) than last year"
-                chartLabels={[
-                  '01/01/2003',
-                  '02/01/2003',
-                  '03/01/2003',
-                  '04/01/2003',
-                  '05/01/2003',
-                  '06/01/2003',
-                  '07/01/2003',
-                  '08/01/2003',
-                  '09/01/2003',
-                  '10/01/2003',
-                  '11/01/2003',
-                ]}
-                chartData={[
-                  {
-                    name: 'Alpha A',
-                    type: 'column',
-                    fill: 'solid',
-                    data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30],
-                  },
-                  {
-                    name: 'Beta B',
-                    type: 'area',
-                    fill: 'gradient',
-                    data: [44, 55, 41, 67, 22, 43, 21, 41, 56, 27, 43],
-                  },
-                  {
-                    name: 'Gamma C',
-                    type: 'line',
-                    fill: 'solid',
-                    data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39],
-                  },
-                ]}
-              />
-            ) : (
-              <></>
-            )}
+            {[ 'company-super-admin'].includes(user.role) && (
+             <AppWebsiteVisits
+             title="Employees Onboarded by Companies"
+             subheader=""
+             chartLabels={chartLabels}
+             chartData={[
+               {
+                 name: 'Employees',
+                 type: 'area',
+                 fill: 'gradient',
+                 data: chartData,
+               },
+             ]}
+           />
+            ) }
           </Grid>
+
+          {[ 'company-super-admin'].includes(user.role) && (
+          <Grid item xs={12} sm={6} md={6}>
+  <DashboardCard
+    title={"Total Departments"}
+    total={departments?.length || 0}
+    data={departments}
+    icon={<Apartment />}
+    navigation={"/dashboard/company-employee-management"}
+    category="departments"
+  />
+</Grid>
+          )
+        }
+  {[ 'company-super-admin'].includes(user.role) && (
+<Grid item xs={12} sm={6} md={6}>
+  <AppTopManagers
+    title={"Managers"}
+    subheader={"Top Managers"}
+    list={data}
+  />
+</Grid>
+  )}
+
+
+
 
           {/* New Section for Hobbies and Interest */}
           {(user.role === 'user'||user.role === "manager"||user.role === "admin"||user.role === "lead") && (
@@ -1612,116 +1800,35 @@ export default function DashboardAppPage() {
             />
           </Grid> */}
 
-          {/* Reward Points Section */}
+       
+
+        
+
+        
+
+         
+
+         
           <Grid item xs={12} md={6} lg={6}>
-            <Card>
-              <CardHeader title="Reward Points" subheader="Here it will show the rewards achieved." />
-              <Box sx={{ p: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                  <RewardIcon>
-                    <StarIcon sx={{ color: '#FFD700', fontSize: '2rem' }} />
-                  </RewardIcon>
-                  <Typography variant="h6">{stars} Stars</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                  <RewardIcon>
-                    <LocalDrinkIcon sx={{ color: '#8B4513', fontSize: '3rem' }} />
-                  </RewardIcon>
-                  <Typography variant="h5">{cups} Cups</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                  <RewardIcon>
-                    <EmojiEventsIcon sx={{ color: '#FFD700', fontSize: '4rem' }} />
-                  </RewardIcon>
-                  <Typography variant="h4">{trophies} Trophies</Typography>
-                </Box>
-              </Box>
-            </Card>
+            <DashLeaderBoard data={data} />
           </Grid>
-
           <Grid item xs={12} md={6} lg={6}>
-            <AppCurrentSubject
-              title="Your Activity Breakdown"
-              chartLabels={['Connects', 'Policies', 'Tasks', 'Announcements', 'Courses', 'Buy n Sell']}
-              chartData={[
-                { name: 'Series 1', data: [80, 50, 30, 40, 100, 20] },
-                { name: 'Series 2', data: [20, 30, 40, 80, 20, 80] },
-                { name: 'Series 3', data: [44, 76, 78, 13, 43, 10] },
-              ]}
-              chartColors={[...Array(6)].map(() => theme.palette.text.secondary)}
-            />
+            <BoardProgressChart data={BoardProgess} />
           </Grid>
+          {['company-super-admin'].includes(user.role) && (
+  <Grid item xs={12}>
+    <DashboardConnects
+      title="Connects"
+      groupedThreads={groupedThreads}
+      sx={{
+        minHeight: "250px",
+        width: "100%",
+      }}
+    />
+  </Grid>
+)}
 
-          <Grid item xs={12} md={6} lg={6}>
-            <AppTasks
-              title="Task Master: Your assigned tasks"
-              list={[
-                { id: '1', label: 'Create FireStone Logo' },
-                { id: '2', label: 'Add SCSS and JS files if required' },
-                { id: '3', label: 'Stakeholder Meeting' },
-                { id: '4', label: 'Scoping & Estimations' },
-                { id: '6', label: 'Sprint Planning' },
-                { id: '7', label: 'Line Up' },
-                { id: '8', label: 'Retrospective Meeting' },
-                { id: '9', label: 'Stakeholder Meeting' },
-                { id: '10', label: 'Scoping & Estimations' },
-              ]}
-            />
-          </Grid>
-
-          {/* New Announcement Section */}
-          <Grid item xs={12} md={12} lg={12}>
-            <Card>
-              <CardHeader title="Announcements" subheader="Latest updates and news" />
-              <Box sx={{ p: 2 }}>
-                <Typography variant="body1" gutterBottom>
-                  <strong>Employee Management System Update:</strong>
-                </Typography>
-                <Typography variant="body2" paragraph>
-                  Dear team, we are excited to announce the upcoming launch of our new Employee Management System. This system will streamline our HR processes, making it easier to manage employee records, track performance, and handle payroll.
-                </Typography>
-                <Typography variant="body2" paragraph>
-                  <strong>Key Features:</strong>
-                  <ul style={{ paddingLeft: '20px' }}>
-                    <li>Automated attendance tracking</li>
-                    <li>Performance evaluation tools</li>
-                    <li>Seamless integration with payroll</li>
-                    <li>Employee self-service portal</li>
-                  </ul>
-                </Typography>
-                <Typography variant="body2" paragraph>
-                  We will be conducting training sessions over the next few weeks to ensure everyone is comfortable using the new system. Please stay tuned for more information on the training schedule.
-                </Typography>
-                <Typography variant="body2">
-                  Thank you for your cooperation and support as we transition to this new platform.
-                </Typography>
-              </Box>
-            </Card>
-          </Grid>
-
-          {/* dynamic content for user side */}
-          <Grid item xs={12} md={6} lg={6}>
-            <AppCurrentVisits
-              title="Rewards based Leader Board"
-              chartData={[
-                { label: 'America', value: 4344 },
-                { label: 'Asia', value: 5435 },
-                { label: 'Europe', value: 1443 },
-                { label: 'Africa', value: 4443 },
-              ]}
-              chartColors={[
-                theme.palette.primary.main,
-                theme.palette.info.main,
-                theme.palette.warning.main,
-                theme.palette.error.main,
-              ]}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={6}>
-            <DashLeaderBoard />
-          </Grid>
-
+         
           {user.role === 'user' && (
             <Grid item xs={12} md={6} lg={12}>
               <Card sx={{ p: 2, display: 'flex', flexDirection: 'column', alignContent: 'center' }}>

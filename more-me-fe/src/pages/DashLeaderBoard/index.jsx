@@ -1,53 +1,48 @@
-import { Helmet } from 'react-helmet-async';
-import { filter } from 'lodash';
-import { sentenceCase } from 'change-case';
 import { useState } from 'react';
-// @mui
 import {
   Card,
   Table,
   Stack,
-  Paper,
   Avatar,
-  Button,
-  Popover,
-  Checkbox,
   TableRow,
-  MenuItem,
   TableBody,
   TableCell,
-  Container,
-  Typography,
-  IconButton,
+  CardHeader,
   TableContainer,
   TablePagination,
-  CardHeader,
+  Typography,
+  Paper,
 } from '@mui/material';
-// components
 import Scrollbar from '../../components/scrollbar';
-// sections
-import { UserListHead, UserListToolbar } from '../../sections/@dashboard/user';
-// mock
-import USERLIST from '../../_mock/user';
-
-// ----------------------------------------------------------------------
+import { UserListHead } from '../../sections/@dashboard/user';
+import { filter } from 'lodash';
 
 const TABLE_HEAD = [
   { id: 'name', label: 'Name', alignRight: false },
   { id: 'score', label: 'Score', alignRight: false },
 ];
 
-// ----------------------------------------------------------------------
-
 function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
-    return -1;
+  if (orderBy === 'name') {
+    const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
+    const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
+    if (nameB < nameA) return -1;
+    if (nameB > nameA) return 1;
+    return 0;
   }
-  if (b[orderBy] > a[orderBy]) {
-    return 1;
+
+  if (orderBy === 'score') {
+    const scoreA = (a.userRewards || 0) + (a.readPolicies || 0) + (a.points || 0);
+    const scoreB = (b.userRewards || 0) + (b.readPolicies || 0) + (b.points || 0);
+    return scoreB - scoreA;
   }
+
+  // fallback for any other property
+  if (b[orderBy] < a[orderBy]) return -1;
+  if (b[orderBy] > a[orderBy]) return 1;
   return 0;
 }
+
 
 function getComparator(order, orderBy) {
   return order === 'desc'
@@ -63,33 +58,20 @@ function applySortFilter(array, comparator, query) {
     return a[1] - b[1];
   });
   if (query) {
-    return filter(array, (_user) => _user.name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
+    return filter(array, (user) =>
+      `${user.firstName} ${user.lastName}`.toLowerCase().includes(query.toLowerCase())
+    );
   }
   return stabilizedThis.map((el) => el[0]);
 }
 
-export default function DashLeaderBoard() {
-  const [open, setOpen] = useState(null);
-
+export default function DashLeaderBoard({ data }) {
   const [page, setPage] = useState(0);
-
-  const [order, setOrder] = useState('asc');
-
+  const [order, setOrder] = useState('desc');
   const [selected, setSelected] = useState([]);
-
-  const [orderBy, setOrderBy] = useState('name');
-
+  const [orderBy, setOrderBy] = useState('score');
   const [filterName, setFilterName] = useState('');
-
   const [rowsPerPage, setRowsPerPage] = useState(5);
-
-  const handleOpenMenu = (event) => {
-    setOpen(event.currentTarget);
-  };
-
-  const handleCloseMenu = () => {
-    setOpen(null);
-  };
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -99,26 +81,11 @@ export default function DashLeaderBoard() {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelecteds = USERLIST.map((n) => n.name);
+      const newSelecteds = data.map((user) => `${user.firstName} ${user.lastName}`);
       setSelected(newSelecteds);
       return;
     }
     setSelected([]);
-  };
-
-  const handleClick = (event, name) => {
-    const selectedIndex = selected.indexOf(name);
-    let newSelected = [];
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, name);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(selected.slice(0, selectedIndex), selected.slice(selectedIndex + 1));
-    }
-    setSelected(newSelected);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -135,15 +102,13 @@ export default function DashLeaderBoard() {
     setFilterName(event.target.value);
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - USERLIST.length) : 0;
-
-  const filteredUsers = applySortFilter(USERLIST, getComparator(order, orderBy), filterName);
-
+  const filteredUsers = applySortFilter(data, getComparator(order, orderBy), filterName);
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - data.length) : 0;
   const isNotFound = !filteredUsers.length && !!filterName;
 
   return (
     <Card>
-      <CardHeader title={'Leader Board'} />
+      <CardHeader title="Leader Board" />
       <Scrollbar>
         <TableContainer sx={{ mt: 1, minWidth: 300 }}>
           <Table>
@@ -151,60 +116,60 @@ export default function DashLeaderBoard() {
               order={order}
               orderBy={orderBy}
               headLabel={TABLE_HEAD}
-              rowCount={USERLIST.length}
+              rowCount={data.length}
               numSelected={selected.length}
               onRequestSort={handleRequestSort}
               onSelectAllClick={handleSelectAllClick}
             />
             <TableBody>
-              {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                const { id, name, score, avatarUrl } = row;
-                const selectedUser = selected.indexOf(name) !== -1;
+              {filteredUsers
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((user) => {
+                  const {
+                    id,
+                    profilePic,
+                    firstName,
+                    lastName,
+                    userRewards = 0,
+                    readPolicies = 0,
+                    points = 0,
+                  } = user;
+                  const name = `${firstName} ${lastName}`;
+                  const score = userRewards + readPolicies + points;
+                  const selectedUser = selected.includes(name);
 
-                return (
-                  <TableRow hover colSpan={3}  key={id} tabIndex={-1} role="checkbox" selected={selectedUser}>
-                    <TableCell colSpan={1} padding="checkbox">
-                      <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, name)} />
-                    </TableCell>
+                  return (
+                    <TableRow hover key={id} tabIndex={-1} selected={selectedUser}>
+                      <TableCell />
+                      <TableCell component="th" scope="row" padding="none">
+                        <Stack direction="row" alignItems="center" spacing={2}>
+                          <Avatar alt={name} src={profilePic} />
+                          <Typography variant="subtitle2" noWrap>
+                            {name}
+                          </Typography>
+                        </Stack>
+                      </TableCell>
+                      <TableCell align="left">{score}</TableCell>
+                    </TableRow>
+                  );
+                })}
 
-                    <TableCell colSpan={1} component="th" scope="row" padding="none">
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Avatar alt={name} src={avatarUrl} />
-                        <Typography variant="subtitle2" noWrap>
-                          {name}
-                        </Typography>
-                      </Stack>
-                    </TableCell>
-
-                    <TableCell colSpan={1} align="left">{score}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-
-            {isNotFound && (
-              <TableBody>
+              {isNotFound && (
                 <TableRow>
                   <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
-                    <Paper
-                      sx={{
-                        textAlign: 'center',
-                      }}
-                    >
+                    <Paper sx={{ textAlign: 'center' }}>
                       <Typography variant="h6" paragraph>
                         Not found
                       </Typography>
-
                       <Typography variant="body2">
                         No results found for &nbsp;
-                        <strong>&quot;{filterName}&quot;</strong>.
-                        <br /> Try checking for typos or using complete words.
+                        <strong>&quot;{filterName}&quot;</strong>. Try checking for typos or using complete words.
                       </Typography>
                     </Paper>
                   </TableCell>
                 </TableRow>
-              </TableBody>
-            )}
+              )}
+            </TableBody>
           </Table>
         </TableContainer>
       </Scrollbar>
@@ -212,12 +177,12 @@ export default function DashLeaderBoard() {
       <TablePagination
         rowsPerPageOptions={[5, 10, 25]}
         component="div"
-        count={USERLIST.length}
+        count={data.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
     </Card>
-  )
+  );
 }

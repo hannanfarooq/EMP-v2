@@ -13,6 +13,7 @@ import {
 } from "../controllers/companyThread/companyThread.controller";
 import { createThreadMessage } from "../controllers/threadMessage/threadMessage.controller";
 import { fetchArticles } from "../controllers/buyAndSell/buyAnsSell.controller";
+import { getBoardTaskProgress } from "../controllers/Task_Management/Board.controller";
 
 const router = express.Router();
 

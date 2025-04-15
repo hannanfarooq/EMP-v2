@@ -4744,3 +4744,37 @@ export const getTeamMembersbyuser = async (token, id) => {
   });
   return res.json();
 };
+
+export const allgetFunctionDepartments = async (token, compnayid) => {
+  const apiUrl = "/api/getallFunctionDepartments";
+  const data = {
+    compnayid: compnayid,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": token,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+
+export const Board_Progress = async (token, compnayid) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = "/api/Board_Progress";
+  const data = {
+    companyId: currentUser.company.id,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": currentUser.token,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}

@@ -9,7 +9,7 @@ export const createDepartment = async (req, res) => {
         name: data.name,
         headId: data.headId,
         functionId: data.functionId,
-        compnayid:data.compnayid,
+        companyId:data.companyId,
         });
 
         const userData = await User.findByPk(data.headId);
@@ -229,4 +229,15 @@ export const deleteDepartment = async (req, res) => {
     catch (error) {
         throw error;
     }
+}
+
+export const getFunctionDepartmentsall = async (req, res) => {
+  try {
+      const { compnayid } = req.body;
+      const departments = await Department.findAll({ where: { companyId:compnayid } });
+      return successResponse(req, res, departments);
+  }
+  catch (error) {
+      throw error;
+  }
 }
