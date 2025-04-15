@@ -1808,13 +1808,16 @@ useEffect(()=>
 
          
 
-         
+{['company-super-admin'].includes(user.role) && (
           <Grid item xs={12} md={6} lg={6}>
             <DashLeaderBoard data={data} />
           </Grid>
+)}
+          {['company-super-admin'].includes(user.role) && (
           <Grid item xs={12} md={6} lg={6}>
             <BoardProgressChart data={BoardProgess} />
           </Grid>
+          )}
           {['company-super-admin'].includes(user.role) && (
   <Grid item xs={12}>
     <DashboardConnects
