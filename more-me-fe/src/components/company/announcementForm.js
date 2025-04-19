@@ -16,10 +16,11 @@ import { uploadImageAndGetURL } from "src/utils/uploadImageAndGetURL";
 import { DesktopDateTimePicker } from "@mui/x-date-pickers/DesktopDateTimePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { addMinutes } from "date-fns";
+import { addMinutes, format } from "date-fns";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { MenuItem, Select, InputLabel, FormControl } from "@mui/material";
-
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 function validateForm(name, description, reward) {
   const errors = {};
   if (!name.trim()) errors.name = "Name is required";
@@ -41,7 +42,7 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
     departmentId: "",
     teamId: "",
   });
-
+  const today = new Date();
   const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -50,6 +51,10 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
   const [companyFunctions, setCompanyFunctions] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [teams, setTeams] = useState([]);
+  const [datePart, setDatePart] = useState(null);
+  const [timePart, setTimePart] = useState("12:00");
+  
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     getCompanyFunctions(storedUserData.token, storedUserData?.company.id)
@@ -61,6 +66,25 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
       });
   }, []);
 
+  useEffect(() => {
+    if (datePart && timePart) {
+      const [hours, minutes] = timePart.split(":").map(Number);
+      const combined = new Date(datePart);
+      combined.setUTCHours(hours);
+      combined.setUTCMinutes(minutes);
+      combined.setUTCSeconds(0);
+      combined.setUTCMilliseconds(0);
+  
+      // Format to: YYYY-MM-DD HH:mm:ss.SSS +00:00
+      const formatted = combined.toISOString().replace("T", " ").replace("Z", " +00:00");
+  
+      setFormData((prevData) => ({
+        ...prevData,
+        announcementDate: formatted,
+      }));
+    }
+  }, [datePart, timePart]);
+  
   useEffect(() => {
     if (formData.functionId) {
       getFunctionDepartments(storedUserData.token, formData.functionId)
@@ -408,7 +432,7 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
                   ))}
                 </ul>
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} sx={{ pb: 3, pl: 2 }}>
                 <span>Select announcement images (.png, .jpg, .jpeg)</span>
                 <input
                   type="file"
@@ -427,17 +451,54 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
                   ))}
                 </ul>
               </Grid>
-              <Grid item xs={12}>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DesktopDateTimePicker
-                    label="Announcement Date and Time"
-                    value={formData.announcementDate}
-                    onChange={handleDateChange}
-                    minDateTime={minDateTime}
-                    renderInput={(params) => <TextField {...params} />}
-                  />
-                </LocalizationProvider>
-              </Grid>
+              <Grid container spacing={4} sx={{ pt: 3, pl: 2 }}>
+      {/* 📅 Date Picker */}
+      <Grid item xs={12} sm={6}>
+     
+      <DatePicker
+  selected={datePart}
+  onChange={(date) => {
+    setDatePart(date);
+    setError(false);
+  }}
+  dateFormat="dd/MM/yyyy"
+  minDate={today}
+  customInput={
+    <TextField
+      label="Announce Date"
+      value={datePart ? format(datePart, "dd/MM/yyyy") : ""}
+      error={error && !datePart}
+      helperText={error && !datePart ? "Date is required" : ""}
+      InputLabelProps={{ shrink: true }}
+      InputProps={{
+        endAdornment: <span role="img" aria-label="calendar">📅</span>,
+      }}
+      inputProps={{
+        placeholder: "DD/MM/YYYY", // ✅ This makes the placeholder visible
+      }}
+    />
+  }
+/>
+      </Grid>
+
+      {/* ⏰ Time Picker */}
+      <Grid item xs={12} sm={6}>
+        <TextField
+          label="Announce Time"
+          type="time"
+          value={timePart}
+          onChange={(e) => setTimePart(e.target.value)}
+          InputLabelProps={{
+            shrink: true,
+          }}
+          inputProps={{
+            step: 300, // 5 min steps
+          }}
+        />
+      </Grid>
+
+      
+    </Grid>
 
               {/* Questions Section */}
               <Grid item xs={12}>
