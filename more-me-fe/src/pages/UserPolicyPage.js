@@ -675,8 +675,8 @@ export default function UserPolicyPage() {
           searchWords.some((searchWord) => word.includes(searchWord))
         );
 
-        let snippet = words.slice(firstMatchIndex, firstMatchIndex + 50).join(" ");
-        if (words.length > firstMatchIndex + 50) {
+        let snippet = words.slice(firstMatchIndex, firstMatchIndex + 300).join(" ");
+        if (words.length > firstMatchIndex + 300) {
           snippet += " ...";
         }
 

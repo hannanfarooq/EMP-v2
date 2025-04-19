@@ -239,7 +239,7 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
   };
 
   const currentDate = new Date();
-  const minDateTime = addMinutes(currentDate, 1);
+  const minDateTime = addMinutes(currentDate, -5);
 
 
   return (
