@@ -755,6 +755,7 @@ const handleProjectSelect = (e) => {
   const selected = projects.find((project) => project.id === e.target.value);
   setSelectedproject(selected); // Set the selected project
 };
+
   return (
     <>
       <Helmet>
@@ -1129,7 +1130,10 @@ const handleProjectSelect = (e) => {
       ref={provided.innerRef}
     >
       {column.items && column.items.map((item, index) => (
-        <Draggable key={item.id} draggableId={item.id} index={index}>
+        <Draggable key={item.id} draggableId={item.id} index={index} isDragDisabled={
+          item.subtasks?.length > 0 && 
+          !item.subtasks.every(subtask => subtask.status === 'Completed')
+        }>
           {(provided) => (
             <div
       className="kanban-card"

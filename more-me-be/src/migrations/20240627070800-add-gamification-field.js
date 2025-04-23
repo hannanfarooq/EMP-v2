@@ -4,8 +4,8 @@ module.exports = {
   up: (queryInterface, Sequelize) => Promise.all([
     
     queryInterface.addColumn('Users', 'gamification', {
-      type: Sequelize.JSON,
-      defaultValue: {},
+      type: Sequelize.ARRAY(Sequelize.INTEGER),
+      defaultValue: [],
       allowNull: true, // or false, depending on your requirements
     }),
     queryInterface.addColumn('Users', 'points', {
@@ -37,7 +37,7 @@ module.exports = {
         allowNull: false,
       },
       correctOption: {
-        type: Sequelize.STRING,
+        type: Sequelize.ARRAY(Sequelize.STRING),  // Change this to store multiple correct options
         allowNull: false,
       },
       media: {
@@ -71,7 +71,7 @@ module.exports = {
         onDelete: 'SET NULL',
       },
       image: {
-        type: Sequelize.ARRAY(Sequelize.STRING),
+        type: Sequelize.JSON,
         allowNull: true,
       },
       columnA: {

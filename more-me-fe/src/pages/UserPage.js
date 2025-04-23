@@ -762,7 +762,7 @@ export default function UserPage() {
                             </TableCell>
 
                             {/* Role */}
-                            <TableCell align="left">{role}</TableCell>
+                            <TableCell align="left">{role=="admin"?"Function Head":role}</TableCell>
 
                             {/* Status */}
                             <TableCell align="left">
@@ -1094,10 +1094,14 @@ export default function UserPage() {
           Show Question
         </MenuItem>
 
-        <MenuItem sx={{ color: "error.main" }} onClick={handleDeleteUser}>
-          <DeleteIcon sx={{ mr: 2 }} />
-          Delete
-        </MenuItem>
+{
+  storedUserData.user.role=="company-super-admin" &&
+  <MenuItem sx={{ color: "error.main" }} onClick={handleDeleteUser}>
+  <DeleteIcon sx={{ mr: 2 }} />
+  Delete
+</MenuItem>
+}
+       
       </Popover>
     </>
   );

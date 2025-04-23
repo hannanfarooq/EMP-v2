@@ -1,7 +1,11 @@
 // import React, { useState } from 'react';
-// import { Button, Radio, RadioGroup, FormControl, FormControlLabel, TextField, Box } from '@mui/material';
-// import { keyframes } from "@mui/system";
+// import { Button, Radio, RadioGroup, FormControl, FormControlLabel, Box, TextField } from '@mui/material';
+// import { keyframes } from '@mui/system';
+// import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+// import DatePicker from "react-datepicker";
+// import "react-datepicker/dist/react-datepicker.css"; // Include date picker styles
 
+// // Define vibration animation
 // const vibration = keyframes`
 //   0%, 100% {
 //     transform: translateX(0);
@@ -20,20 +24,22 @@
 // const Q3 = ({ handleNext, handleAnswerChange }) => {
 //   const [selectedStatus, setSelectedStatus] = useState('Single');
 //   const [spouseName, setSpouseName] = useState('');
-//   const [spouseDOB, setSpouseDOB] = useState('');
+//   const [spouseDOB, setSpouseDOB] = useState(null); // Start with null for DatePicker
 //   const [error, setError] = useState(false);
 
 //   const today = new Date().toISOString().split('T')[0];
 
 //   const handleSubmit = () => {
-//     if ((selectedStatus === 'Married' || selectedStatus === 'Engaged' || selectedStatus === 'Widowed') && (spouseName === '' || spouseDOB === '')) {
+//     // Error handling logic: only apply to married/engaged/widowed statuses
+//     if ((selectedStatus === 'Married' || selectedStatus === 'Engaged' || selectedStatus === 'Widowed') && (!spouseName || !spouseDOB)) {
 //       setError(true);
 //       return;
 //     }
+
 //     const answer = {
 //       relationshipStatus: selectedStatus,
 //       spouseName: selectedStatus !== 'Single' ? spouseName : '',
-//       spouseDOB: selectedStatus !== 'Single' ? spouseDOB : ''
+//       spouseDOB: selectedStatus !== 'Single' ? spouseDOB : '' // Only include DOB if not Single
 //     };
 //     console.log("Submitting answer for Q3:", answer);
 //     handleAnswerChange(answer);
@@ -60,42 +66,56 @@
 
 //       {(selectedStatus === 'Married' || selectedStatus === 'Engaged' || selectedStatus === 'Widowed') && (
 //         <>
-//           <Box
-//             sx={{
-//               animation: error && spouseName === '' ? `${vibration} 0.3s linear` : 'none'
-//             }}
-//           >
+//           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 //             <TextField
-//               style={{ width: "100%" }}
-//               label='Spouse Name'
+//               label="Spouse Name"
 //               value={spouseName}
 //               onChange={(e) => setSpouseName(e.target.value)}
-//               margin='normal'
-//               error={error && spouseName === ''}
-//               helperText={error && spouseName === '' ? 'Spouse name is required' : ''}
+//               error={error && !spouseName}
+//               helperText={error && !spouseName ? "Spouse name is required" : ""}
+//               sx={error && !spouseName ? { animation: `${vibration} 0.3s ease` } : {}}
+//               margin="normal"
 //             />
-//           </Box>
-//           <Box
-//             sx={{
-//               animation: error && spouseDOB === '' ? `${vibration} 0.3s linear` : 'none'
-//             }}
-//           >
-//             <TextField
-//               type='date'
-//               label='Spouse Date of Birth'
-//               value={spouseDOB}
-//               onChange={(e) => setSpouseDOB(e.target.value)}
-//               InputLabelProps={{ shrink: true }}
-//               inputProps={{ max: today }}
-//               margin='normal'
-//               error={error && spouseDOB === ''}
-//               helperText={error && spouseDOB === '' ? 'Spouse date of birth is required' : ''}
+            
+//             <DatePicker
+//               selected={spouseDOB}
+//               onChange={(date) => {
+//                 setSpouseDOB(date);
+//                 setError(false); // Reset error on valid date change
+//               }}
+//               dateFormat="dd/MM/yyyy"
+//               maxDate={new Date(today)} // Ensure the date is not in the future
+//               customInput={
+//                 <TextField
+//                   error={error && !spouseDOB}
+//                   helperText={error && !spouseDOB ? "Spouse date of birth is required" : ""}
+//                   sx={error && !spouseDOB ? { animation: `${vibration} 0.3s ease` } : {}}
+//                   placeholder="dd/mm/yyyy"
+//                   InputProps={{
+//                     endAdornment: <span>📅</span>,
+//                   }}
+//                 />
+//               }
+//               isClearable={false}
+//               placeholderText="dd/mm/yyyy"
+//               inline={false}
+//               popperModifiers={{
+//                 preventOverflow: { enabled: true, boundariesElement: 'viewport' },
+//                 hide: { enabled: true },
+//               }}
 //             />
 //           </Box>
 //         </>
 //       )}
 
-//       <Button className='mt-10 w-60' variant='outlined' onClick={handleSubmit}>Next!</Button>
+//       <Button
+//         className="mt-10 w-60"
+//         variant="outlined"
+//         onClick={handleSubmit}
+//         endIcon={<ArrowForwardIcon />}
+//       >
+//         Next!
+//       </Button>
 //     </>
 //   );
 // };
@@ -103,11 +123,13 @@
 // export default Q3;
 
 import React, { useState } from 'react';
-import { Button, Radio, RadioGroup, FormControl, FormControlLabel, TextField, Box } from '@mui/material';
-import { keyframes } from "@mui/system";
+import { Button, Radio, RadioGroup, FormControl, FormControlLabel, Box, TextField, InputLabel } from '@mui/material';
+import { keyframes } from '@mui/system';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css"; // Include date picker styles
 
-
+// Define vibration animation
 const vibration = keyframes`
   0%, 100% {
     transform: translateX(0);
@@ -126,24 +148,26 @@ const vibration = keyframes`
 const Q3 = ({ handleNext, handleAnswerChange }) => {
   const [selectedStatus, setSelectedStatus] = useState('Single');
   const [spouseName, setSpouseName] = useState('');
-  const [spouseDOB, setSpouseDOB] = useState('');
+  const [spouseDOB, setSpouseDOB] = useState(null); // Start with null for DatePicker
   const [error, setError] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
 
   const handleSubmit = () => {
-    if ((selectedStatus === 'Married' || selectedStatus === 'Engaged' || selectedStatus === 'Widowed') && (spouseName === '' || spouseDOB === '')) {
+    // Error handling logic: only apply to married/engaged/widowed statuses
+    if ((selectedStatus === 'Married' || selectedStatus === 'Engaged' || selectedStatus === 'Widowed') && (!spouseName || !spouseDOB)) {
       setError(true);
       return;
     }
+
     const answer = {
       relationshipStatus: selectedStatus,
       spouseName: selectedStatus !== 'Single' ? spouseName : '',
-      spouseDOB: selectedStatus !== 'Single' ? spouseDOB : ''
+      spouseDOB: selectedStatus !== 'Single' ? spouseDOB : '' // Only include DOB if not Single
     };
     console.log("Submitting answer for Q3:", answer);
-    handleAnswerChange(answer, 'persona'); // Save the answer in the persona category
-    handleNext(); // Move to the next question
+    handleAnswerChange(answer);
+    handleNext();
   };
 
   return (
@@ -166,52 +190,54 @@ const Q3 = ({ handleNext, handleAnswerChange }) => {
 
       {(selectedStatus === 'Married' || selectedStatus === 'Engaged' || selectedStatus === 'Widowed') && (
         <>
-          <Box
-            sx={{
-              animation: error && spouseName === '' ? `${vibration} 0.3s linear` : 'none'
-            }}
-          >
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <TextField
-              style={{ width: "100%" }}
-              label='Spouse Name'
+              label="Spouse Name"
               value={spouseName}
               onChange={(e) => setSpouseName(e.target.value)}
-              margin='normal'
-              error={error && spouseName === ''}
-              helperText={error && spouseName === '' ? 'Spouse name is required' : ''}
-            />
-          </Box>
-          <Box
-            sx={{
-              animation: error && spouseDOB === '' ? `${vibration} 0.3s linear` : 'none'
-            }}
-          >
-            {/* <TextField
-              type='date'
-              label='Spouse Date of Birth'
-              value={spouseDOB}
-              onChange={(e) => setSpouseDOB(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              inputProps={{ max: today }}
-              margin='normal'
-              error={error && spouseDOB === ''}
-              helperText={error && spouseDOB === '' ? 'Spouse date of birth is required' : ''}
-            /> */}
-            <TextField
-              type="date"
-              label="Spouse Date of Birth"
-              value={spouseDOB}
-              onChange={(e) => {
-                setSpouseDOB(e.target.value);
-                // Programmatically blur the input after selection
-                e.target.blur();
-              }}
-              InputLabelProps={{ shrink: true }}
-              inputProps={{ max: today }}
+              error={error && !spouseName}
+              helperText={error && !spouseName ? "Spouse name is required" : ""}
+              sx={error && !spouseName ? { animation: `${vibration} 0.3s ease` } : {}}
               margin="normal"
-              error={error && spouseDOB === ''}
-              helperText={error && spouseDOB === '' ? 'Spouse date of birth is required' : ''}
             />
+
+            {/* Label for Spouse Date of Birth */}
+            <FormControl fullWidth margin="normal">
+              <InputLabel htmlFor="spouseDOB"></InputLabel>
+              <DatePicker
+                selected={spouseDOB}
+                onChange={(date) => {
+                  setSpouseDOB(date);
+                  setError(false); // Reset error on valid date change
+                }}
+                dateFormat="dd/MM/yyyy"
+                maxDate={new Date(today)} // Ensure the date is not in the future
+                customInput={
+                  <TextField
+                    id="spouseDOB"
+                    label="Spouse Date of Birth"
+                    value={spouseDOB ? spouseDOB.toLocaleDateString("en-GB") : ''}
+                    error={error && !spouseDOB}
+                    helperText={error && !spouseDOB ? "Spouse date of birth is required" : ""}
+                    sx={error && !spouseDOB ? { animation: `${vibration} 0.3s ease` } : {}}
+                    placeholder="dd/mm/yyyy"
+                    InputProps={{
+                      endAdornment: <span>📅</span>,
+                    }}
+                    InputLabelProps={{
+                      shrink: true, // Ensures label floats above the input
+                    }}
+                  />
+                }
+                isClearable={false}
+                placeholderText="dd/mm/yyyy"
+                inline={false}
+                popperModifiers={{
+                  preventOverflow: { enabled: true, boundariesElement: 'viewport' },
+                  hide: { enabled: true },
+                }}
+              />
+            </FormControl>
           </Box>
         </>
       )}

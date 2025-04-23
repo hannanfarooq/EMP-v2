@@ -60,7 +60,6 @@
 //     </div>
 //   );
 // }
-
 import * as React from "react";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
@@ -97,7 +96,7 @@ export default function TransitionsModal({
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const buttonWidth = isMobile ? "100%" : "auto";
+  const buttonWidth = "auto";
 
   return (
     <div>
@@ -107,6 +106,7 @@ export default function TransitionsModal({
         variant={variant}
         startIcon={icon}
         disabled={disabled}
+        size="small" // Set button size to small
         style={{ width: buttonWidth }} // Dynamic width based on screen size
       >
         {title}

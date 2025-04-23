@@ -102,6 +102,7 @@ if (blockeduser && blockeduser.blockedId && Array.isArray(blockeduser.blockedId)
   };
 
   const handleEditModeToggle = () => {
+    setTempMembers(members);
     setEditMode(!editMode);
   };
 
@@ -162,6 +163,7 @@ if (blockeduser && blockeduser.blockedId && Array.isArray(blockeduser.blockedId)
   const handleMemberRemove = (index) => {
     const newMembers = [...tempMembers];
     newMembers[index].markedForRemoval = !newMembers[index].markedForRemoval;
+    console.log("newMembers : ",newMembers[index]);
 
     if (newMembers[index].markedForRemoval) {
       setRemovedMembers([...removedMembers, newMembers[index].id]);
@@ -244,13 +246,21 @@ console.log("REMAINGING USER AFTER LEAVING GROUP : ",remainingMemberIds);
   };
 
   const filteredUsers = users.filter(user => !members.find(member => member.id == user.id));
-
+  const handleRemoveMember = (memberId) => {
+    // Remove the member from tempMembers
+    const updatedMembers = tempMembers.filter(member => member.id !== memberId);
+    setTempMembers(updatedMembers);
+  
+    // Also update addedMembers by removing the member's id
+    const updatedAddedMembers = addedMembers.filter(id => id !== memberId);
+    setAddedMembers(updatedAddedMembers);
+  };
   return (
     <>
-      <AppBar position="static" color="default">
+      <AppBar position="static" color="transparent">
         <Toolbar>
           <Avatar alt={alt} src={avatar} style={{ marginRight: 10 }} />
-          <Typography variant="h6" style={{ flexGrow: 1 }}>
+          <Typography  style={{ flexGrow: 1 }}>
             {isGroup ? `Group: ${title}` : `${title}`}
           </Typography>
           <IconButton edge="end" color="inherit" onClick={handleClickOpen}>
@@ -259,121 +269,136 @@ console.log("REMAINGING USER AFTER LEAVING GROUP : ",remainingMemberIds);
         </Toolbar>
       </AppBar>
       <Dialog open={open} onClose={handleClose} aria-labelledby="group-info-title">
-        <DialogTitle id="group-info-title">
-          {editMode ? (
-            <TextField fullWidth label="Group Name" value={groupName} onChange={handleGroupNameChange} />
-          ) : (
-            'Group Information'
-          )}
-        </DialogTitle>
-        <DialogContent>
-          <List>
-            {editMode ? (
-              tempMembers.map((member, index) => (
-                <ListItem key={member.id}>
-                  <Avatar alt={member.fullName} src={conversation.avatar} style={{ marginRight: 10 }} />
-                  <TextField
-                    fullWidth
-                    label={`Member ${index + 1}`}
-                    value={member.fullName || ''}
-                    onChange={(e) => handleMemberChange(index, 'fullName', e.target.value)}
-                    style={{ marginRight: 10 }}
-                    disabled={true}
-                  />
-                  <TextField
-                    fullWidth
-                    label={`Email ${index + 1}`}
-                    value={member.email || ''}
-                    onChange={(e) => handleMemberChange(index, 'email', e.target.value)}
-                    style={{ marginRight: 10 }}
-                    disabled={true}
-                  />
-                 
-                </ListItem>
-              ))
-            ) : (
-              <>
-                <ListItem>
-                  <ListItemText primary="Group Name" secondary={groupName} />
-                </ListItem>
-                {members.map((member) => (
-                  <ListItem key={member.id}>
-                    <Avatar alt={member.fullName} src={member.profilePic} style={{ marginRight: 10 }} />
-                    <ListItemText
-                      primary={member.fullName}
-                      secondary={member.id == conversation.user1Id ? '(Admin)' : null}
-                    />
-                    <ListItemText primary={member.email} />
-                  </ListItem>
-                ))}
-              </>
-            )}
-          </List>
-          {isAdmin && editMode ? (
-            <Box mt={2}>
-              <FormControl fullWidth>
-                <InputLabel id="select-user-label">Select User</InputLabel>
-                <Select
-                  labelId="select-user-label"
-                  value={selectedUser}
-                  onChange={(e) => setSelectedUser(e.target.value)}
-                >
-                  {filteredUsers.map((user) => (
-                    <MenuItem key={user.id} value={user.id}>
-                      {user.fullName} ({user.email})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <Button variant="text" color="primary" onClick={handleMemberAdd} style={{ marginTop: 10 }}>
-                Add Member
-              </Button>
-              <Button variant="contained" color="primary" onClick={handleSave} style={{ marginTop: 10 }}>
-                Save
-              </Button>
-              <Button variant="text" color="secondary" onClick={handleEditModeToggle} style={{ marginTop: 10 }}>
-                Cancel
-              </Button>
-            </Box>
-          ) : (
-            isAdmin  && isGroup&& (
-              <Button variant="contained" color="primary" onClick={handleEditModeToggle}>
-                Edit
-              </Button>
-            )
-          )}
-         {
-  !isGroup && (
-    isBlocked ? (
-      <Button 
-        variant="contained" 
-        color="primary" 
-        onClick={handleUnblock} 
-        style={{ marginTop: 10 }}
-      >
-        Unblock User
-      </Button>
+  <DialogTitle id="group-info-title">
+    {editMode ? (
+      <TextField fullWidth label="Group Name" value={groupName} onChange={handleGroupNameChange} />
     ) : (
-      <Button 
-        variant="contained" 
-        color="secondary" 
-        onClick={handleBlockUser} 
-        style={{ marginTop: 10 }}
-      >
-        Block User
-      </Button>
-    )
-  )
-}
-
-         
-          {isGroup && !isAdmin && (
-            <Button variant="contained" color="secondary" onClick={handleLeaveGroup} style={{ marginTop: 10 }}>
-              Leave Group
+      'Group Information'
+    )}
+  </DialogTitle>
+  <DialogContent>
+    <List>
+      {editMode ? (
+       tempMembers.map((member, index) => (
+        <ListItem
+          key={member.id}
+          style={{
+            backgroundColor: member.markedForRemoval ? '#ffdddd' : 'transparent', // Red background for marked members
+            borderLeft: member.markedForRemoval ? '4px solid red' : 'none', // Optional: add red left border for emphasis
+            transition: 'background-color 0.3s', // Smooth transition for background color change
+          }}
+        >
+          <Avatar alt={member.fullName} src={conversation.avatar} style={{ marginRight: 10 }} />
+          <TextField
+            fullWidth
+            label={`Member ${index + 1}`}
+            value={member.fullName || ''}
+            onChange={(e) => handleMemberChange(index, 'fullName', e.target.value)}
+            style={{ marginRight: 10 }}
+            disabled={true}
+          />
+          <TextField
+            fullWidth
+            label={`Email ${index + 1}`}
+            value={member.email || ''}
+            onChange={(e) => handleMemberChange(index, 'email', e.target.value)}
+            style={{ marginRight: 10 }}
+            disabled={true}
+          />
+          {isAdmin && (
+            <Button
+              variant="outlined"
+              color="secondary"
+              disabled={storedUserData.user.id == member.id}
+              onClick={() => handleMemberRemove(index)} // Handle member removal
+              style={{ marginLeft: '10px' }}
+            >
+              Remove
             </Button>
           )}
-        </DialogContent>
-      </Dialog>
+        </ListItem>
+      ))
+      
+      ) : (
+        <>
+          <ListItem>
+            <ListItemText primary="Group Name" secondary={groupName} />
+          </ListItem>
+          {members.map((member) => (
+            <ListItem key={member.id}>
+              <Avatar alt={member.fullName} src={member.profilePic} style={{ marginRight: 10 }} />
+              <ListItemText
+                primary={member.fullName}
+                secondary={member.id == conversation.user1Id ? '(Admin)' : null}
+              />
+              <ListItemText primary={member.email} />
+            </ListItem>
+          ))}
+        </>
+      )}
+    </List>
+    {isAdmin && editMode ? (
+      <Box mt={2}>
+        <FormControl fullWidth>
+          <InputLabel id="select-user-label">Select User</InputLabel>
+          <Select
+            labelId="select-user-label"
+            value={selectedUser}
+            onChange={(e) => setSelectedUser(e.target.value)}
+          >
+            {filteredUsers.map((user) => (
+              <MenuItem key={user.id} value={user.id}>
+                {user.fullName} ({user.email})
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <Button variant="text" color="primary" onClick={handleMemberAdd} style={{ marginTop: 10 }}>
+          Add Member
+        </Button>
+        <Button variant="contained" color="primary" onClick={handleSave} style={{ marginTop: 10 }}>
+          Save
+        </Button>
+        <Button variant="text" color="secondary" onClick={handleEditModeToggle} style={{ marginTop: 10 }}>
+          Cancel
+        </Button>
+      </Box>
+    ) : (
+      isAdmin && isGroup && (
+        <Button variant="contained" color="primary" onClick={handleEditModeToggle}>
+          Edit
+        </Button>
+      )
+    )}
+    {isGroup && !isAdmin && (
+      <Button variant="contained" color="secondary" onClick={handleLeaveGroup} style={{ marginTop: 10 }}>
+        Leave Group
+      </Button>
+    )}
+    {!isGroup && (
+      isBlocked ? (
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={handleUnblock} 
+          style={{ marginTop: 10 }}
+        >
+          Unblock User
+        </Button>
+      ) : (
+        <Button 
+          variant="contained" 
+          color="secondary" 
+          onClick={handleBlockUser} 
+          style={{ marginTop: 10 }}
+        >
+          Block User
+        </Button>
+      )
+    )}
+  </DialogContent>
+</Dialog>
+
       <ToastContainer />
     </>
   );

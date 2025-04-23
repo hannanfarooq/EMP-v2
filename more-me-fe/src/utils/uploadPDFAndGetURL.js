@@ -1,24 +1,32 @@
-import { storage } from "src/utils/firebase";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { uploadFile } from 'react-s3';
+window.Buffer = window.Buffer || require("buffer").Buffer;
+
+const config = {
+  bucketName: process.env.REACT_APP_S3_BUCKET,
+  region: process.env.REACT_APP_REGION,
+  accessKeyId: process.env.REACT_APP_ACCESS_KEY,
+  secretAccessKey: process.env.REACT_APP_SECRET_ACCESS_KEY,
+};
+
 export async function uploadPDFAndGetURL(mediaFile) {
   if (!mediaFile) return null;
 
-  // Extract the file extension and type dynamically
-  const fileExtension = mediaFile.name ? mediaFile.name.split('.').pop().toLowerCase():mediaFile.split('.').pop().toLowerCase();
+  const fileExtension = mediaFile.name.split('.').pop().toLowerCase();
+  const fileName = `${new Date().getTime()}_${mediaFile.name}`;
 
-  // Use a directory named 'uploads' for all file types
-  const storageRef = ref(storage, `uploads/${new Date().getTime()}_${mediaFile.name}`);
-  const uploadTask = uploadBytesResumable(storageRef, mediaFile);
-
+  // Upload the file to S3
   try {
-    await uploadTask;
+    const data = await uploadFile(mediaFile, {
+      ...config,
+      key: `uploads/${fileName}`, // Store in the 'uploads' folder
+    });
 
-    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-    return downloadURL;
+    return data.location; // Return the URL of the uploaded PDF
   } catch (error) {
-    console.error("Error uploading file:", error);
+    console.error("Error uploading file to S3:", error);
     return null;
   }
 }
+
 // Usage example:
 // const mediaUrl = await uploadFileAndGetURL(file);

@@ -34,11 +34,7 @@ const MENU_OPTIONS = [
     icon: "eva:person-fill",
     path: "/edit-preference",
   },
-  {
-    label: "Settings",
-    icon: "eva:settings-2-fill",
-    path: "/settings",
-  },
+  
   {
     label: "Change Password",
     icon: "eva:person-fill",

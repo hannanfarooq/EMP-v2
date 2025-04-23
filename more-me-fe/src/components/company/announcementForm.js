@@ -8,17 +8,19 @@ import Box from "@mui/material/Box";
 import BusinessIcon from "@mui/icons-material/Business";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
-import { useState } from "react";
-import { createCompanyAnnouncement } from "src/api";
+import { useState, useEffect } from "react";
+import { createCompanyAnnouncement, getCompanyFunctions,   getDepartmentTeams,   getFunctionDepartments  } from "src/api";
 import { toast } from "react-toastify";
 import { uploadPDFAndGetURL } from "src/utils/uploadPDFAndGetURL";
 import { uploadImageAndGetURL } from "src/utils/uploadImageAndGetURL";
 import { DesktopDateTimePicker } from "@mui/x-date-pickers/DesktopDateTimePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { addMinutes } from "date-fns";
+import { addMinutes, format } from "date-fns";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-
+import { MenuItem, Select, InputLabel, FormControl } from "@mui/material";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 function validateForm(name, description, reward) {
   const errors = {};
   if (!name.trim()) errors.name = "Name is required";
@@ -35,13 +37,79 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
     reward: "",
     announcementDate: null,
     questions: [],
+    announcementType: "global",
+    functionId: "",
+    departmentId: "",
+    teamId: "",
   });
-
+  const today = new Date();
   const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [selectedDocuments, setSelectedDocuments] = useState([]);
   const [selectedImages, setSelectedImages] = useState([]);
+  const [companyFunctions, setCompanyFunctions] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [datePart, setDatePart] = useState(null);
+  const [timePart, setTimePart] = useState("12:00");
+  
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    getCompanyFunctions(storedUserData.token, storedUserData?.company.id)
+      .then((response) => {
+        setCompanyFunctions(response.data);
+      })
+      .catch((error) => {
+        toast.error("Failed to fetch company functions");
+      });
+  }, []);
+
+  useEffect(() => {
+    if (datePart && timePart) {
+      const [hours, minutes] = timePart.split(":").map(Number);
+      const combined = new Date(datePart);
+      combined.setUTCHours(hours);
+      combined.setUTCMinutes(minutes);
+      combined.setUTCSeconds(0);
+      combined.setUTCMilliseconds(0);
+  
+      // Format to: YYYY-MM-DD HH:mm:ss.SSS +00:00
+      const formatted = combined.toISOString().replace("T", " ").replace("Z", " +00:00");
+  
+      setFormData((prevData) => ({
+        ...prevData,
+        announcementDate: formatted,
+      }));
+    }
+  }, [datePart, timePart]);
+  
+  useEffect(() => {
+    if (formData.functionId) {
+      getFunctionDepartments(storedUserData.token, formData.functionId)
+             .then((response) => {
+               console.log("DEPARTMENTS", response);
+               setDepartments(response.data);
+             })
+             .catch((error) => {
+               toast.error("Failed to fetch departments");
+             });
+    }
+  }, [formData.functionId]);
+
+  useEffect(() => {
+    if (formData.departmentId) {
+     getDepartmentTeams(storedUserData.token, formData.departmentId)
+            .then((response) => {
+              console.log("TEAMS", response);
+              setTeams(response.data);
+            })
+            .catch((error) => {
+              toast.error("Failed to fetch teams");
+            });
+    }
+  }, [formData.departmentId]);
 
   const handleFileInput = (e, type) => {
     const files = Array.from(e.target.files);
@@ -62,30 +130,44 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const { name, description, reward, announcementDate, questions } = formData;
-
+    const { name, description, reward, announcementDate, questions, announcementType, functionId, departmentId, teamId } = formData;
+  
     const formErrors = validateForm(name, description, reward);
     setErrors(formErrors);
-
+  
     if (!name || !description || !reward || !announcementDate) {
       toast.error("All fields are required! Please fill out all the fields.");
       return;
     }
-
+  
+    // Check required fields based on announcementType
+    if (announcementType === "function" && !functionId) {
+      toast.error("Function ID is required for function type announcements.");
+      return;
+    }
+    if (announcementType === "department" && !departmentId) {
+      toast.error("Department ID is required for department type announcements.");
+      return;
+    }
+    if (announcementType === "team" && !teamId) {
+      toast.error("Team ID is required for team type announcements.");
+      return;
+    }
+  
     if (Object.keys(formErrors).length === 0) {
       const uploadToastId = toast.info("Uploading files...", { autoClose: false, isLoading: true });
-
+  
       try {
         const documentUrls = await Promise.all(
           selectedDocuments.map((file) => uploadPDFAndGetURL(file))
         );
-
+  
         const imageUrls = await Promise.all(
           selectedImages.map((file) => uploadImageAndGetURL(file))
         );
-
+  
         toast.dismiss(uploadToastId);
-
+  
         const data = {
           name,
           description,
@@ -94,24 +176,33 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
           documentUrls,
           imageUrls,
           announcementDate,
-          questions, // Send questions to the API
+          questions,
+          announcementType,
+          functionId,
+          departmentId,
+          teamId,
         };
-
+  
         setSubmitting(true);
         await createCompanyAnnouncement(data, storedUserData.token);
         fetchCompanyAnnouncements();
         setSubmitting(false);
         toast.success("Announcement created successfully!");
+  
         setFormData({
           name: "",
           description: "",
           reward: "",
           announcementDate: null,
           questions: [],
+          announcementType: "global",
+          functionId: "",
+          departmentId: "",
+          teamId: "",
         });
         setSelectedDocuments([]);
         setSelectedImages([]);
-
+  
         if (onClose) {
           onClose();
         }
@@ -121,6 +212,7 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
       }
     }
   };
+  
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -171,7 +263,8 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
   };
 
   const currentDate = new Date();
-  const minDateTime = addMinutes(currentDate, 1);
+  const minDateTime = addMinutes(currentDate, -5);
+
 
   return (
     <ThemeProvider theme={createTheme()}>
@@ -193,6 +286,91 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
           </Typography>
           <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
             <Grid container spacing={2}>
+               {/* Announcement Type Dropdown */}
+               <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel id="announcementType-label">Announcement Type</InputLabel>
+                  <Select
+                    labelId="announcementType-label"
+                    id="announcementType"
+                    name="announcementType"
+                    value={formData.announcementType}
+                    onChange={handleInputChange}
+                    label="Announcement Type"
+                  >
+                    <MenuItem value="global">Global</MenuItem>
+                    <MenuItem value="function">Function</MenuItem>
+                    <MenuItem value="department">Department</MenuItem>
+                    <MenuItem value="team">Team</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+               {/* Function Dropdown (if announcementType is function, department or team) */}
+               {formData.announcementType !== "global" && (
+                <Grid item xs={12}>
+                  <FormControl fullWidth>
+                    <InputLabel id="functionId-label">Function</InputLabel>
+                    <Select
+                      labelId="functionId-label"
+                      id="functionId"
+                      name="functionId"
+                      value={formData.functionId}
+                      onChange={handleInputChange}
+                      label="Function"
+                    >
+                      {companyFunctions.map((func) => (
+                        <MenuItem key={func.id} value={func.id}>
+                          {func.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              )}
+               {/* Department Dropdown (if announcementType is department or team) */}
+               {formData.announcementType !== "global" && formData.announcementType !== "function" && (
+                <Grid item xs={12}>
+                  <FormControl fullWidth>
+                    <InputLabel id="departmentId-label">Department</InputLabel>
+                    <Select
+                      labelId="departmentId-label"
+                      id="departmentId"
+                      name="departmentId"
+                      value={formData.departmentId}
+                      onChange={handleInputChange}
+                      label="Department"
+                    >
+                      {departments.map((department) => (
+                        <MenuItem key={department.id} value={department.id}>
+                          {department.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              )}
+               {/* Team Dropdown (if announcementType is team) */}
+               {formData.announcementType === "team" && (
+                <Grid item xs={12}>
+                  <FormControl fullWidth>
+                    <InputLabel id="teamId-label">Team</InputLabel>
+                    <Select
+                      labelId="teamId-label"
+                      id="teamId"
+                      name="teamId"
+                      value={formData.teamId}
+                      onChange={handleInputChange}
+                      label="Team"
+                    >
+                      {teams.map((team) => (
+                        <MenuItem key={team.id} value={team.id}>
+                          {team.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              )}
               <Grid item xs={12}>
                 <TextField
                   required
@@ -254,7 +432,7 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
                   ))}
                 </ul>
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} sx={{ pb: 3, pl: 2 }}>
                 <span>Select announcement images (.png, .jpg, .jpeg)</span>
                 <input
                   type="file"
@@ -273,17 +451,54 @@ export default function AddAnnouncement({ fetchCompanyAnnouncements, onClose }) 
                   ))}
                 </ul>
               </Grid>
-              <Grid item xs={12}>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DesktopDateTimePicker
-                    label="Announcement Date and Time"
-                    value={formData.announcementDate}
-                    onChange={handleDateChange}
-                    minDateTime={minDateTime}
-                    renderInput={(params) => <TextField {...params} />}
-                  />
-                </LocalizationProvider>
-              </Grid>
+              <Grid container spacing={4} sx={{ pt: 3, pl: 2 }}>
+      {/* 📅 Date Picker */}
+      <Grid item xs={12} sm={6}>
+     
+      <DatePicker
+  selected={datePart}
+  onChange={(date) => {
+    setDatePart(date);
+    setError(false);
+  }}
+  dateFormat="dd/MM/yyyy"
+  minDate={today}
+  customInput={
+    <TextField
+      label="Announce Date"
+      value={datePart ? format(datePart, "dd/MM/yyyy") : ""}
+      error={error && !datePart}
+      helperText={error && !datePart ? "Date is required" : ""}
+      InputLabelProps={{ shrink: true }}
+      InputProps={{
+        endAdornment: <span role="img" aria-label="calendar">📅</span>,
+      }}
+      inputProps={{
+        placeholder: "DD/MM/YYYY", // ✅ This makes the placeholder visible
+      }}
+    />
+  }
+/>
+      </Grid>
+
+      {/* ⏰ Time Picker */}
+      <Grid item xs={12} sm={6}>
+        <TextField
+          label="Announce Time"
+          type="time"
+          value={timePart}
+          onChange={(e) => setTimePart(e.target.value)}
+          InputLabelProps={{
+            shrink: true,
+          }}
+          inputProps={{
+            step: 300, // 5 min steps
+          }}
+        />
+      </Grid>
+
+      
+    </Grid>
 
               {/* Questions Section */}
               <Grid item xs={12}>

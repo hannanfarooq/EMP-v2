@@ -35,6 +35,7 @@ const adminConfig = [
     path: "/dashboard/invite",
     icon: <CoPresentIcon />,
   },
+  
   {
     title: "users",
     path: "/dashboard/user",
@@ -85,6 +86,11 @@ const adminConfig = [
     path: "/dashboard/questionnaire",
     icon: icon("ic_question"),
   },
+   {
+      title: "Dynamic questionnaire",
+      path: "/dashboard/dynamicQuestionnaire",
+      icon: <QuestionAnswerOutlinedIcon />,
+    },
   {
     title: "gamification",
     path: "/dashboard/gamification",

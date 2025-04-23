@@ -2247,10 +2247,11 @@ export const getUserCompanyPolicy = async (token, companyId) => {
   return res.json();
 };
 
-export const getCompanyAnnouncement = async (token, companyId) => {
-  const apiUrl = "/api/getCompanyAnnouncement";
+export const getCompanyAnnouncement = async (token, companyId,userId,) => {
+  const apiUrl = "/api/getCompanyAnnouncementforuser";
   const data = {
     companyId: companyId,
+    userId:userId,
   };
   const res = await fetch(baseURL + apiUrl, {
     method: "POST",
@@ -2320,8 +2321,28 @@ export const saveAnswers = async (answers, userId, token) => {
   });
   return res.json();
 };
-export const updateUserPoints = async (point, userId, policyId, token) => {
+
+export const updateUserPointsPolicy = async (point, userId, policyId, token) => {
   const apiUrl = "/api/updateUserPoints";
+  const data = {
+    userPolicyId: policyId,
+    userRewards: point,
+    userId: userId,
+  };
+
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const updateUserPoints = async (point, userId, policyId, token) => {
+  const apiUrl = "/api/updateUserPointsAnnouncement";
   const data = {
     userPolicyId: policyId,
     userRewards: point,
@@ -2774,6 +2795,25 @@ body:JSON.stringify(requestData),
   });
   return res.json();
 };
+
+
+export const updateMessageStatus = async (chatId) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/updateMessageStatus`;
+  const data = {
+    chatId: chatId,
+    userid:currentUser.user.id
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
 export const postMessage = async (data) => {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const apiUrl = `/api/messages`;
@@ -2805,10 +2845,14 @@ export const createConversation = async (data,token) => {
   return res.json();
 };
 
-export const addQuestionCategory = async (name) => {
+export const addQuestionCategory = async (name,description,images,video,subCategoryId,selectedgameid,startingLevel,canProceedToNextLevel) => {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const apiUrl = `/api/addQuestionCategory`;
-  const data = { name: name, companyId: currentUser.company.id }
+  const data = { name: name, companyId: currentUser.company.id,  images: images,
+    description:description,
+    video:video,
+    subCategoryId:subCategoryId,
+    gameid:selectedgameid,starting:startingLevel,canProceedToNextLevel:canProceedToNextLevel }
 
   const res = await fetch(baseURL + apiUrl, {
     method: "POST",
@@ -3111,6 +3155,157 @@ export const getArticles = async (category) => {
 //   }
 // };
 
+export const getpodcastUrlsByTitle = async (title) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/getpodcastUrlsByTitle`;
+  const data = { titles: title }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const getBooksUrlsByTitle = async (title) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/getBooksUrlsByTitle`;
+  const data = { titles: title }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const getWebinarsUrlsByTitle = async (title) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/getWebinarsUrlsByTitle`;
+  const data = { titles: title }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const getVideosByTitle = async (title) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/getVideoUrlsByTitle`;
+  const data = { titles: title }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const getUrlsByTitle = async (title) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/getUrlsByTitle`;
+  const data = { titles: title }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const createwebinars = async (title, urls) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/createwebinars`;
+  const data = { title: title, urls:urls }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const createBooks = async (title, urls) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/createBooks`;
+  const data = { title: title, urls:urls }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const createPosdcast = async (title, urls) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/createPosdcast`;
+  const data = { title: title, urls:urls }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const createVideos = async (title, urls) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/createVideos`;
+  const data = { title: title, urls:urls }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const createArticle = async (title, urls) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = `/api/createArticle`;
+  const data = { title: title, urls:urls }
+ 
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
 export const getArticlesFromTopicAndContentPref = async ({ topic, contentPreferences, hobbies, start = 1 }) => {
   //new api key=AIzaSyDS-x8lZ0vl_suQ11XB2ndkFiQTT-SlxR0
   //old api key=AIzaSyC3FVIBTpZUcwYI16HR1K9eu8TktccL6Dw
@@ -3123,7 +3318,7 @@ export const getArticlesFromTopicAndContentPref = async ({ topic, contentPrefere
   const cx = "430d5a3e4f6f644f4";
   const numResults = 10;
   // const searchParams = `${topic} ${contentPreferences.join(' ')}`;
-  const searchParams = `${topic} ',' ${hobbies.join(',')}`;
+  const searchParams = `${topic}`;
   const url = `https://customsearch.googleapis.com/customsearch/v1?cx=${cx}&q=${encodeURIComponent(searchParams)}&key=${apiKey}&num=${numResults}&start=${start}`;
 
   const fetchWithRetry = async (url, retries = 3, delay = 1000) => {
@@ -3152,6 +3347,42 @@ export const getArticlesFromTopicAndContentPref = async ({ topic, contentPrefere
 
   return fetchWithRetry(url);
 };
+//////////////////////////////
+export const getresultsArticlesForInterestTopics = async ({ topic, start = 1 }) => {
+  const apiKey = "AIzaSyC3FVIBTpZUcwYI16HR1K9eu8TktccL6Dw";
+  const cx = "430d5a3e4f6f644f4";
+  const numResults = 10;
+  // const searchParams = `${topic} ${contentPreferences.join(' ')}`;
+  const searchParams = `${topic}`;
+  const url = `https://customsearch.googleapis.com/customsearch/v1?cx=${cx}&q=${encodeURIComponent(searchParams)}&key=${apiKey}&num=${numResults}&start=${start}`;
+
+  const fetchWithRetry = async (url, retries = 3, delay = 1000) => {
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!res.ok) {
+        if (res.status === 429 && retries > 0) {
+          console.warn(`Rate limited. Retrying after ${delay} ms...`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          return fetchWithRetry(url, retries - 1, delay * 2);
+        }
+        throw new Error('Network response was not ok');
+      }
+      return await res.json();
+    } catch (error) {
+      toast.error('Error while fetching articles');
+      console.error('Error fetching articles:', error);
+      throw error;
+    }
+  };
+
+  return fetchWithRetry(url);
+};
+
 
 // export const getArticlesFromTopicAndContentPref = async ({ topic, contentPreferences, start = 1 }) => {
 //   const apiKey = "AIzaSyDS-x8lZ0vl_suQ11XB2ndkFiQTT-SlxR0";
@@ -3316,7 +3547,7 @@ const fetchWithRetry = async (url, retries = 3, delay = 1000) => {
 
 // Fetch Books
 export const getBooks = async (topic) => {
-  const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(topic)}&key=${apiKeyForBooksAndVideos}&maxResults=${numResults}`;
+  const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(topic)}&key=${apiKeyForBooksAndVideos}&maxResults=40`;
   try {
     const response = await fetchWithRetry(googleBooksUrl);
     console.log("response books", response);
@@ -3334,7 +3565,7 @@ export const getBooks = async (topic) => {
 };
 // Fetch Videos
 export const getVideos = async (topic) => {
-  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topic)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=${numResults}`;
+  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topic)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=40`;
   try {
     const response = await fetchWithRetry(youtubeSearchUrl);
     console.log("video response", response);
@@ -3413,7 +3644,7 @@ export const getPodcasts = async (topic) => {
     .map((topic) => `${topic.trim()} podcast`)
     .join(" | "); // Use " | " for OR search in YouTube Data API
     console.log("topics for podcasts:", topicsWithPodcast);
-  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topicsWithPodcast)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=${numResults}`;
+  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topicsWithPodcast)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=40`;
   try {
     const response = await fetchWithRetry(youtubeSearchUrl);
     console.log("podcast results", response);
@@ -3438,7 +3669,7 @@ export const getWebinars = async (topic) => {
     .map((topic) => `${topic.trim()} webinar`)
     .join(" | "); // Use " | " for OR search in YouTube Data API
     console.log("topics for podcasts:", topicsWithWebinars);
-  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topicsWithWebinars)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=${numResults}`;
+  const youtubeSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topicsWithWebinars)}&key=${apiKeyForBooksAndVideos}&type=video&maxResults=40`;
   try {
     const response = await fetchWithRetry(youtubeSearchUrl);
     console.log("webinar results", response);
@@ -3733,6 +3964,249 @@ export const getUserGamificationsbyCompnay = async () => {
   return res.json();
 };
 
+
+export const deleteCategory = async (id) => {
+  const apiUrl = "/api/deleteCategory";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    id: id,
+  
+ 
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const updateSubCategory = async (id,name) => {
+  const apiUrl = "/api/updateSubCategory";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    id: id,
+    name:name,
+
+ 
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const deleteSubCategory = async (id,name) => {
+  const apiUrl = "/api/deleteSubCategory";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    id: id,
+
+ 
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const getSubCategories = async (categoryId) => {
+  const apiUrl = "/api/getSubCategoryById";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    categoryId: categoryId,
+ 
+ 
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const createSubCategory = async (categoryId,name,companyId) => {
+  const apiUrl = "/api/createSubCategory";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    categoryId: categoryId,
+    name:name,
+    companyId:companyId,
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const updateCategory = async (id,name) => {
+  const apiUrl = "/api/updateCategory";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    id: id,
+    name:name,
+ 
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+
+export const getGamesBySubCategory = async ( subCategoryId) => {
+  const apiUrl = "/api/getGamesBySubCategory";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    subCategoryId:subCategoryId,
+ 
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+
+
+export const deleteGame = async (id, name) => {
+  const apiUrl = "/api/deleteGame";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    id:id
+ 
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const updateGame = async (id, name) => {
+  const apiUrl = "/api/updateGame";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    id:id, name:name,
+ 
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const createGame = async (name, subCategoryId) => {
+  const apiUrl = "/api/createGame";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    name:name, subCategoryId:subCategoryId,
+ 
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+export const getAllCategories = async (companyId) => {
+  const apiUrl = "/api/getAllCategories";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    companyId: companyId,
+ 
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const createCategory = async (companyId, name) => {
+  const apiUrl = "/api/createCategory";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const data = {
+    companyId: companyId,
+    name:name,
+   
+    
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${currentUser.token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
 export const updateUserGamification = async (selectedCategory, updatedPoints) => {
   const apiUrl = "/api/updateUserGamification";
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
@@ -3866,6 +4340,14 @@ export const deleteDailyQuestionForCompany = async (token, id) => {
 
 //getDailyQuestionsForCompany
 export const getDailyQuestionsForCompany = async (token, parsedUserData) => {
+  // Show a loading toast before making the request
+  const loadingToast = toast.info('Loading questions...', { 
+    position: "top-right", 
+    autoClose: false,  // Keep the toast open indefinitely
+    closeOnClick: false,
+    draggable: false,
+  });
+
   const apiUrl = `/api/getDailyQuestionsForCompany/${parsedUserData.company.id}`;
 
   try {
@@ -3881,8 +4363,10 @@ export const getDailyQuestionsForCompany = async (token, parsedUserData) => {
     if (!res.ok) {
       throw new Error("Failed to fetch questions");
     }
-
+    // Dismiss the loading toast once the response is received
+    toast.dismiss(loadingToast);
     const data = await res.json();
+    
     return data; // Return the response from the API
 
   } catch (error) {
@@ -4270,3 +4754,37 @@ export const getTeamMembersbyuser = async (token, id) => {
   });
   return res.json();
 };
+
+export const allgetFunctionDepartments = async (token, compnayid) => {
+  const apiUrl = "/api/getallFunctionDepartments";
+  const data = {
+    compnayid: compnayid,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": token,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+
+export const Board_Progress = async (token, compnayid) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const apiUrl = "/api/Board_Progress";
+  const data = {
+    companyId: currentUser.company.id,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": currentUser.token,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}

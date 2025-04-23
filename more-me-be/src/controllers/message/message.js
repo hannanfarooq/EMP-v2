@@ -99,3 +99,45 @@ export const markMessageAsRead = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+export const updateMessageStatus = async (req, res) => {
+  try {
+    const { chatId,userid } = req.body; // Get chatId from request parameters
+
+    if (!chatId) {
+      return res.status(400).json({ message: 'Chat ID is required' });
+    }
+
+    // Update messages where status is 'sent' to 'delivered'
+    const updatedSentMessages = await Message.update(
+      { status: 'delivered' },
+      {
+        where: {
+          chatId: chatId,
+          senderId: { [Op.ne]: userid }, // Sender is not the current user
+          status: 'sent',
+        },
+      }
+    );
+
+    // Then, update messages with status 'delivered' to 'seen'
+    const updatedDeliveredMessages = await Message.update(
+      { status: 'seen' },
+      {
+        where: {
+          chatId: chatId,
+          senderId: { [Op.ne]: userid }, // Sender is not the current user
+          status: 'delivered',
+        },
+      }
+    );
+
+    if (updatedSentMessages[0] === 0 && updatedDeliveredMessages[0] === 0) {
+      return res.status(404).json({ message: 'No messages found to update' });
+    }
+
+    return res.status(200).json({ message: 'Messages updated successfully', updatedMessages });
+  } catch (error) {
+    console.error('Error updating messages:', error);
+    return res.status(500).json({ message: 'Internal server error', error });
+  }
+};

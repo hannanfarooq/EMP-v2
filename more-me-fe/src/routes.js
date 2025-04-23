@@ -51,8 +51,8 @@ export default function Router() {
   const dashboardRoutes = [
     { element: <Navigate to="/dashboard/app" />, index: true },
     { path: "app", element: <DashboardAppPage /> },
-    { path: "invite", element: <InvitePage /> },
-    { path: "policy", element: <PolicyPage /> },
+    { path: "invite", element: role ==="company-super-admin"?<InvitePage />:<Navigate to="/404" /> },
+    { path: "policy", element: role ==="company-super-admin"?<PolicyPage />:<UserPolicyPage /> },
     {
       path: isSuperAdmin ? "company" : "*",
       element: isSuperAdmin ? <CompanyPage /> : <Navigate to="/404" />,
@@ -72,12 +72,12 @@ export default function Router() {
       element:  <ChatPage /> ,
     },
     {
-      path: isAdmin ? "all-questions" : undefined,
-      element: isAdmin ? <AllQuestion /> : <Navigate to="/login" />,
+      path: role ==="company-super-admin" ? "all-questions" : undefined,
+      element: role ==="company-super-admin" ? <AllQuestion /> : <Navigate to="/login" />,
     },
     {
-      path: isAdmin ? "announcements" : undefined,
-      element: isAdmin ? <Announcements /> : <Navigate to="/login" />,
+      path:  "announcements" ,
+      element: role =="company-super-admin" ? <Announcements />:role =="admin"||role =="manager"||role =="lead" ? <UserAnnouncementPage/> : <Navigate to="/login" />,
     },
     { path: "task-management", element: <TaskManagement /> },
     { path: "user", element: <UserPage /> },
@@ -85,10 +85,14 @@ export default function Router() {
     { path: "articles", element: <BlogPage /> },
     { path: "thread", element: <ThreadPage /> },
     {path:"project-Management",element:<ProjectTable/>},
+    {
+      path: "dynamicQuestionnaire",
+      element:  <DynamicQuestionnaire />,
+    },
     
     {
       path: "questionnaire",
-      element: isAuthenticated && !isSuperAdmin ? <QuestionnairePage /> : <Navigate to="/login" />,
+      element: isAuthenticated && role =="company-super-admin" ? <QuestionnairePage /> : <Navigate to="/login" />,
     },
     {
       path: "company/:id",
@@ -96,14 +100,15 @@ export default function Router() {
     },
     {
       path: "gamification",
-      element: isAuthenticated && isAdmin ? <GamificationPage /> : <GamificationAttempt />,
+      element: isAuthenticated && role ==="company-super-admin" ? <GamificationPage /> : <GamificationAttempt />,
     },
   ];
 
   const userDashBoardRoutes = [
     { element: <Navigate to="/dashboard/app" />, index: true },
     { path: "app", element: <DashboardAppPage /> },
-    { path: "invite", element: <InvitePage /> },
+    { path: "invite", element: role ==="company-super-admin"?<InvitePage />:null
+     },
     { path: "policy", element: <UserPolicyPage /> },
     { path: "chat", element: <ChatPage /> },
     { path: "gamification", element: <GamificationAttempt /> },
@@ -130,11 +135,11 @@ export default function Router() {
     },
     {
       path: "questionnaire",
-      element: role == "user" && <Questions />,
+      element: (role == "user"||role == "manager"||role == "admin"||role == "lead") && <Questions />,
     },
     {
       path: "dynamicQuestionnaire",
-      element: role == "user" && <DynamicQuestionnaire />,
+      element:  <DynamicQuestionnaire />,
     },
     {
       path: "editProfilePage",

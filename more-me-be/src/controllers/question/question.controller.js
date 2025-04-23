@@ -266,12 +266,17 @@ export const deleteDynamicQuestion = async (req, res) => {
 };
 
 export const addQuestionCategory = async (req, res) => {
-  const { name, companyId } = req.body;
   try {
+    const { name, companyId, description, video, images,subCategoryId,gameid,starting,canProceedToNextLevel } = req.body;
+
+    // Ensure name is a string
+   console.log("ADDED DATA , ",req.body)
     const existingCategory = await QuestionCategory.findOne({
       where: {
         name: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), name.toLowerCase()),
         companyId,
+        subCategoryId,
+        gameid
       },
     });
 
@@ -282,16 +287,22 @@ export const addQuestionCategory = async (req, res) => {
     const newCategory = await QuestionCategory.create({
       name,
       companyId,
-      img: null,
+      images: images || [], // Ensure images is an array
+      description: description || "",
+      video: video || "",
+      subCategoryId:subCategoryId,
+      gameid:gameid,
+      starting:starting,
+      canProceedToNextLevel:canProceedToNextLevel
     });
 
     return successResponse(req, res, newCategory);
   } catch (error) {
     console.error("Error adding question category:", error);
-    throw error;
-    
+    return errorResponse(req, res, "An error occurred while adding the category.");
   }
 };
+
 
 // create questionnaire controller
 export const createQuestionnaire = async (req, res) => {

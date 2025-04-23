@@ -13,43 +13,76 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
       },
       documentUrls: {
-        // Updated field to allow multiple files
         type: DataTypes.JSON,
-        allowNull: true, // Optional
-        defaultValue: [], // Default to an empty array
+        allowNull: true,
+        defaultValue: [],
       },
       imageUrls: {
-        // New field for multiple images
         type: DataTypes.JSON,
-        allowNull: true, // Optional
-        defaultValue: [], // Default to an empty array
+        allowNull: true,
+        defaultValue: [],
       },
       announcementDate: {
-        type: DataTypes.STRING,
-        allowNull: true,
+        type: DataTypes.DATE, // Use DATE for correct comparisons
+        allowNull: false,
       },
       companyId: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
       isVisible: {
-        type: DataTypes.BOOLEAN, // Boolean field to control visibility
+        type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: true, // Default is true, meaning the question is visible
+        defaultValue: true,
+      },
+      announcementType: {
+        type: DataTypes.ENUM("global", "function", "department", "team"),
+        allowNull: false,
+      },
+      functionId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      departmentId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      teamId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
       },
     },
-    {
-      // Additional options can go here
-    }
+    {}
   );
 
   CompanyAnnouncement.associate = function (models) {
-    CompanyAnnouncement.hasMany(models.AnnouncementQuestion, { 
-      foreignKey: "announcementId",  // Assuming "announcementId" is the key in the AnnouncementQuestion model
-      as: "questions", // Alias to use when including in queries
-      
-    });
     CompanyAnnouncement.belongsTo(models.Company, { foreignKey: "companyId" });
+
+    CompanyAnnouncement.belongsTo(models.Function, {
+      foreignKey: "functionId",
+      as: "function",
+      onDelete: "SET NULL",
+      hooks: true, // Required for cascading updates
+    });
+
+    CompanyAnnouncement.belongsTo(models.Department, {
+      foreignKey: "departmentId",
+      as: "department",
+      onDelete: "SET NULL",
+      hooks: true,
+    });
+
+    CompanyAnnouncement.belongsTo(models.Team, {
+      foreignKey: "teamId",
+      as: "team",
+      onDelete: "SET NULL",
+      hooks: true,
+    });
+
+    CompanyAnnouncement.hasMany(models.AnnouncementQuestion, {
+      foreignKey: "announcementId",
+      as: "questions",
+    });
   };
 
   return CompanyAnnouncement;

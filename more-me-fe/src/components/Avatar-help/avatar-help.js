@@ -49,7 +49,7 @@ export default function TipsAvatar() {
 
   return (
     <div>
-      <Tooltip title="Today's Advice">
+      {/* <Tooltip title="Today's Advice">
         <AnimatedAvatar  
           onClick={handleAvatarClick} 
           alt="Tips" 
@@ -60,7 +60,7 @@ export default function TipsAvatar() {
         <DialogContent>
           <DailyAdvise />
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </div>
   );
 }

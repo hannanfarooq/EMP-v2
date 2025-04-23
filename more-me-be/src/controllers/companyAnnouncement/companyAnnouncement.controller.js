@@ -1,11 +1,11 @@
 import { errorResponse, successResponse } from "../../helpers";
 import { CompanyAnnouncement,AnnouncementResponse } from "../../models"; // Assuming you have your Sequelize instance initialized
-
-import { AnnouncementQuestion } from '../../models'; // Import your models
+import { Op } from "sequelize";
+import { AnnouncementQuestion,Function,Department,Team } from '../../models'; // Import your models
 
 export const createCompanyAnnouncement = async (req, res) => {
   const data = req.body;
-  const { name, description, rewardPoints, documentUrls, imageUrls, announcementDate, companyId, questions } = data;
+  const { name, description, rewardPoints, documentUrls, imageUrls, announcementDate, companyId, questions,announcementType,functionId,departmentId,teamId } = data;
 
   try {
     // Create the Company Announcement
@@ -17,6 +17,10 @@ export const createCompanyAnnouncement = async (req, res) => {
       imageUrls,
       announcementDate,
       companyId,
+      announcementType,
+      functionId:functionId||null,
+      departmentId:departmentId||null,
+      teamId:  teamId||null
     });
 
     // Check if there are any questions to create
@@ -45,27 +49,154 @@ export const createCompanyAnnouncement = async (req, res) => {
 export const getCompanyAnnouncement = async (req, res) => {
   try {
     const { companyId } = req.body;
+    
+    // Get the current timestamp in UTC
+    const currentDateTime = new Date().toISOString(); // Convert to ISO string for accurate comparison
+    console.log("currentDateTime (UTC):", currentDateTime);
 
-    // Fetch announcements along with associated questions
+    // Fetch announcements with associated questions where announcementDate has passed
     const companies = await CompanyAnnouncement.findAll({
-      where: { companyId },
+      where: { 
+        companyId,
+       // Compare in UTC format
+     
+      },
       include: [
         {
-          model: AnnouncementQuestion, // Assuming you have a Question model
-          as: 'questions', // Alias for the association
-          required: false, // To allow fetching announcements even if no questions are associated
+          model: AnnouncementQuestion,
+          as: "questions",
+          required: false,
         },
       ],
+      order: [["announcementDate", "DESC"]], // Sort by announcementDate (most recent first)
     });
 
     // Return the announcements with their associated questions
     return successResponse(req, res, companies);
   } catch (error) {
-    console.log("ANNOUCEMENT ERROR",error);
+    console.log("ANNOUNCEMENT ERROR", error);
     return errorResponse(req, res, error);
-    throw error;
   }
 };
+
+export const getCompanyAnnouncementforuser = async (req, res) => {
+  try {
+    const { companyId, userId } = req.body;
+    console.log("req.body : ", req.body);
+
+    const currentDateTime = new Date().toISOString(); // Get current timestamp
+
+    // Define the condition for fetching all announcements
+    let whereCondition = {
+      companyId,
+      announcementDate: { [Op.lte]: currentDateTime },
+      isVisible: true,
+    };
+
+    // Define an additional condition to dynamically handle the announcement type
+    if (req.body.announcementType === "function") {
+      whereCondition = {
+        ...whereCondition,
+        announcementType: "function",
+      };
+    } else if (req.body.announcementType === "department") {
+      whereCondition = {
+        ...whereCondition,
+        announcementType: "department",
+      };
+    } else if (req.body.announcementType === "team") {
+      whereCondition = {
+        ...whereCondition,
+        announcementType: "team",
+      };
+    }
+
+    // Fetch all announcements
+    const announcements = await CompanyAnnouncement.findAll({
+      where: whereCondition,
+      include: [
+        {
+          model: AnnouncementQuestion,
+          as: "questions",
+          required: false,
+        },
+        {
+          model: Function,
+          as: "function",
+          required: false,
+        },
+        {
+          model: Department,
+          as: "department",
+          required: false,
+        },
+        {
+          model: Team,
+          as: "team",
+          required: false,
+        },
+      ],
+      order: [["announcementDate", "DESC"]],
+    });
+
+    // Check if user exists in any related function, department, or team
+    const filteredAnnouncements = [];
+
+    for (let announcement of announcements) {
+      if (announcement.announcementType === "global") {
+        filteredAnnouncements.push(announcement); // Global announcements are visible to all users
+      } else if (announcement.announcementType === "function") {
+        // Fetch all departments under the function
+        const departments = await Department.findAll({ where: { functionId: announcement.functionId } });
+
+        // For each department, fetch all teams under the department
+        const departmentIds = departments.map(department => department.id);
+        const teams = await Team.findAll({
+          where: { departmentId: { [Op.in]: departmentIds } },
+        });
+
+        // Check if user is in any department or team under the function
+        const userInFunction = announcement.function.headId === userId || 
+          departments.some(department => department.headId === userId) || 
+          teams.some(team => team.leadId === userId || team.userIds.includes(userId));
+
+        if (userInFunction) {
+          filteredAnnouncements.push(announcement);
+        }
+      } else if (announcement.announcementType === "department") {
+        // Fetch all teams under the department
+        const teams = await Team.findAll({ where: { departmentId: announcement.departmentId } });
+
+        // Check if user is in any team under the department
+        const userInDepartment = announcement.department.headId === userId || 
+          teams.some(team => team.leadId === userId || team.userIds.includes(userId));
+
+        if (userInDepartment) {
+          filteredAnnouncements.push(announcement);
+        }
+      } else if (announcement.announcementType === "team") {
+        // Check if the user is part of the team directly for team-level announcement
+        const team = await Team.findByPk(announcement.teamId);
+
+        // Check if user is lead or a member of the team
+        const userInTeam = team.leadId === userId || team.userIds.includes(userId);
+
+        if (userInTeam) {
+          filteredAnnouncements.push(announcement);
+        }
+      }
+    }
+
+    // Return the filtered announcements
+    return successResponse(req, res, filteredAnnouncements);
+  } catch (error) {
+    console.log("ANNOUNCEMENT ERROR", error);
+    return errorResponse(req, res, error);
+  }
+};
+
+
+
 
 export const updateCompanyAnnouncement = async (req, res) => {
   try {

@@ -22,6 +22,12 @@ module.exports = {
         allowNull: false,
         trim: true
       },
+      status:
+      {
+        type: Sequelize.ENUM('sent', 'delivered','seen'),
+        allowNull: false,
+        defaultValue: 'sent'
+      },
      
       readBy: {
         type: Sequelize.ARRAY(Sequelize.INTEGER),

@@ -3,6 +3,8 @@ import { Box, Typography, Card, CardContent, CardHeader, CircularProgress, Radio
 import { getDailyQuestionsForCompany } from "src/api"; // Assuming you have an API function for fetching questions
 import MuiAlert from '@mui/material/Alert';
 import processWithLLM from '../../api/llm/llm.js'; // Import the LLM API function
+import { toast } from 'react-toastify'; // Import the toast library
+
 const axios = require('axios');
 
 export default function QuestionnaireForm({ username, onResponse  }) {
@@ -15,6 +17,7 @@ export default function QuestionnaireForm({ username, onResponse  }) {
   const [llmFeedback, setLlmFeedback] = useState(''); // Store LLM feedback
 
   const fetchQuestions = async (token, parsedUserData) => {
+  
     try {
       const response = await getDailyQuestionsForCompany(token, parsedUserData);
       console.log("Response:", response);
@@ -104,7 +107,9 @@ export default function QuestionnaireForm({ username, onResponse  }) {
       onResponse(llmResponse.data.summary);
 
       if (llmResponse.code === 200) {
-        setLlmFeedback(llmResponse.data.feedback); // Assuming LLM returns feedback in a field called "feedback"
+        console.log("llm Respense code is 200!!!!!!!!!!");
+        console.log("llmResponse.data.summary", llmResponse.data.summary);
+        setLlmFeedback(llmResponse.data.summary); // Assuming LLM returns feedback in a field called "feedback"
         // Show success toast
       
       } else {
@@ -216,7 +221,7 @@ export default function QuestionnaireForm({ username, onResponse  }) {
           severity="success"
           sx={{ width: '100%' }}
         >
-          Feedback submitted successfully!
+          Hurray Feedback submitted successfully!!!
         </MuiAlert>
       </Snackbar>
 

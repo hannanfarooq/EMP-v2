@@ -728,6 +728,7 @@ export default function AddDepartment({ functionF, department, handleClose }) {
           name: departmentName,
           headId: head,
           functionId: functionF.id,
+          companyId:storedUserData.company.id,
         },
         storedUserData.token
       );

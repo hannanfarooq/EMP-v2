@@ -235,25 +235,27 @@ export default function ChatPage() {
   return (
     <>
      
-      <Wrapper>
+      
         <Container>
           <LeftContainer>
-            <Grid container spacing={2} alignItems="center">
+            <Grid container spacing={1} alignItems="center">
               <Grid item>
-              <Badge
-                badgeContent={'online'}
-                color="primary"
-                sx={{ '& .MuiBadge-badge': { backgroundColor: green[400] } }}
-              >
-                <Avatar alt="User Avatar" src={currentUser?.user?.profilePic || ""} />
-              </Badge>
-              </Grid>
-              <Grid item>
+             
+              <Avatar
+  alt="User Avatar"
+  src={currentUser?.user?.profilePic || ""}
+  sx={{ width: 56, height: 56 }} // Adjust size here
+/>
+
+            
+              </Grid >
+              <Grid  sx={{ ml: 18 }}  item>
   <Tooltip
     title="Create Group Chat"
     open={tooltipOpengroup}
     onClose={() => setTooltipOpengroup(false)}
     onOpen={() => setTooltipOpengroup(true)}
+   
   >
                  <div onClick={() => setTooltipOpengroup(false)}>
                   <ChatTransitionsModal
@@ -321,7 +323,7 @@ export default function ChatPage() {
             </Grid>
 
             <ChatDivContainer>
-              <ChatListComponent setCurrentConversation={setCurrentConversation} />
+              <ChatListComponent setCurrentConversation={setCurrentConversation} blockeduser={users} />
             </ChatDivContainer>
           </LeftContainer>
           <RightContainer>
@@ -343,7 +345,7 @@ export default function ChatPage() {
             )}
           </RightContainer>
         </Container>
-      </Wrapper>
+     
     </>
   );
 }

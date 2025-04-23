@@ -50,8 +50,13 @@ export const getAllCompanyThreads = async (req, res) => {
     // Fetch all company threads
     let companyThreads = await CompanyThread.findAll({
       where: {
-        companyId: companyId,
+        companyId, // Shortened syntax if variable and field name are the same
       },
+      include: [
+        {
+          model: User, // Assuming User is a Sequelize model
+        },
+      ],
       order: [['createdAt', 'DESC']],
     });
 

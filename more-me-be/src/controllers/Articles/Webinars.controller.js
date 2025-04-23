@@ -1,0 +1,62 @@
+
+import  { Webinars } from "../../models"; // Import the Webinars model
+import { Op } from "sequelize";
+
+// ✅ 1️⃣ Create a new Webinars
+export const createWebinars = async (req, res) => {
+  try {
+    const { title, urls } = req.body;
+
+    // Validate input
+    if (!title || !urls || !Array.isArray(urls)) {
+      return res.status(400).json({ error: "Title and a valid URLs array are required" });
+    }
+
+    // Check if the Webinars already exists
+    let Video = await Webinars.findOne({ where: { title } });
+
+    if (Video) {
+      // Replace old URLs with new ones
+      await Video.update({ urls: JSON.stringify(urls) });
+
+      return res.status(200).json({ message: "Webinars updated", Video });
+    } else {
+      // Create a new Webinars
+      Video = await Webinars.create({ title, urls: JSON.stringify(urls) });
+
+      return res.status(201).json({ message: "Webinars created", Webinars });
+    }
+  } catch (error) {
+    console.error("Error creating/updating Webinars:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+  
+export const getWebinarsUrlsByTitle = async (req, res) => {
+  try {
+    const { titles } = req.body;
+
+  
+    // Use Op.in to filter multiple titles
+    const webinarss = await Webinars.findAll({
+      where: { title: { [Op.in]: titles.titles } },
+      attributes: ["title", "urls", "updatedAt"], // Include updatedAt
+    });
+
+    // Convert results into a mapping { title: { urls, updatedAt } }
+    const result = webinarss.reduce((acc, Webinars) => {
+      acc[Webinars.title] = {
+        urls: Webinars.urls,
+        updatedAt: Webinars.updatedAt, // Include updatedAt in response
+      };
+      return acc;
+    }, {});
+
+    
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching URLs by titles:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};

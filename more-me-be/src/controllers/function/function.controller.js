@@ -105,7 +105,7 @@
 // }
 
 import { errorResponse, successResponse } from "../../helpers";
-import { Function, User } from "../../models";
+import { Function, User,CompanyAnnouncement,AnnouncementQuestion,AnnouncementResponse,Department,Team } from "../../models";
 import { Op } from "sequelize";
 
 export const createFunction = async (req, res) => {
@@ -221,6 +221,133 @@ export const updateFunction = async (req, res) => {
     }
 }
 
+
+
+const deleteTeam = async (id) => {
+    try {
+      // Check if team exists
+      const teamData = await Team.findByPk(id);
+      if (!teamData) {
+        console.log(`Team with ID ${id} not found.`);
+        return { success: false, message: "Team not found" };
+      }
+  
+      // Fetch all related CompanyAnnouncements
+      const companyAnnouncements = await CompanyAnnouncement.findAll({
+        where: { teamId: id },
+      });
+  
+      if (companyAnnouncements.length > 0) {
+        // Extract announcement IDs
+        const announcementIds = companyAnnouncements.map((ann) => ann.id);
+  
+        // Fetch all related AnnouncementQuestions
+        const relatedQuestions = await AnnouncementQuestion.findAll({
+          where: { announcementId: announcementIds },
+        });
+  
+        if (relatedQuestions.length > 0) {
+          // Extract question IDs
+          const questionIds = relatedQuestions.map((q) => q.id);
+  
+          // Delete all related AnnouncementResponses
+          await AnnouncementResponse.destroy({
+            where: { questionId: questionIds },
+          });
+  
+          // Delete all related AnnouncementQuestions
+          await AnnouncementQuestion.destroy({
+            where: { announcementId: announcementIds },
+          });
+        }
+  
+        // Delete related CompanyAnnouncements
+        await CompanyAnnouncement.destroy({
+          where: { teamId: id },
+        });
+      }
+  
+      // Fetch team leader data and reset their role
+      const userData = await User.findByPk(teamData.leadId);
+      if (userData) {
+        userData.role = "user"; // Reset role if needed
+        await userData.save();
+        console.log(`Updated user ${userData.id} role after team deletion.`);
+      }
+  
+      // Delete the team
+      await teamData.destroy();
+  
+      console.log(`Team with ID ${id} deleted successfully.`);
+      return { success: true, message: "Team deleted successfully" };
+    } catch (error) {
+      console.error("Error deleting team:", error);
+      return { success: false, message: "Internal Server Error" };
+    }
+  };
+  
+
+ const deleteDepartment = async (id) => {
+    try {
+       
+        const departmentData = await Department.findByPk(id);
+        // console.log('DEPARTMENT delete DATA:', departmentData);
+
+        if (!departmentData) {
+            throw new Error("Department not found");
+        }
+        const companyAnnouncements = await CompanyAnnouncement.findAll({
+            where: { departmentId: id },
+          });
+      
+          if (companyAnnouncements.length > 0) {
+            // Extract announcement IDs
+            const announcementIds = companyAnnouncements.map((ann) => ann.id);
+      
+            // Fetch all related AnnouncementQuestions
+            const relatedQuestions = await AnnouncementQuestion.findAll({
+              where: { announcementId: announcementIds },
+            });
+      
+            if (relatedQuestions.length > 0) {
+              // Extract question IDs
+              const questionIds = relatedQuestions.map((q) => q.id);
+      
+              // Delete all related AnnouncementResponses
+              await AnnouncementResponse.destroy({
+                where: { questionId: questionIds },
+              });
+      
+              // Delete all related AnnouncementQuestions
+              await AnnouncementQuestion.destroy({
+                where: { announcementId: announcementIds },
+              });
+            }
+      
+            // Delete related CompanyAnnouncements
+            await CompanyAnnouncement.destroy({
+              where: { teamId: id },
+            });
+          }
+
+          const userData = await User.findByPk(departmentData.headId);
+          if (userData) {
+        
+              userData.role = "user";
+              await userData.save();
+          }
+          const teams = await Team.findAll({ where: { departmentId: id } });
+
+          await Promise.all(teams.map(team => deleteTeam(team.id)));
+
+      
+        const resp = await departmentData.destroy();
+        return resp;
+    }
+    catch (error) {
+        throw error;
+    }
+}
 export const deleteFunction = async (req, res) => {
     try {
         const { id } = req.body;
@@ -229,7 +356,48 @@ export const deleteFunction = async (req, res) => {
         if (!functionData) {
             return errorResponse(req, res, "Function not found");
         }
+        const companyAnnouncements = await CompanyAnnouncement.findAll({
+            where: { functionId: id },
+          });
+      
+          if (companyAnnouncements.length > 0) {
+            // Extract announcement IDs
+            const announcementIds = companyAnnouncements.map((ann) => ann.id);
+      
+            // Fetch all related AnnouncementQuestions
+            const relatedQuestions = await AnnouncementQuestion.findAll({
+              where: { announcementId: announcementIds },
+            });
+      
+            if (relatedQuestions.length > 0) {
+              // Extract question IDs
+              const questionIds = relatedQuestions.map((q) => q.id);
+      
+              // Delete all related AnnouncementResponses
+              await AnnouncementResponse.destroy({
+                where: { questionId: questionIds },
+              });
+      
+              // Delete all related AnnouncementQuestions
+              await AnnouncementQuestion.destroy({
+                where: { announcementId: announcementIds },
+              });
+            }
+      
+            // Delete related CompanyAnnouncements
+            await CompanyAnnouncement.destroy({
+              where: { teamId: id },
+            });
+          }
 
+          const userData = await User.findByPk(functionData.headId);
+          if (userData) {
+       
+              userData.role = "user";
+              await userData.save();
+          }
+          const departments = await Department.findAll({ where: { functionId: id } });
+          await Promise.all(departments.map(department => deleteDepartment(department.id)));
         const resp = await functionData.destroy();
         return successResponse(req, res, resp);
     }

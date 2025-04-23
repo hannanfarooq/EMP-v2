@@ -34,8 +34,23 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import Questionnaire from 'src/components/feedback/dailyQuestions';
 import {
-  getAllDailyQuestions, getUserStartUpQuestions, getArticlesFromTopicAndContentPref, getBooks,
-  getVideos, getPodcasts, getWebinars, getCompanyAnnouncement, CreateThread
+  getAllDailyQuestions, getUserStartUpQuestions, getArticlesFromTopicAndContentPref, getresultsArticlesForInterestTopics,
+  getBooks, getVideos, getPodcasts, getWebinars, getCompanyAnnouncement, CreateThread,
+  getUserProfile,
+  createArticle,
+  getUrlsByTitle,
+  getVideosByTitle,
+  createVideos,
+  getpodcastUrlsByTitle,
+  createPosdcast,
+  getWebinarsUrlsByTitle,
+  createwebinars,
+  createBooks,
+  getBooksUrlsByTitle,
+  getAllCompanyUser,
+  allgetFunctionDepartments,
+  GetCompaniesAllThread,
+  Board_Progress
 } from 'src/api';
 import { toast } from 'react-toastify';
 import Chip from '@mui/material/Chip';
@@ -58,7 +73,11 @@ import ThreadPage from 'src/components/thread/ThreadPage';
 import { QUESTIONS_ANSWERED, areas } from 'src/utils/baseURL';
 import { useProfileSetUp } from '../App';
 import "./Ticker.css"; // Import the CSS for styling
-
+import DashboardCard from './Dashboardcard';
+import { Apartment } from '@mui/icons-material';
+import { AppTopManagers } from 'src/layouts/dashboard/components/AppTopManager';
+import { DashboardConnects } from 'src/layouts/dashboard/components/DashboardConnect';
+import BoardProgressChart from 'src/layouts/dashboard/components/TaskProgressChart';
 
 // Add the path to the uploaded image
 const backgroundImagePath = '/mnt/data/image.png';
@@ -106,7 +125,6 @@ const calculateRewards = (points) => {
   return { stars, cups, trophies };
 };
 
-
 export default function DashboardAppPage() {
   const [user, setUser] = useState({});
   const [openQuestionare, setOpenQuestionare] = useState(false);
@@ -118,6 +136,8 @@ export default function DashboardAppPage() {
   const [lifePrinciple, setLifePrinciple] = useState([]);
   const [expandedTopic, setExpandedTopic] = useState(null);
   const [articles, setArticles] = useState([]);
+  const [articlesForInterestTopics, setArticlesForInterestTopics] = useState([]);
+  const [data, setData] = useState([]);
   const [courses, setCourses] = useState([]);
   const [books, setBooks] = useState([]);
   const [videos, setVideos] = useState([]);
@@ -128,10 +148,10 @@ export default function DashboardAppPage() {
   const [booksStartIndex, setBookStartIndex] = useState(1);
   const [videosStartIndex, setVideosStartIndex] = useState(1);
   const [podcastsStartIndex, setPodcastsStartIndex] = useState(1);
-  const { webinarsStartIndex, setWebinarStartIndex } = useProfileSetUp(1);
+  const { webinarsStartIndex, setWebinarStartIndex } = useState(1);
   const { profileSetUp, setProfileSetUp } = useProfileSetUp(1);
   const [preferences, setPreferences] = useState([]);
-
+  const [departments, setDepartments] = useState([]);
   const [open, setOpen] = useState(null);  // State to manage popover open/close
   const [editingCardOpen, setEditingCardOpen] = useState(false);
   const [showQuestion, setShowQuestion] = useState(false);
@@ -139,11 +159,24 @@ export default function DashboardAppPage() {
   const [questionnaireResponse, setQuestionnaireResponse] = useState(''); // Store the response from Questionnaire
   const [openAvatarDialog, setOpenAvatarDialog] = useState(false); // Manage the response dialog open/close
   const [openToast, setOpenToast] = useState(false);
-  const [ responseString, updateResponseString ] = useState(''); // Using the custom hook
+  const [responseString, updateResponseString] = useState(''); // Using the custom hook
   const [announcementMessage, setAnnouncementMessage] = useState("");
-
+  const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
   const [isScrolling, setIsScrolling] = useState(false);
   const [anchorElMap, setAnchorElMap] = useState({});
+  const [visibleCourses, setVisibleCourses] = useState(10);
+  const [visibleVideos, setVisibleVideos] = useState(10);
+  const [visiblepodcast, setvisiblepodcast] = useState(10);
+  const [visiblewebinars, setVisiblewebinars] = useState(10);
+  const [visibleBooks, setVisibleBooks] = useState(10);
+
+  const [chartLabels, setChartLabels] = useState([]);
+  const [chartData, setChartData] = useState([]);
+
+  const [companyThread, setCompanyThread] = useState([]);
+  const [groupedThreads, setGroupedThreads] = useState([]);
+  const [BoardProgess, setBoardProgess] = useState([]);
+  const [isLoading, setIsLoading] = useState(false); // Add state to manage loading state
 
   const AnimatedAvatar = styled(Avatar)`
   cursor: pointer;
@@ -175,8 +208,8 @@ export default function DashboardAppPage() {
   }
 `;
 
-  const lastShownTimestamp = localStorage.getItem('snackbarLastShown');
-  let today = new Date().toLocaleDateString();
+  // const lastShownTimestamp = localStorage.getItem('snackbarLastShown');
+  // let today = new Date().toLocaleDateString();
 
   // Dummy variable for reward points
   const rewardPoints = 1230;
@@ -192,16 +225,70 @@ export default function DashboardAppPage() {
   const theme = useTheme();
   const navigate = useNavigate();
 
+
+  const fetchCompanyUser = async () => {
+    const companyData = await getAllCompanyUser(
+      storedUserData.token,
+      storedUserData.company.id
+    );
+    console.log("compan data b date:", companyData);
+
+    const sortedData = companyData.data
+      ?.filter(
+        (user) =>
+
+          user.role != "company-super-admin"
+      ) // Filter out the logged-in user
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        //return dateA - dateB; // For ascending order
+        return dateB - dateA; // For descending order
+      });
+    // Log the sorted data
+    console.log("Sorted Data:", sortedData);
+    setData(sortedData);
+  };
   useEffect(() => {
+    if (storedUserData.user.role != "super-super-admin") {
+      fetchCompanyUser();
+      allgetFunctionDepartments(storedUserData.token, storedUserData.company.id)
+        .then((response) => {
+          console.log("DEPARTMENTS", response);
+          setDepartments(response.data);
+        })
+        .catch((error) => {
+          toast.error("Failed to fetch departments");
+        });
+    }
+  }, []);
+
+  useEffect(() => {
+
+
     const fetchData = async () => {
       const userObj = JSON.parse(localStorage.getItem('currentUser') ?? '{}');
       console.log("userObj", userObj);
       try {
-        const companyAnnouncement = await getCompanyAnnouncement(userObj.token, userObj.company.id);
-        console.log("announcement data::", companyAnnouncement.data[0]);
-        
-        // Set the announcement message to state
-        setAnnouncementMessage(companyAnnouncement.data[0]);
+        const companyAnnouncement = await getCompanyAnnouncement(userObj.token, userObj.company.id, userObj.user.id);
+        console.log("announcement data::", companyAnnouncement);
+        const UserData = await getUserProfile(
+          userObj?.user?.id,
+          userObj.token
+        );
+
+        const announcements = UserData?.data?.user?.readAnnouncements || [];
+
+
+
+        // Find the first announcement that hasn't been read
+        const unreadAnnouncement = companyAnnouncement.data.find(
+          (announce) => !announcements.includes(announce.id)
+        );
+        if (unreadAnnouncement) {
+          setAnnouncementMessage(unreadAnnouncement);
+        }
+
       } catch (error) {
         console.error("Error fetching company announcement:", error);
       }
@@ -348,7 +435,7 @@ export default function DashboardAppPage() {
         const userObj = JSON.parse(localStorage.getItem('currentUser') ?? '{}');
 
         // Check if user object and role are defined
-        if (userObj?.user?.role === 'user') {
+        if (userObj?.user?.role === 'user' || userObj?.user?.role === 'manager' || userObj?.user?.role === 'lead' || userObj?.user?.role === 'admin') {
           const isCompanyUser = userObj.user.role === 'user';
 
           // Fetch user startup questions
@@ -356,7 +443,7 @@ export default function DashboardAppPage() {
             userObj?.token,
             userObj?.company?.id,
             userObj?.user?.id,
-            isCompanyUser
+
           ).then((res) => res.data);
 
           console.log("questionData:", questionData);
@@ -401,7 +488,7 @@ export default function DashboardAppPage() {
             }
 
             // Extract hobbies, interest topics, and content preferences
-            const lifePrincipleData = questionData 
+            const lifePrincipleData = questionData
               .map((q) => (Array.isArray(q.lifePrincipleInspirations) ? q.lifePrincipleInspirations : q.lifePrincipleInspirations.split(',')))
               .flat()
               .filter(Boolean);
@@ -430,26 +517,12 @@ export default function DashboardAppPage() {
             localStorage.setItem('userInterestTopics', JSON.stringify(interestsData));
             localStorage.setItem('userContentPreferences', JSON.stringify(contentPreferencesData));
             localStorage.setItem('userLifePrinciples', JSON.stringify(lifePrincipleData));
-            
+
             // Profile setup check
             if (questionData.length > 0) {
               setProfileSetUp(true);
               console.log("profileSetUp", true);
 
-              // Show daily questionnaire if it hasn't been shown today
-              const lastShownTimestamp = localStorage.getItem('snackbarLastShown');
-              const today = new Date().toLocaleDateString();
-
-              console.log("lastShownTimestamp", lastShownTimestamp);
-              // if (lastShownTimestamp !== today || lastShownTimestamp === null) {
-              if (true) {
-                console.log("Daily Questions active");
-                setOpenQuestionare(true);
-                setProfileSetUp(true);
-                localStorage.setItem('snackbarLastShown', today);
-              } else {
-                setOpenQuestionare(false);
-              }
             } else {
               // Navigate to questionnaire if no data found
               setProfileSetUp(false);
@@ -472,6 +545,29 @@ export default function DashboardAppPage() {
     fetchData2();
   }, [navigate, setProfileSetUp, preferences]);
 
+  useEffect(() => {
+    const userObj = JSON.parse(localStorage.getItem('currentUser') ?? '{}');
+    console.log("userObj?.user?.role", userObj?.user?.role);
+    // Check if user object and role are defined
+    if (userObj?.user?.role === 'user' || userObj?.user?.role === 'manager' || userObj?.user?.role === 'lead' || userObj?.user?.role === 'admin') {
+      // Show daily questionnaire if it hasn't been shown today
+      const lastShownTimestamp = localStorage.getItem('snackbarLastShown');
+      const today = new Date().toLocaleDateString();
+
+      console.log("lastShownTimestamp", lastShownTimestamp);
+      console.log("today", today);
+      if (lastShownTimestamp !== today || lastShownTimestamp === null) {
+        //if (lastShownTimestamp !== today) {
+        //if (true) {
+        console.log("Daily Questions active");
+        setOpenQuestionare(true);
+        setProfileSetUp(true);
+        localStorage.setItem('snackbarLastShown', today);
+      } else {
+        setOpenQuestionare(false);
+      }
+    }
+  }, []);
   const handleClose = () => {
     setOpenQuestionare(false);
   };
@@ -482,6 +578,17 @@ export default function DashboardAppPage() {
       return;
     }
     try {
+      const resultsArticlesForInterestTopics = await getresultsArticlesForInterestTopics({ topic });
+      console.log("resultsArticlesForInterestTopics", resultsArticlesForInterestTopics.items);
+      if (resultsArticlesForInterestTopics && resultsArticlesForInterestTopics.items) {
+        const filteredArticles = resultsArticlesForInterestTopics.items.slice(0, 3);
+        console.log("hello filtred articles", filteredArticles);
+
+        setArticlesForInterestTopics(filteredArticles);
+        setExpandedTopic(topic);
+      } else {
+        toast.error('No articles found');
+      }
       const result = await getArticlesFromTopicAndContentPref({ topic, contentPreferences, hobbies });
       if (result && result.items) {
         const filteredArticles = result.items.slice(0, 3);
@@ -494,206 +601,478 @@ export default function DashboardAppPage() {
       toast.error('Error while fetching articles');
     }
   };
-
-  const fetchCourses = async (startIndex = 1) => {
-    console.log("interestTopics->", interestTopics);
-    console.log("contentPreferences->", contentPreferences);
-    console.log("hobbies->", hobbies);
-    console.log("lifePrinciple->", lifePrinciple); 
-    if (interestTopics.length > 0 && contentPreferences.length > 0 && lifePrinciple.length > 0) {
-      try {
-        const result = await getArticlesFromTopicAndContentPref({ topic: interestTopics.join(',') +','+ lifePrinciple.join(','), contentPreferences, hobbies, start: startIndex });
-        console.log("getArticlesFromTopicAndContentPref: ", result);
-        if (result && result.items) {
-          if (startIndex === 1) {
-            setCourses(result.items);
-          } else {
-            setCourses((prevCourses) => [...prevCourses, ...result.items]);
-          }
-        } else {
-          toast.error('No courses found');
-        }
-      } catch (error) {
-        // console.error('Error while fetching courses', error);
-        toast.error('Error while fetching courses');
-      }
-    } else {
-      // toast.error('No interest topics or content preferences provided');
+  const shuffleArray = (array) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]]; // Swap elements
     }
   };
+  const fetchCourses = async (startIndex = 1) => {
+    console.log("Fetching courses for interestTopics, hobbies, and lifePrinciple separately...");
+
+    const allTopics = [...interestTopics, ...hobbies, ...lifePrinciple];
+    const now = new Date(); // Get current timestamp
+
+    try {
+      // Fetch all topics from the database in a single call
+      const dbResults = await getUrlsByTitle({ titles: allTopics });
+
+      let allResults = [];
+      const topicsToFetch = [];
+
+      // Process database results
+      allTopics.forEach(topic => {
+        const data = dbResults[topic]; // Get data for the topic
+
+        if (data) {
+          const { urls, updatedAt } = data;
+          const lastUpdated = new Date(updatedAt);
+
+          // Check if data is still fresh (less than 24 hours old)
+          const hoursPassed = (now - lastUpdated) / (1000 * 60 * 60);
+
+          if (hoursPassed < 24 && urls && urls.length > 0) {
+            console.log(`Using cached data for ${topic}`);
+            allResults = [...allResults, ...JSON.parse(urls)];
+          } else {
+            console.log(`Data expired for ${topic}, fetching new data...`);
+            topicsToFetch.push(topic);
+          }
+        } else {
+          console.log(`No data found for ${topic}, fetching new data...`);
+          topicsToFetch.push(topic);
+        }
+      });
+
+      // If all topics were found and up-to-date, return early
+      if (topicsToFetch.length === 0) {
+        shuffleArray(allResults);
+        setCourses(allResults);
+        return;
+      }
+
+      console.log(`Fetching results for ${topicsToFetch.length} topics from API...`);
+
+      // Fetch missing/expired topics in parallel
+      const fetchResults = await Promise.all(
+        topicsToFetch.map(topic =>
+          getArticlesFromTopicAndContentPref({
+            topic,
+            contentPreferences,
+            start: 1
+          }).then(result => ({ topic, result }))
+        )
+      );
+
+      // Process and store the newly fetched results
+      for (const { topic, result } of fetchResults) {
+        if (result && result.items && result.items.length > 0) {
+          await createArticle(topic, result.items); // Store new data in database
+          console.log("Fetched new articles:", result.items);
+          allResults = [...allResults, ...result.items];
+        } else {
+          console.warn(`No results found for topic: ${topic}`);
+        }
+      }
+
+      // Store final results in state
+      if (allResults.length > 0) {
+        shuffleArray(allResults);
+        setCourses(allResults);
+      }
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    }
+  };
+
+
+
+
+  // const fetchCourses = async (startIndex = 1) => {
+  //   console.log("interestTopics->", interestTopics);
+  //   console.log("contentPreferences->", contentPreferences);
+  //   console.log("hobbies->", hobbies);
+  //   console.log("lifePrinciple->", lifePrinciple); 
+  //   if (interestTopics.length > 0 && contentPreferences.length > 0 && lifePrinciple.length > 0) {
+  //     try {
+  //       const result = await getArticlesFromTopicAndContentPref({ topic: interestTopics.join(',') +','+ lifePrinciple.join(','), contentPreferences, hobbies, start: startIndex });
+  //       console.log("interestTopics.join(',') : ",interestTopics.join(','))
+  //       console.log("contentPreferences : ",contentPreferences)
+  //       console.log("hobbies : ",hobbies)
+  //       console.log("lifePrinciple.join(','): ",  lifePrinciple.join(','))
+  //       console.log("getArticlesFromTopicAndContentPref: ", result);
+  //       if (result && result.items) {
+  //         if (startIndex === 1) {
+  //           setCourses(result.items);
+  //         } else {
+  //           setCourses((prevCourses) => [...prevCourses, ...result.items]);
+  //         }
+  //       } else {
+  //         toast.error('No courses found');
+  //       }
+  //     } catch (error) {
+  //       // console.error('Error while fetching courses', error);
+  //       toast.error('Error while fetching courses');
+  //     }
+  //   } else {
+  //     // toast.error('No interest topics or content preferences provided');
+  //   }
+  // };
 
   //fetch books
   const fetchBooks = async (startIndex = 1) => {
-    console.log("Fetching books with topics:", interestTopics);
+    console.log("Fetching books for interestTopics, hobbies, and lifePrinciple separately...");
 
-    if (interestTopics.length > 0) {
-      try {
-        // Combine the interest topics into a single search query
-        const topicQuery = interestTopics.join(',') +','+ lifePrinciple.join(',') +','+ hobbies.join(',');
+    const allTopics = [...interestTopics, ...hobbies, ...lifePrinciple];
+    const now = new Date(); // Get current timestamp
 
-        // Call the getBooks function with the combined topic query
-        const booksResult = await getBooks(topicQuery);
-        // console.log("books results", booksResult);
+    try {
+      // Fetch all topics from the database in a single call
+      const dbResults = await getBooksUrlsByTitle({ titles: allTopics });
 
-        if (booksResult && booksResult.length > 0) {
-          // If it's the first page of results, set the books directly
-          if (startIndex === 1) {
-            setBooks(booksResult);
+      let allResults = [];
+      const topicsToFetch = [];
+
+      // Process database results
+      allTopics.forEach(topic => {
+        const data = dbResults[topic]; // Get cached data for the topic
+
+        if (data) {
+          const { urls, updatedAt } = data;
+          const lastUpdated = new Date(updatedAt);
+
+          // Check if data is fresh (less than 24 hours old)
+          const hoursPassed = (now - lastUpdated) / (1000 * 60 * 60);
+
+          if (hoursPassed < 24 && urls && urls.length > 0) {
+            console.log(`Using cached books for ${topic}`);
+            allResults = [...allResults, ...JSON.parse(urls)];
           } else {
-            // Append new results to the existing list of books
-            setBooks((prevBooks) => [...prevBooks, ...booksResult]);
+            console.log(`Data expired for ${topic}, fetching new books...`);
+            topicsToFetch.push(topic);
           }
         } else {
-          toast.error('No books found for the given topics.');
+          console.log(`No data found for ${topic}, fetching new books...`);
+          topicsToFetch.push(topic);
         }
-      } catch (error) {
-        console.error('Error while fetching books:', error);
-        toast.error('Error while fetching books.');
+      });
+
+      // If all topics are up-to-date, return early
+      if (topicsToFetch.length === 0) {
+        shuffleArray(allResults);
+        setBooks(allResults);
+        return;
       }
-    } else {
-      // toast.error('No interest topics provided for book search.');
+
+      console.log(`Fetching books for ${topicsToFetch.length} topics from API...`);
+
+      // Fetch missing/expired topics in parallel
+      const fetchResults = await Promise.all(
+        topicsToFetch.map(topic =>
+          getBooks(topic).then(result => ({ topic, result }))
+        )
+      );
+      console.log("fetchResults", fetchResults);
+      // Process and store the newly fetched results
+      for (const { topic, result } of fetchResults) {
+        console.log(`result by ${topic}`, result);
+        if (result.length > 0) {
+          await createBooks(topic, result); // Store new data in the database
+          console.log("Fetched new books:", result);
+          allResults = [...allResults, ...result]; // Append new results
+        } else {
+          console.warn(`No books found for topic: ${topic}`);
+        }
+      }
+
+      // Store final results in state
+      if (allResults.length > 0) {
+        shuffleArray(allResults);
+        setBooks(allResults);
+      }
+    } catch (error) {
+      console.error("Error fetching books:", error);
     }
   };
+
   const handleLoadMoreBooks = () => {
-    setBookStartIndex((prevStartIndex) => {
-      const newIndex = prevStartIndex + 10;
-      fetchBooks(newIndex);
-      return newIndex;
-    });
+    if (visibleBooks + 10 >= books.length) {
+      setVisibleBooks(books.length); // Show all courses if fewer than 10 remain 
+    } else {
+      setVisibleBooks(visibleBooks + 10); // Load 10 more
+    }
   };
   //fetch videosResult
   const fetchVideos = async (startIndex = 1) => {
-    console.log("videos fetcing..........");
-    if (interestTopics.length > 0) {
-      try {
-        // Combine the interest topics into a single search query
-        const topicQuery = interestTopics.join(',') +','+ lifePrinciple.join(',') +','+ hobbies.join(',');
-        console.log("topicQuery for videos:>", topicQuery);
-        // Call the getBooks function with the combined topic query
-        const videosResult = await getVideos(topicQuery);
-        console.log("Videos results", videosResult);
+    console.log("Fetching videos for interestTopics, hobbies, and lifePrinciple separately...");
 
-        if (videosResult && videosResult.length > 0) {
-          // If it's the first page of results, set the books directly
-          if (startIndex === 1) {
-            setVideos(videosResult);
+    const allTopics = [...interestTopics, ...hobbies, ...lifePrinciple];
+    const now = new Date(); // Get current timestamp
+
+    try {
+      // Fetch existing videos from the database
+      const dbResults = await getVideosByTitle({ titles: allTopics });
+
+      let allResults = [];
+      const topicsToFetch = [];
+
+      // Process database results
+      allTopics.forEach(topic => {
+        const data = dbResults[topic]; // Get stored data for the topic
+
+        if (data) {
+          const { urls, updatedAt } = data;
+          const lastUpdated = new Date(updatedAt);
+
+          // Check if data is fresh (less than 24 hours old)
+          const hoursPassed = (now - lastUpdated) / (1000 * 60 * 60);
+
+          if (hoursPassed < 24 && urls && urls.length > 0) {
+            console.log(`Using cached data for ${topic}`);
+            allResults = [...allResults, ...JSON.parse(urls)];
           } else {
-            // Append new results to the existing list of books
-            setVideos((prevVideos) => [...prevVideos, ...videosResult]);
+            console.log(`Data expired for ${topic}, fetching new videos...`);
+            topicsToFetch.push(topic);
           }
         } else {
-          toast.error('No Videos found for the given topics.');
+          console.log(`No data found for ${topic}, fetching new videos...`);
+          topicsToFetch.push(topic);
         }
-      } catch (error) {
-        console.error('Error while fetching Videos:', error);
-        toast.error('Error while fetching Videos.');
+      });
+
+      // If all topics are already up-to-date, return early
+      if (topicsToFetch.length === 0) {
+        console.log('Total videos:', allResults.length);
+        shuffleArray(allResults);
+        setVideos(allResults);
+        return;
       }
-    } else {
-      // toast.error('No interest topics provided for video search.');
+
+      console.log(`Fetching results for ${topicsToFetch.length} topics from API...`);
+
+      // Fetch missing/expired topics in parallel
+      const fetchResults = await Promise.all(
+        topicsToFetch.map(topic =>
+          getVideos(topic).then(result => ({ topic, result }))
+        )
+      );
+
+      // Process and store the newly fetched results
+      for (const { topic, result } of fetchResults) {
+        if (result && result.length > 0) {
+          await createVideos(topic, result); // Store new data in the database
+          console.log("Fetched new videos:", result);
+          allResults = [...allResults, ...result];
+        } else {
+          console.warn(`No videos found for topic: ${topic}`);
+        }
+      }
+
+      // Store final results in state
+      if (allResults.length > 0) {
+        shuffleArray(allResults);
+        setVideos(allResults);
+      }
+    } catch (error) {
+      console.error("Error fetching videos:", error);
+      toast.error("Error while fetching Videos.");
     }
   };
+
   const handleLoadMoreVideos = () => {
-    setVideosStartIndex((prevStartIndex) => {
-      const newIndex = prevStartIndex + 10;
-      fetchVideos(newIndex);
-      return newIndex;
-    });
+    if (visibleVideos + 10 >= videos.length) {
+      setVisibleVideos(courses.length); // Show all courses if fewer than 10 remain 
+    } else {
+      setVisibleVideos(visibleVideos + 10); // Load 10 more
+    }
   };
 
   //fetch videosResult
   const fetchWebinars = async (startIndex = 1) => {
-    console.log("podcasts fetcing..........");
-    if (interestTopics.length > 0) {
-      try {
-        // Combine the interest topics into a single search query
-        const topicQuery = interestTopics.join(',') +','+ lifePrinciple.join(',') +','+ hobbies.join(',');
+    console.log("Fetching webinars for interestTopics, hobbies, and lifePrinciple separately...");
 
-        // Call the getBooks function with the combined topic query
-        const webinarsResult = await getWebinars(topicQuery);
-        console.log("webinars results", webinarsResult);
+    const allTopics = [...interestTopics, ...hobbies, ...lifePrinciple];
+    const now = new Date(); // Get current timestamp
 
-        if (webinarsResult && webinarsResult.length > 0) {
-          // If it's the first page of results, set the books directly
-          if (startIndex === 1) {
-            setWebinars(webinarsResult);
+    try {
+      // Fetch existing webinars from the database
+      const dbResults = await getWebinarsUrlsByTitle({ titles: allTopics });
+
+      let allResults = [];
+      const topicsToFetch = [];
+
+      // Process database results
+      allTopics.forEach(topic => {
+        const data = dbResults[topic]; // Get stored data for the topic
+
+        if (data) {
+          const { urls, updatedAt } = data;
+          const lastUpdated = new Date(updatedAt);
+
+          // Check if data is fresh (less than 24 hours old)
+          const hoursPassed = (now - lastUpdated) / (1000 * 60 * 60);
+
+          if (hoursPassed < 24 && urls && urls.length > 0) {
+            console.log(`Using cached data for ${topic}`);
+            allResults = [...allResults, ...JSON.parse(urls)];
           } else {
-            // Append new results to the existing list of books
-            setWebinars((prevWebinars) => [...prevWebinars, ...webinarsResult]);
+            console.log(`Data expired for ${topic}, fetching new webinars...`);
+            topicsToFetch.push(topic);
           }
         } else {
-          toast.error('No podcasts found for the given topics.');
+          console.log(`No data found for ${topic}, fetching new webinars...`);
+          topicsToFetch.push(topic);
         }
-      } catch (error) {
-        console.error('Error while fetching podcasts:', error);
-        toast.error('Error while fetching podcasts.');
+      });
+
+      // If all topics are already up-to-date, return early
+      if (topicsToFetch.length === 0) {
+        console.log("total webinars", allResults.length);
+        shuffleArray(allResults);
+        setWebinars(allResults);
+        return;
       }
-    } else {
-      // toast.error('No interest topics provided for video search.');
+
+      console.log(`Fetching results for ${topicsToFetch.length} topics from API...`);
+
+      // Fetch missing/expired topics in parallel
+      const fetchResults = await Promise.all(
+        topicsToFetch.map(topic =>
+          getWebinars(topic).then(result => ({ topic, result }))
+        )
+      );
+
+      // Process and store the newly fetched results
+      for (const { topic, result } of fetchResults) {
+        if (result && result.length > 0) {
+          await createwebinars(topic, result); // Store new data in the database
+          console.log("Fetched new webinars:", result);
+          allResults = [...allResults, ...result];
+        } else {
+          console.warn(`No webinars found for topic: ${topic}`);
+        }
+      }
+
+      // Store final results in state
+      if (allResults.length > 0) {
+        shuffleArray(allResults);
+        setWebinars(allResults);
+      }
+    } catch (error) {
+      console.error("Error fetching webinars:", error);
+      toast.error("Error while fetching Webinars.");
     }
   };
+
   const handleLoadMoreWebinars = () => {
-    setWebinarStartIndex((prevStartIndex) => {
-      const newIndex = prevStartIndex + 10;
-      fetchWebinars(newIndex);
-      return newIndex;
-    });
+    if (visiblewebinars + 10 >= webinars.length) {
+      setVisiblewebinars(webinars.length); // Show all courses if fewer than 10 remain 
+    } else {
+      setVisiblewebinars(visiblewebinars + 10); // Load 10 more
+    }
   };
   //fetch videosResult
   const fetchPodcasts = async (startIndex = 1) => {
-    console.log("podcasts fetcing..........");
-    if (interestTopics.length > 0) {
-      try {
-        // Combine the interest topics into a single search query
-        const topicQuery = interestTopics.join(',') +','+ lifePrinciple.join(',') +','+ hobbies.join(',');
+    console.log("Fetching podcasts for interestTopics, hobbies, and lifePrinciple separately...");
 
-        // Call the getBooks function with the combined topic query
-        const podcastsResult = await getPodcasts(topicQuery);
-        console.log("podcasts results", podcastsResult);
+    const allTopics = [...interestTopics, ...hobbies, ...lifePrinciple];
+    const now = new Date(); // Get current timestamp
 
-        if (podcastsResult && podcastsResult.length > 0) {
-          // If it's the first page of results, set the books directly
-          if (startIndex === 1) {
-            setPodcasts(podcastsResult);
+    try {
+      // Fetch existing podcasts from the database
+      const dbResults = await getpodcastUrlsByTitle({ titles: allTopics });
+
+      let allResults = [];
+      const topicsToFetch = [];
+
+      // Process database results
+      allTopics.forEach(topic => {
+        const data = dbResults[topic]; // Get stored data for the topic
+
+        if (data) {
+          const { urls, updatedAt } = data;
+          const lastUpdated = new Date(updatedAt);
+
+          // Check if data is fresh (less than 24 hours old)
+          const hoursPassed = (now - lastUpdated) / (1000 * 60 * 60);
+
+          if (hoursPassed < 24 && urls && urls.length > 0) {
+            console.log(`Using cached data for ${topic}`);
+            allResults = [...allResults, ...JSON.parse(urls)];
           } else {
-            // Append new results to the existing list of books
-            setPodcasts((prevPodcasts) => [...prevPodcasts, ...podcastsResult]);
+            console.log(`Data expired for ${topic}, fetching new podcasts...`);
+            topicsToFetch.push(topic);
           }
         } else {
-          toast.error('No podcasts found for the given topics.');
+          console.log(`No data found for ${topic}, fetching new podcasts...`);
+          topicsToFetch.push(topic);
         }
-      } catch (error) {
-        console.error('Error while fetching podcasts:', error);
-        toast.error('Error while fetching podcasts.');
+      });
+
+      // If all topics are already up-to-date, return early
+      if (topicsToFetch.length === 0) {
+        console.log("TOTAL NO OF PODCASTS", allResults.length);
+        shuffleArray(allResults);
+        setPodcasts(allResults);
+        return;
       }
-    } else {
-      // toast.error('No interest topics provided for video search.');
+
+      console.log(`Fetching results for ${topicsToFetch.length} topics from API...`);
+
+      // Fetch missing/expired topics in parallel
+      const fetchResults = await Promise.all(
+        topicsToFetch.map(topic =>
+          getPodcasts(topic).then(result => ({ topic, result }))
+        )
+      );
+
+      // Process and store the newly fetched results
+      for (const { topic, result } of fetchResults) {
+        if (result && result.length > 0) {
+          await createPosdcast(topic, result); // Store new data in the database
+          console.log("Fetched new podcasts:", result);
+          allResults = [...allResults, ...result];
+        } else {
+          console.warn(`No podcasts found for topic: ${topic}`);
+        }
+      }
+
+      // Store final results in state
+      if (allResults.length > 0) {
+        shuffleArray(allResults);
+        setPodcasts(allResults);
+      }
+    } catch (error) {
+      console.error("Error fetching podcasts:", error);
+      toast.error("Error while fetching Podcasts.");
     }
   };
+
   const handleLoadMorePodcasts = () => {
-    setPodcastsStartIndex((prevStartIndex) => {
-      const newIndex = prevStartIndex + 10;
-      fetchPodcasts(newIndex);
-      return newIndex;
-    });
+    if (visiblepodcast + 10 >= podcasts.length) {
+      setvisiblepodcast(podcasts.length); // Show all courses if fewer than 10 remain 
+    } else {
+      setvisiblepodcast(visiblepodcast + 10); // Load 10 more
+    }
   };
 
-    // Function to handle opening the popover for a specific card
-    const handleOpenMenu = (event, cardId) => {
-      setAnchorElMap((prev) => ({ ...prev, [cardId]: event.currentTarget }));
-    };
-  
-    // Function to handle closing the popover for a specific card
-    const handleCloseMenu = (cardId) => {
-      setAnchorElMap((prev) => ({ ...prev, [cardId]: null }));
-    };
-  
-    // Function to handle the share action
+  // Function to handle opening the popover for a specific card
+  const handleOpenMenu = (event, cardId) => {
+    setAnchorElMap((prev) => ({ ...prev, [cardId]: event.currentTarget }));
+  };
+
+  // Function to handle closing the popover for a specific card
+  const handleCloseMenu = (cardId) => {
+    setAnchorElMap((prev) => ({ ...prev, [cardId]: null }));
+  };
+
+  // Function to handle the share action
   const handleShare = async (link, cardId) => {
     console.log(`Shared URL: ${link}`);
     toast.success('Content shared successfully!');
 
     const userObj = JSON.parse(localStorage.getItem('currentUser') ?? '{}');
-    console.log(userObj);
+    console.log("userObj", userObj);
     // Prepare data with only the link and other fields empty
     const data = {
       userId: userObj.user.id, // Assuming 'user' contains the user data
@@ -734,23 +1113,64 @@ export default function DashboardAppPage() {
   };
 
   const handleLoadMore = () => {
-    setCourseStartIndex((prevStartIndex) => {
-      const newIndex = prevStartIndex + 10;
-      fetchCourses(newIndex);
-      return newIndex;
-    });
+    if (visibleCourses + 10 >= courses.length) {
+      setVisibleCourses(courses.length); // Show all courses if fewer than 10 remain
+    } else {
+      setVisibleCourses(visibleCourses + 10); // Load 10 more
+    }
   };
+  // const handleResponse = (responseString) => {
+  //   if (responseString) {
+  //     updateResponseString(responseString);
+  //     setOpenToast(true);
+  //     setTimeout(() => {
+  //       setOpenToast(false); // Hide the toast after 3 seconds
+  //     }, 30000);
+  //   }
+  //   setQuestionnaireResponse(responseString);  // Save the response string from Questionnaire
+  //   console.log("responseString", responseString);
+  //   setOpenQuestionare(false);  // Close the modal after receiving the response
+  // };
+
+  const formatResponse = (responseString) => {
+
+    const sections = responseString.split('\n\n');
+
+    return sections.map((section) => {
+      // Check if it's a heading (starts with a number followed by a period)
+      if (section.match(/^\d+\./)) {
+        // Remove the ** and wrap the heading in <span> with green and bold styling
+        const cleanHeading = section.replace(/^\d+\.\s*/, '').replace(/\*\*/g, ''); // Remove ** around heading text
+        return `<br><span style="font-weight: bold; color: green;">${cleanHeading}</span><br>`;
+      } else {
+        // Remove ** for normal text as well
+        return section.replace(/\*\*/g, ''); // Remove ** from the content
+      }
+    }).join('\n\n'); // Join back with two newlines
+  };
+
   const handleResponse = (responseString) => {
+
     if (responseString) {
-      updateResponseString(responseString);
+      // Show the loading toast
+      setIsLoading(true);
+      // Format the response string before updating state
+      const formattedResponse = formatResponse(responseString);
+
+      // Update the response string state with the formatted string
+      updateResponseString(formattedResponse);
+
       setOpenToast(true);
       setTimeout(() => {
-        setOpenToast(false); // Hide the toast after 3 seconds
+        setOpenToast(false); // Hide the toast after 30 seconds
+        setIsLoading(false);
       }, 3000);
     }
-    setQuestionnaireResponse(responseString);  // Save the response string from Questionnaire
-    console.log("responseString", responseString);
-    setOpenQuestionare(false);  // Close the modal after receiving the response
+
+    setQuestionnaireResponse(responseString);  // Save the original response string if necessary
+    console.log("Formatted Response String:", responseString);
+
+    setOpenQuestionare(false); // Close the modal after receiving the response
   };
 
   const handleOpenAvatarDialog = () => {
@@ -774,6 +1194,136 @@ export default function DashboardAppPage() {
     navigate("/dashboard/announcements");
   };
 
+
+  useEffect(() => {
+    const countsByMonth = {};
+
+    // Step 1: Count users by month
+    data.forEach((user) => {
+      const date = new Date(user.createdAt);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      countsByMonth[key] = (countsByMonth[key] || 0) + 1;
+    });
+
+    // Step 2: Generate last 12 months (from current month backwards)
+    const currentDate = new Date();
+    const last12Months = [];
+
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      last12Months.push(key);
+    }
+
+    // Step 3: Format labels and data
+    const formattedLabels = [];
+    const dataValues = [];
+
+    last12Months.forEach((key) => {
+      const [year, month] = key.split('-');
+      const date = new Date(year, month - 1);
+      const label = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+      formattedLabels.push(label);
+      const count = countsByMonth[key];
+
+      if (count === undefined) {
+        // If no data for that month, add random number between 1 and 10
+        dataValues.push(Math.floor(Math.random() * 10) + 1);
+      } else {
+        dataValues.push(count);
+      }
+    });
+
+    setChartLabels(formattedLabels);
+    console.log('formattedLabels:', formattedLabels);
+    console.log('dataValues:', dataValues);
+
+    setChartData(dataValues);
+  }, [data]);
+
+
+  async function GetBoardProgress() {
+    try {
+      const boardprogress = await Board_Progress();
+      if (boardprogress) {
+        console.log("boardprogress : ", boardprogress);
+        setBoardProgess(boardprogress); // Update companyThread
+      }
+    } catch (error) {
+      console.error("Failed to fetch company threads:", error);
+    }
+  }
+
+  async function getCompanyThread() {
+    try {
+      const companythread = await GetCompaniesAllThread();
+      if (companythread) {
+        console.log("Fetched Company Threads:", companythread);
+        setCompanyThread(companythread); // Update companyThread
+      }
+    } catch (error) {
+      console.error("Failed to fetch company threads:", error);
+    }
+  }
+  const groupThreadsByParentId = (threads) => {
+    const getLatestActivity = (thread) => {
+      let latest = new Date(thread.companyThread.createdAt).getTime();
+      thread.replies.forEach((reply) => {
+        latest = Math.max(latest, getLatestActivity(reply));
+      });
+      return latest;
+    };
+
+    const allThreads = threads.reduce((map, thread) => {
+      map[thread.companyThread.id] = { ...thread, replies: [] };
+      return map;
+    }, {});
+
+    threads.forEach((thread) => {
+      const { parentId, id } = thread.companyThread;
+      if (parentId) {
+        if (allThreads[parentId]) {
+          allThreads[parentId].replies.push(allThreads[id]);
+        } else {
+          console.warn(
+            `Parent thread with id ${parentId} not found for thread ${id}`
+          );
+        }
+      }
+    });
+
+    const standaloneThreads = Object.values(allThreads).filter(
+      (thread) => thread.companyThread.parentId === null
+    );
+
+    standaloneThreads.sort((a, b) => {
+      const latestA = getLatestActivity(a);
+      const latestB = getLatestActivity(b);
+      return latestB - latestA; // Descending order
+    });
+
+    standaloneThreads.forEach((thread) => {
+      thread.replies.sort(
+        (a, b) =>
+          new Date(b.companyThread.createdAt) -
+          new Date(a.companyThread.createdAt)
+      );
+    });
+
+    return standaloneThreads;
+  };
+
+  useEffect(() => {
+    GetBoardProgress();
+    getCompanyThread();
+  }, [])
+  // Group threads by parentId whenever companyThread changes
+  useEffect(() => {
+
+    setGroupedThreads(groupThreadsByParentId(companyThread));
+  }, [companyThread]); // Dependency array ensures this runs when companyThread changes
+
   return (
     <>
       <Helmet>
@@ -781,8 +1331,8 @@ export default function DashboardAppPage() {
       </Helmet>
 
       {/* Conditionally render the ticker only if there's announcement data */}
-      {announcementMessage && user.role === 'user' && (
-        <div className="ticker-container" style={{cursor:"pointer"}} onClick={handleTickerClick}>
+      {announcementMessage && (user.role === 'user' || user.role === 'admin' || user.role === 'manager' || user.role === 'lead') && (
+        <div className="ticker-container" style={{ cursor: "pointer" }} onClick={handleTickerClick}>
           <div className="ticker-message scroll">
             <h2> 🚨Announcement🚨 Title: {announcementMessage.name} </h2>
             <h3>Description: {announcementMessage.description} You will get more announcements in Announcements tab</h3>
@@ -802,78 +1352,107 @@ export default function DashboardAppPage() {
       <Container maxWidth="xl">
         <Grid container spacing={3}>
           <Grid item xs={12} md={6} lg={12}>
-            {['admin', 'company-super-admin'].includes(user.role) ? (
+            {['company-super-admin'].includes(user.role) && (
               <AppWebsiteVisits
                 title="Employees Onboarded by Companies"
-                subheader="(+43%) than last year"
-                chartLabels={[
-                  '01/01/2003',
-                  '02/01/2003',
-                  '03/01/2003',
-                  '04/01/2003',
-                  '05/01/2003',
-                  '06/01/2003',
-                  '07/01/2003',
-                  '08/01/2003',
-                  '09/01/2003',
-                  '10/01/2003',
-                  '11/01/2003',
-                ]}
+                subheader=""
+                chartLabels={chartLabels}
                 chartData={[
                   {
-                    name: 'Alpha A',
-                    type: 'column',
-                    fill: 'solid',
-                    data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30],
-                  },
-                  {
-                    name: 'Beta B',
+                    name: 'Employees',
                     type: 'area',
                     fill: 'gradient',
-                    data: [44, 55, 41, 67, 22, 43, 21, 41, 56, 27, 43],
-                  },
-                  {
-                    name: 'Gamma C',
-                    type: 'line',
-                    fill: 'solid',
-                    data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39],
+                    data: chartData,
                   },
                 ]}
               />
-            ) : (
-              <></>
             )}
           </Grid>
 
+          {['company-super-admin'].includes(user.role) && (
+            <Grid item xs={12} sm={6} md={6}>
+              <DashboardCard
+                title={"Total Departments"}
+                total={departments?.length || 0}
+                data={departments}
+                icon={<Apartment />}
+                navigation={"/dashboard/company-employee-management"}
+                category="departments"
+              />
+            </Grid>
+          )
+          }
+          {['company-super-admin'].includes(user.role) && (
+            <Grid item xs={12} sm={6} md={6}>
+              <AppTopManagers
+                title={"Managers"}
+                subheader={"Top Managers"}
+                list={data}
+              />
+            </Grid>
+          )}
+
+
+
+
           {/* New Section for Hobbies and Interest */}
-          {user.role === 'user' && (
+          {(user.role === 'user' || user.role === "manager" || user.role === "admin" || user.role === "lead") && (
             <Grid item xs={12} md={12} lg={6}>
               <Card>
                 <CardHeader title="Selected Areas" subheader="Your Hobbies and Interests" />
                 <Grid container>
                   <Grid item xs={6}>
-                    <Box sx={{ p: 4, pb: 4, flexWrap: 'wrap', alignItems: 'center' }} dir="ltr">
+                    <Box sx={{ p: 4, pb: 4, flexWrap: 'wrap', alignItems: 'center', }}
+                      dir="ltr">
                       <Typography variant="h6">Hobbies</Typography>
                       {hobbies.length > 0 ? (
-                        hobbies.map((hobby) => (
-                          <Chip
-                            key={hobby}
-                            label={hobby}
-                            component="a"
-                            href="#basic-chip"
-                            variant="outlined"
-                            clickable
-                            className="w-[100%] h-[100px] rounded-lg bg-sky-200 font-semibold mt-5"
-                          />
+                        hobbies.map((topic) => (
+                          <div key={topic}>
+                            <Chip
+                              className="w-[100%] h-[100px] rounded-lg bg-sky-200 font-semibold mt-5"
+                              variant="outlined"
+                              label={topic}
+                              clickable
+                              onClick={() => handleInterestExpand(topic)}
+                              icon={expandedTopic === topic ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                              sx={{
+                                transition: 'all 1.0s ease-in-out', // slower animation
+                              }}
+                            />
+                            <Collapse in={expandedTopic === topic} timeout="auto" unmountOnExit>
+                              <List>
+                                {articlesForInterestTopics.length > 0 ? (
+                                  articlesForInterestTopics.map((article, index) => (
+                                    <ArticleCard
+                                      key={index}
+                                      component="a"
+                                      href={article.link}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      background={article.pagemap?.cse_image?.[0]?.src || backgroundImagePath}
+                                    >
+                                      <ArticleTitle style={{
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden", textOverflow: "ellipsis"
+                                      }} variant="h6">{article.title}</ArticleTitle>
+                                    </ArticleCard>
+                                  ))
+                                ) : (
+                                  <Typography>No articles available</Typography>
+                                )}
+                              </List>
+                            </Collapse>
+                          </div>
                         ))
                       ) : (
-                        <Typography>No hobbies available</Typography>
+                        <Typography>No Hobbies available</Typography>
                       )}
                     </Box>
                   </Grid>
+
                   <Grid item xs={6}>
-                    <Box sx={{ p: 4, pb: 4, flexWrap: 'wrap', alignItems: 'center',}}
-                     dir="ltr">
+                    <Box sx={{ p: 4, pb: 4, flexWrap: 'wrap', alignItems: 'center', }}
+                      dir="ltr">
                       <Typography variant="h6">Interest Topics</Typography>
                       {interestTopics.length > 0 ? (
                         interestTopics.map((topic) => (
@@ -891,8 +1470,8 @@ export default function DashboardAppPage() {
                             />
                             <Collapse in={expandedTopic === topic} timeout="auto" unmountOnExit>
                               <List>
-                                {articles.length > 0 ? (
-                                  articles.map((article, index) => (
+                                {articlesForInterestTopics.length > 0 ? (
+                                  articlesForInterestTopics.map((article, index) => (
                                     <ArticleCard
                                       key={index}
                                       component="a"
@@ -929,21 +1508,16 @@ export default function DashboardAppPage() {
             <Grid item xs={12} md={12} lg={6}>
               <Card>
                 <CardHeader title="Articles You Might Be Interested In" />
-                <Box sx={{ p: 4, pb: 4, flexWrap: 'wrap', alignItems: 'center' }} dir="ltr">
+                <Box sx={{ p: 4, pb: 4, flexWrap: "wrap", alignItems: "center" }} dir="ltr">
                   <Grid container spacing={2}>
-                    {courses.map((course, index) => (
+                    {courses.slice(0, visibleCourses).map((course, index) => (
                       <Grid item xs={12} md={6} key={index}>
-                        {/* Add ellipsis button here */}
                         <Card sx={{ textAlign: "end" }}>
                           <IconButton onClick={(event) => handleOpenMenu(event, course.id || index)}>
                             <Iconify icon="eva:more-vertical-fill" width={20} height={20} />
                           </IconButton>
 
-                          {/* Popover with options outside the ArticleCard */}
                           <Popover
-                            // open={Boolean(open)}
-                            // anchorEl={open}
-                            // onClose={handleCloseMenu}
                             open={Boolean(anchorElMap[course.id || index])}
                             anchorEl={anchorElMap[course.id || index]}
                             onClose={() => handleCloseMenu(course.id || index)}
@@ -953,7 +1527,6 @@ export default function DashboardAppPage() {
                               sx: {
                                 boxShadow: "none",
                                 p: 1,
-                                // width: 140,
                                 "& .MuiMenuItem-root": {
                                   typography: "body2",
                                   borderRadius: 0.75,
@@ -966,6 +1539,7 @@ export default function DashboardAppPage() {
                               Share
                             </MenuItem>
                           </Popover>
+
                           <ArticleCard
                             sx={{ borderRadius: "0", margin: "0" }}
                             component="a"
@@ -973,7 +1547,7 @@ export default function DashboardAppPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             background={course.pagemap?.cse_image?.[0]?.src || backgroundImagePath}
-                            onClick={handleLinkClick} // Prevent link navigation when clicking IconButton
+                            onClick={handleLinkClick}
                           >
                             <ArticleTitle
                               style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
@@ -981,25 +1555,25 @@ export default function DashboardAppPage() {
                             >
                               {course.title}
                             </ArticleTitle>
-
                           </ArticleCard>
                         </Card>
                       </Grid>
                     ))}
                   </Grid>
-                  <Button
-                    type="button"
-                    fullWidth
-                    color="secondary"
-                    onClick={handleLoadMore}
-                    sx={{ mt: 2, mb: 1 }}
-                  >
-                    Load More
-                  </Button>
+
+                  {/* Show Load More Button Until All Articles Are Displayed */}
+                  {visibleCourses < courses.length ? (
+                    <Button type="button" fullWidth color="secondary" onClick={handleLoadMore} sx={{ mt: 2, mb: 1 }}>
+                      Load More
+                    </Button>
+                  ) : (
+                    <Typography sx={{ textAlign: "center", mt: 2 }}>No more articles</Typography>
+                  )}
                 </Box>
               </Card>
             </Grid>
           )}
+
           {/* For books */}
           {preferences.includes("Reading Books") && books.length > 0 && (
             <Grid item xs={12} md={12} lg={6}>
@@ -1007,7 +1581,7 @@ export default function DashboardAppPage() {
                 <CardHeader title="Books You Might Be Interested In" />
                 <Box sx={{ p: 4, pb: 4, flexWrap: 'wrap', alignItems: 'center' }} dir="ltr">
                   <Grid container spacing={2}>
-                    {books.map((book, index) => (
+                    {books.slice(0, visibleBooks).map((book, index) => (
                       <Grid item xs={12} md={6} key={index}>
                         <Card sx={{ textAlign: "end" }}>
                           <IconButton onClick={(event) => handleOpenMenu(event, book.id || index)}>
@@ -1036,7 +1610,7 @@ export default function DashboardAppPage() {
                               },
                             }}
                           >
-                          <MenuItem onClick={() => handleShare(book.link, book.id || index)}>
+                            <MenuItem onClick={() => handleShare(book.link, book.id || index)}>
                               <Iconify icon={"eva:share-fill"} sx={{ mr: 2 }} />
                               Share
                             </MenuItem>
@@ -1059,15 +1633,14 @@ export default function DashboardAppPage() {
                     ))}
                   </Grid>
 
-                  <Button
-                    type="button"
-                    fullWidth
-                    color="secondary"
-                    onClick={handleLoadMoreBooks}
-                    sx={{ mt: 2, mb: 1 }}
-                  >
-                    Load More
-                  </Button>
+                  {visibleBooks < books.length ? (
+                    <Button type="button" fullWidth color="secondary" onClick={handleLoadMoreBooks} sx={{ mt: 2, mb: 1 }}>
+                      Load More
+                    </Button>
+                  ) : (
+                    <Typography sx={{ textAlign: "center", mt: 2 }}>No more articles</Typography>
+                  )}
+
 
                 </Box>
               </Card>
@@ -1080,7 +1653,7 @@ export default function DashboardAppPage() {
                 <CardHeader title="Videos You Might Be Interested In" />
                 <Box sx={{ p: 4, pb: 4, flexWrap: 'wrap', alignItems: 'center' }} dir="ltr">
                   <Grid container spacing={2}>
-                    {videos.map((video, index) => (
+                    {videos.slice(0, visibleVideos).map((video, index) => (
                       <Grid item xs={12} md={6} key={index}>
                         <Card sx={{ textAlign: "end" }}>
                           <IconButton onClick={(event) => handleOpenMenu(event, video.id || index)}>
@@ -1109,7 +1682,7 @@ export default function DashboardAppPage() {
                               },
                             }}
                           >
-                           <MenuItem onClick={() => handleShare(video.link, video.id || index)}>
+                            <MenuItem onClick={() => handleShare(video.link, video.id || index)}>
                               <Iconify icon={"eva:share-fill"} sx={{ mr: 2 }} />
                               Share
                             </MenuItem>
@@ -1131,16 +1704,14 @@ export default function DashboardAppPage() {
                       </Grid>
                     ))}
                   </Grid>
+                  {visibleVideos < videos.length ? (
+                    <Button type="button" fullWidth color="secondary" onClick={handleLoadMoreVideos} sx={{ mt: 2, mb: 1 }}>
+                      Load More
+                    </Button>
+                  ) : (
+                    <Typography sx={{ textAlign: "center", mt: 2 }}>No more Videos</Typography>
+                  )}
 
-                  <Button
-                    type="button"
-                    fullWidth
-                    color="secondary"
-                    onClick={handleLoadMoreVideos}
-                    sx={{ mt: 2, mb: 1 }}
-                  >
-                    Load More
-                  </Button>
 
                 </Box>
               </Card>
@@ -1154,7 +1725,7 @@ export default function DashboardAppPage() {
                 <CardHeader title="Podcasts You Might Be Interested In" />
                 <Box sx={{ p: 4, pb: 4, flexWrap: 'wrap', alignItems: 'center' }} dir="ltr">
                   <Grid container spacing={2}>
-                    {podcasts.map((podcast, index) => (
+                    {podcasts.slice(0, visiblepodcast).map((podcast, index) => (
                       <Grid item xs={12} md={6} key={index}>
                         <Card sx={{ textAlign: "end" }}>
                           <IconButton onClick={(event) => handleOpenMenu(event, podcast.id || index)}>
@@ -1183,7 +1754,7 @@ export default function DashboardAppPage() {
                               },
                             }}
                           >
-                         <MenuItem onClick={() => handleShare(podcast.link, podcast.id || index)}>
+                            <MenuItem onClick={() => handleShare(podcast.link, podcast.id || index)}>
                               <Iconify icon={"eva:share-fill"} sx={{ mr: 2 }} />
                               Share
                             </MenuItem>
@@ -1206,15 +1777,13 @@ export default function DashboardAppPage() {
                     ))}
                   </Grid>
 
-                  <Button
-                    type="button"
-                    fullWidth
-                    color="secondary"
-                    onClick={handleLoadMorePodcasts}
-                    sx={{ mt: 2, mb: 1 }}
-                  >
-                    Load More
-                  </Button>
+                  {visiblepodcast < podcasts.length ? (
+                    <Button type="button" fullWidth color="secondary" onClick={handleLoadMorePodcasts} sx={{ mt: 2, mb: 1 }}>
+                      Load More
+                    </Button>
+                  ) : (
+                    <Typography sx={{ textAlign: "center", mt: 2 }}>No more Podcasts</Typography>
+                  )}
 
                 </Box>
               </Card>
@@ -1228,7 +1797,7 @@ export default function DashboardAppPage() {
                 <CardHeader title="Webinars You Might Be Interested In" />
                 <Box sx={{ p: 4, pb: 4, flexWrap: 'wrap', alignItems: 'center' }} dir="ltr">
                   <Grid container spacing={2}>
-                    {webinars.map((webinar, index) => (
+                    {webinars.slice(0, visiblewebinars).map((webinar, index) => (
                       <Grid item xs={12} md={6} key={index}>
                         <Card sx={{ textAlign: "end" }}>
                           <IconButton onClick={(event) => handleOpenMenu(event, webinar.id || index)}>
@@ -1257,7 +1826,7 @@ export default function DashboardAppPage() {
                               },
                             }}
                           >
-                         <MenuItem onClick={() => handleShare(webinar.link, webinar.id || index)}>
+                            <MenuItem onClick={() => handleShare(webinar.link, webinar.id || index)}>
                               <Iconify icon={"eva:share-fill"} sx={{ mr: 2 }} />
                               Share
                             </MenuItem>
@@ -1280,16 +1849,13 @@ export default function DashboardAppPage() {
                     ))}
                   </Grid>
 
-                  <Button
-                    type="button"
-                    fullWidth
-                    color="secondary"
-                    onClick={handleLoadMoreWebinars}
-                    sx={{ mt: 2, mb: 1 }}
-                  >
-                    Load More
-                  </Button>
-
+                  {visiblewebinars < webinars.length ? (
+                    <Button type="button" fullWidth color="secondary" onClick={handleLoadMoreWebinars} sx={{ mt: 2, mb: 1 }}>
+                      Load More
+                    </Button>
+                  ) : (
+                    <Typography sx={{ textAlign: "center", mt: 2 }}>No more Webinars</Typography>
+                  )}
                 </Box>
               </Card>
             </Grid>
@@ -1308,115 +1874,37 @@ export default function DashboardAppPage() {
             />
           </Grid> */}
 
-          {/* Reward Points Section */}
-          <Grid item xs={12} md={6} lg={6}>
-            <Card>
-              <CardHeader title="Reward Points" subheader="Here it will show the rewards achieved." />
-              <Box sx={{ p: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                  <RewardIcon>
-                    <StarIcon sx={{ color: '#FFD700', fontSize: '2rem' }} />
-                  </RewardIcon>
-                  <Typography variant="h6">{stars} Stars</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                  <RewardIcon>
-                    <LocalDrinkIcon sx={{ color: '#8B4513', fontSize: '3rem' }} />
-                  </RewardIcon>
-                  <Typography variant="h5">{cups} Cups</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                  <RewardIcon>
-                    <EmojiEventsIcon sx={{ color: '#FFD700', fontSize: '4rem' }} />
-                  </RewardIcon>
-                  <Typography variant="h4">{trophies} Trophies</Typography>
-                </Box>
-              </Box>
-            </Card>
-          </Grid>
 
-          <Grid item xs={12} md={6} lg={6}>
-            <AppCurrentSubject
-              title="Your Activity Breakdown"
-              chartLabels={['Connects', 'Policies', 'Tasks', 'Announcements', 'Courses', 'Buy n Sell']}
-              chartData={[
-                { name: 'Series 1', data: [80, 50, 30, 40, 100, 20] },
-                { name: 'Series 2', data: [20, 30, 40, 80, 20, 80] },
-                { name: 'Series 3', data: [44, 76, 78, 13, 43, 10] },
-              ]}
-              chartColors={[...Array(6)].map(() => theme.palette.text.secondary)}
-            />
-          </Grid>
 
-          <Grid item xs={12} md={6} lg={6}>
-            <AppTasks
-              title="Task Master: Your assigned tasks"
-              list={[
-                { id: '1', label: 'Create FireStone Logo' },
-                { id: '2', label: 'Add SCSS and JS files if required' },
-                { id: '3', label: 'Stakeholder Meeting' },
-                { id: '4', label: 'Scoping & Estimations' },
-                { id: '6', label: 'Sprint Planning' },
-                { id: '7', label: 'Line Up' },
-                { id: '8', label: 'Retrospective Meeting' },
-                { id: '9', label: 'Stakeholder Meeting' },
-                { id: '10', label: 'Scoping & Estimations' },
-              ]}
-            />
-          </Grid>
 
-          {/* New Announcement Section */}
-          <Grid item xs={12} md={12} lg={12}>
-            <Card>
-              <CardHeader title="Announcements" subheader="Latest updates and news" />
-              <Box sx={{ p: 2 }}>
-                <Typography variant="body1" gutterBottom>
-                  <strong>Employee Management System Update:</strong>
-                </Typography>
-                <Typography variant="body2" paragraph>
-                  Dear team, we are excited to announce the upcoming launch of our new Employee Management System. This system will streamline our HR processes, making it easier to manage employee records, track performance, and handle payroll.
-                </Typography>
-                <Typography variant="body2" paragraph>
-                  <strong>Key Features:</strong>
-                  <ul style={{ paddingLeft: '20px' }}>
-                    <li>Automated attendance tracking</li>
-                    <li>Performance evaluation tools</li>
-                    <li>Seamless integration with payroll</li>
-                    <li>Employee self-service portal</li>
-                  </ul>
-                </Typography>
-                <Typography variant="body2" paragraph>
-                  We will be conducting training sessions over the next few weeks to ensure everyone is comfortable using the new system. Please stay tuned for more information on the training schedule.
-                </Typography>
-                <Typography variant="body2">
-                  Thank you for your cooperation and support as we transition to this new platform.
-                </Typography>
-              </Box>
-            </Card>
-          </Grid>
 
-          {/* dynamic content for user side */}
-          <Grid item xs={12} md={6} lg={6}>
-            <AppCurrentVisits
-              title="Rewards based Leader Board"
-              chartData={[
-                { label: 'America', value: 4344 },
-                { label: 'Asia', value: 5435 },
-                { label: 'Europe', value: 1443 },
-                { label: 'Africa', value: 4443 },
-              ]}
-              chartColors={[
-                theme.palette.primary.main,
-                theme.palette.info.main,
-                theme.palette.warning.main,
-                theme.palette.error.main,
-              ]}
-            />
-          </Grid>
 
-          <Grid item xs={12} md={6} lg={6}>
-            <DashLeaderBoard />
-          </Grid>
+
+
+
+          {['company-super-admin'].includes(user.role) && (
+            <Grid item xs={12} md={6} lg={6}>
+              <DashLeaderBoard data={data} />
+            </Grid>
+          )}
+          {['company-super-admin'].includes(user.role) && (
+            <Grid item xs={12} md={6} lg={6}>
+              <BoardProgressChart data={BoardProgess} />
+            </Grid>
+          )}
+          {['company-super-admin'].includes(user.role) && (
+            <Grid item xs={12}>
+              <DashboardConnects
+                title="Connects"
+                groupedThreads={groupedThreads}
+                sx={{
+                  minHeight: "250px",
+                  width: "100%",
+                }}
+              />
+            </Grid>
+          )}
+
 
           {user.role === 'user' && (
             <Grid item xs={12} md={6} lg={12}>
@@ -1457,7 +1945,7 @@ export default function DashboardAppPage() {
         {/* Display Tooltip and Avatar only if responseString has data */}
         {questionnaireResponse && (
           <>
-            <Tooltip title="Click to view details" arrow>
+            <Tooltip title="Daily Tips!!!" arrow>
               <Avatar
                 sx={{
                   bgcolor: 'transparent',
@@ -1471,18 +1959,21 @@ export default function DashboardAppPage() {
                 onClick={handleOpenAvatarDialog}
               >
                 {/* <span style={{ fontSize: '1.5rem', color: 'white' }}>?</span> */}
-                <AnimatedAvatar  
+                <AnimatedAvatar
                   // onClick={handleAvatarClick} 
-                  alt="Tips" 
-                  src={`${process.env.PUBLIC_URL}/assets/images/avatars/avatar_14.jpg`} 
+                  alt="Tips"
+                  src={`${process.env.PUBLIC_URL}/assets/images/avatars/avatar_14.jpg`}
                 />
               </Avatar>
             </Tooltip>
             {/* Dialog to show the responseString when Avatar is clicked */}
             <Dialog open={openAvatarDialog} onClose={handleCloseAvatarDialog}>
-              <DialogTitle>Response</DialogTitle>
+              <DialogTitle>Your Daily Tips</DialogTitle>
               <DialogContent>
-                <Typography variant="body1">{responseString}</Typography>
+                <Typography
+                  variant="body1"
+                  dangerouslySetInnerHTML={{ __html: responseString }} // Render the formatted string as HTML
+                />
               </DialogContent>
               <DialogActions>
                 <Button onClick={handleCloseAvatarDialog} color="primary">
@@ -1490,10 +1981,16 @@ export default function DashboardAppPage() {
                 </Button>
               </DialogActions>
             </Dialog>
-
             <Snackbar
-              open={openToast}
+              open={isLoading} // Show loading toast if isLoading is true
               autoHideDuration={3000}
+              onClose={() => setIsLoading(false)}
+            >
+            </Snackbar>
+
+            {/* <Snackbar
+              open={openToast}
+              autoHideDuration={30000}
               onClose={() => setOpenToast(false)}
             >
               <MuiAlert
@@ -1502,7 +1999,7 @@ export default function DashboardAppPage() {
               >
                 Feedback submitted successfully!
               </MuiAlert>
-            </Snackbar>
+            </Snackbar> */}
 
           </>
         )}

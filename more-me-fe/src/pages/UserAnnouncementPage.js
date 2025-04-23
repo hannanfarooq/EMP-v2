@@ -88,10 +88,10 @@ export default function UserAnnouncementPage() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = React.useState(0);
   const[selectedOption,setSelectedOption]=React.useState("");
   const [alreadyanswer,setAlreadyAnswer]=React.useState(null);
-
+  
   const fetchUserData = async () => {
     const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
-
+    
     const UserData = await getUserProfile(
       storedUserData?.user?.id,
       storedUserData.token
@@ -115,7 +115,7 @@ export default function UserAnnouncementPage() {
   };
 
   const fetchCompanyAnnouncements = async (company, token) => {
-    const companyData = await getCompanyAnnouncement(token, company.id);
+    const companyData = await getCompanyAnnouncement(token, company.id,storedUserData.user.id);
     console.log("ANNOUCEMENT : ",companyData.data);
     setData(companyData.data);
   };
@@ -184,7 +184,7 @@ export default function UserAnnouncementPage() {
   };
 
   // Filter policies based on the search query
-  const filteredAnnouncements = data.filter((announcement) =>
+  const filteredAnnouncements = data && data.filter((announcement) =>
     announcement.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
   announcement.description.toLowerCase().includes(searchQuery.toLowerCase())
   );

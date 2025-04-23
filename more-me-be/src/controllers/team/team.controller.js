@@ -1,5 +1,5 @@
 import { errorResponse, successResponse } from "../../helpers";
-import { Team, User } from "../../models";
+import { Team, User,CompanyAnnouncement,AnnouncementQuestion,AnnouncementResponse } from "../../models";
 
 export const createTeam = async (req, res) => {
   const data = req.body;
@@ -86,16 +86,14 @@ export const updateTeam = async (req, res) => {
         }
       }
     }
+    console.log("teamMembers : ", teamMembers);
 
+    // Directly assign the array of user IDs
+    teamData.userIds = Array.isArray(teamMembers) ? teamMembers : [];
+    
+    console.log("userIds stored: ", teamData.userIds);
 
-    // Extract user IDs from teamMembers array and update the userIds field
-    if (teamMembers && teamMembers.length > 0) {
-      // Extracting the `id` field from each team member object
-      const userIds = teamMembers.map(member => member);
-      teamData.userIds = userIds;  // Assuming userIds field stores an array of user IDs
-    } else {
-      teamData.userIds = [];  // If no members, set userIds to an empty array
-    }
+   
 
     // Save updated team data
     const resp = await teamData.save();
@@ -110,25 +108,72 @@ export const updateTeam = async (req, res) => {
 export const deleteTeam = async (req, res) => {
   try {
     const { id } = req.body;
-    const teamData = await Team.findByPk(id);
 
+    // Check if team exists
+    const teamData = await Team.findByPk(id);
     if (!teamData) {
-      throw new Error("Team not found");
+      return res.status(404).json({ message: "Team not found" });
     }
 
-    const resp = await teamData.destroy();
-    return successResponse(req, res, resp);
+    // Fetch all related CompanyAnnouncements
+    const companyAnnouncements = await CompanyAnnouncement.findAll({
+      where: { teamId: id },
+    });
+
+    if (companyAnnouncements.length > 0) {
+      // Extract announcement IDs
+      const announcementIds = companyAnnouncements.map((ann) => ann.id);
+
+      // Fetch all related AnnouncementQuestions
+      const relatedQuestions = await AnnouncementQuestion.findAll({
+        where: { announcementId: announcementIds },
+      });
+
+      if (relatedQuestions.length > 0) {
+        // Extract question IDs
+        const questionIds = relatedQuestions.map((q) => q.id);
+
+        // Delete all related AnnouncementResponses
+        await AnnouncementResponse.destroy({
+          where: { questionId: questionIds },
+        });
+
+        // Delete all related AnnouncementQuestions
+        await AnnouncementQuestion.destroy({
+          where: { announcementId: announcementIds },
+        });
+      }
+
+      // Delete related CompanyAnnouncements
+      await CompanyAnnouncement.destroy({
+        where: { teamId: id },
+      });
+    }
+    const userData = await User.findByPk(teamData.leadId);
+
+    if (userData) {
+     
+        userData.role = "user";  // Or another role if needed
+        await userData.save();
+        console.log(`Updated user ${userData.id} role and department head status`);
+    }
+    // Delete the team
+    await teamData.destroy();
+
+    return res.status(200).json({ message: "Team deleted successfully" });
   } catch (error) {
-    throw error;
+    console.error("Error deleting team:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 export const getTeamMembers = async (req, res) => {
   try {
     const { teamId } = req.body;
     const id=teamId;
     const teamData = await Team.findByPk(id);
-    return successResponse(req, res, teamData.userIds);
+    return successResponse(req, res, teamData.userIds?teamData.userIds:[]);
   } catch (error) {
     throw error;
   }

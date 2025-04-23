@@ -12,6 +12,7 @@ export const createGamifications = async (req, res) => {
     const gamificationData = await data.map((question) =>
       Gamification.create({
         type: question.type,
+        description:question.description,
         text: question.text,
         options: question.options,
         companyId: question.companyId,
@@ -22,6 +23,7 @@ export const createGamifications = async (req, res) => {
         columnA: question.columnA,
         columnB: question.columnB,
         columnMatching: question.columnMatch,
+        optionPoints:question.optionPoints,
       })
     );
 
@@ -94,7 +96,7 @@ export const updateUserGamification = async (req, res) => {
     // Destructure required fields from the request body
     const { gamification, id, points } = req.body;
 
-    // console.log("------------------------------GAMIFICATIONS1", req.body);
+     console.log("------------------------------GAMIFICATIONS1", req.body);
 
     // Find the user by their ID
     const user = await User.findByPk(id);
@@ -103,9 +105,18 @@ export const updateUserGamification = async (req, res) => {
     if (!user) {
       return errorResponse(req, res, new Error("User not found"));
     }
+const questioncategory = await QuestionCategory.findByPk(gamification);
+if (!questioncategory) {
+  return errorResponse(req, res, new Error("Question category not found"));
+}
+if (!questioncategory.locked.includes(id)) {
+  
+  questioncategory.locked.push(id);
+}
+console.log("------------------------------GAMIFICATIONS1", questioncategory);
+questioncategory.changed('locked', true);
 
-
-
+await questioncategory.save();
     // Update the user's gamification and points
     if (gamification && points) {
       // Ensure user.gamification is an array and check for the existence of the gamification
@@ -117,8 +128,7 @@ export const updateUserGamification = async (req, res) => {
 
       if (!gamificationExists) {
 
-        user.gamification[gamification] = true;
-
+        user.gamification.push(gamification);
       }
 
       user.points = points;

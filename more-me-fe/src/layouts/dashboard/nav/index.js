@@ -30,6 +30,9 @@ import adminConfig from "./adminConfig";
 import userConfig from "./userConfig";
 import managerconfig from "./managerconfig";
 import Leadconfig from "./leadconfig";
+import functionhead from "./functionheadconfig";
+
+import { useNavigate } from "react-router-dom";
 
 // ----------------------------------------------------------------------
 
@@ -51,11 +54,18 @@ Nav.propTypes = {
 };
 
 export default function Nav({ openNav, onCloseNav }) {
+   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { userData } = useAuth();
   const role = userData?.user?.role ? userData?.user?.role : "";
 
   console.log(userData)
+  useEffect(() => {
+    // Check if userData is undefined and navigate to login if so
+    if (!userData || Object.keys(userData).length === 0) {
+      navigate("/"); // Redirect to login route
+    }
+  }, [navigate, userData]); // Run this effect when userData changes
 
   const isDesktop = useResponsive("up", "lg");
 
@@ -89,7 +99,11 @@ export default function Nav({ openNav, onCloseNav }) {
         {/* <Logo /> */}
 
         <img
-          src={role == "super-admin" ? MainLogo : userData?.company?.logo}
+          src={role === "super-admin" 
+            ? MainLogo 
+            : role === "super-super-admin" 
+            ? "https://dcassetcdn.com/design_img/4011777/191816/29100150/a6pq4nwzgakwksa7aay8j8c49m_image.png" 
+            : userData?.company?.logo}
           alt="Logo"
           style={{ height: "110px" }}
         />
@@ -119,7 +133,7 @@ export default function Nav({ openNav, onCloseNav }) {
       ) :role == "manager" ? (
         <NavSection data={managerconfig} />
       ):
-      role=="lead"?(  <NavSection data={Leadconfig} />):( <NavSection data={adminConfig} />)}
+      role=="lead"?(  <NavSection data={Leadconfig} />): role == "admin"?( <NavSection data={functionhead} />):( <NavSection data={adminConfig} />)}
 
       <Box sx={{ flexGrow: 1 }} />
 

@@ -42,6 +42,11 @@ const Leadconfig = [
     icon: <PolicyIcon />,
   },
   {
+    title: "announccements",
+    path: "/dashboard/announcements",
+    icon: icon("ic_announcements"),
+  },
+  {
     title: "Connects",
     path: "/dashboard/thread",
     icon: icon("ic_lock"),
@@ -68,13 +73,18 @@ const Leadconfig = [
   },
   {
     title: "questionnaire",
-    path: "/dashboard/questionnaire",
-    icon: icon("ic_question"),
+    path: "/dashboard/dynamicQuestionnaire",
+    icon: <QuestionAnswerOutlinedIcon />,
   },
   {
     title: "gamification",
     path: "/dashboard/gamification",
     icon: icon("ic_gamification"),
+  },
+  {
+    title: "articles",
+    path: "/dashboard/articles",
+    icon: icon("ic_blog"),
   },
   {
     title: "logout",

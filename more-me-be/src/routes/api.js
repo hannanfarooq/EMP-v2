@@ -10,22 +10,30 @@ import * as functionController from "../controllers/function/function.controller
 import * as teamController from "../controllers/team/team.controller";
 import * as departmentController from "../controllers/department/department.controller";
 import { getCompanyPolicy } from "../controllers/companyPolicy/companyPolicy.controller";
-import { getAnnouncementStats, getCompanyAnnouncement, getResponsesByUserId, saveAnswers } from "../controllers/companyAnnouncement/companyAnnouncement.controller"
+import { getAnnouncementStats, getCompanyAnnouncement, getCompanyAnnouncementforuser, getResponsesByUserId, saveAnswers } from "../controllers/companyAnnouncement/companyAnnouncement.controller"
 //import { postMessage, getConversations, getMessagesByConversationId, createConversation } from "../controllers/chat/chat.controller";
 import { createDailyQuestions } from "../controllers/question/dailyquestions.controller";
 import {createStartUpQuestions} from "../controllers/question/startupquestions";
 import { getAllStartUpQuestionsByCompanyIdAndUserId } from "../controllers/question/startupquestions";
 import {createConversation,getConversationById,addUserToConversation,removeUserFromConversation,getConversationsForUser} from '../controllers/chat/chat';
-import {createMessage,getMessagesByConversationId,markMessageAsRead}  from '../controllers/message/message';
+import {createMessage,getMessagesByConversationId,markMessageAsRead, updateMessageStatus}  from '../controllers/message/message';
 import {createInvitation,respondToInvitation,getInvitationsByUserId}  from '../controllers/invitation/invitation';
 import { GetBlockUser, GetBlockedByUsers, blockUsers, unblockUsers } from "../controllers/chat/block";
 import { de } from "@faker-js/faker";
 import { createProject, getProjectsByDepartmentId, getProjectsforUser } from "../controllers/Project/project.controller";
-import { ClearBoardAndAssociations, createboard, deleteBoardAndAssociations, getAllBoardsByCompanyId } from "../controllers/Task_Management/Board.controller";
+import { ClearBoardAndAssociations, createboard, deleteBoardAndAssociations, getAllBoardsByCompanyId, getBoardTaskProgress } from "../controllers/Task_Management/Board.controller";
 import { Create_Task, updateTaskBoardId } from "../controllers/Task_Management/task.controller";
 import { CreateTaskChat, gettaskchat } from "../controllers/Task_Management/taskchat.controller";
 import { Create_SubTask, updateSubTaskStatus } from "../controllers/Task_Management/subtask.controller";
 import { getNotificationsByUserId, markAllNotificationsAsRead } from "../controllers/Notification/notification.controller";
+import { createCategory, deleteCategory, getAllCategories, updateCategory } from "../controllers/gamifications/Category.controller";
+import { createSubCategory, deleteSubCategory, getSubCategoryById, updateSubCategory } from "../controllers/gamifications/SubCategory.controller";
+import { createGame, deleteGame, getGamesBySubCategory, updateGame } from "../controllers/gamifications/Game.controller";
+import { createArticle, getUrlsByTitle } from "../controllers/Articles/Articles.controller";
+import { createVideos, getVideoUrlsByTitle } from "../controllers/Articles/Video.controller";
+import { createPodcast, getpodcastUrlsByTitle } from "../controllers/Articles/Podcasts.controller";
+import { createWebinars, getWebinarsUrlsByTitle } from "../controllers/Articles/Webinars.controller";
+import { createBooks, getBooksUrlsByTitle } from "../controllers/Articles/Books.controller";
 
 const router = express.Router();
 
@@ -41,6 +49,8 @@ router.post(
 router.post("/inviteUsersCSV", userController.bulkInviteUsers);
 router.post("/getCompanyPolicy", getCompanyPolicy);
 router.post("/getCompanyAnnouncement", getCompanyAnnouncement);
+router.post("/getCompanyAnnouncementforuser", getCompanyAnnouncementforuser);
+router.post("/updateUserPointsAnnouncement", userController.updateUserPointsAnnouncement);
 router.post("/updateUserPoints", userController.updateUserPoints);
 router.post("/updateUserQuestionnaire", userController.updateUserQuestionnaire);
 router.post("/updateStartUpQuestions", userController.updateStartUpQuestions);
@@ -81,8 +91,24 @@ router.post("/createGamifications", gamificationController.createGamifications);
 router.post("/getGamifications", gamificationController.getCompanyGamifications);
 router.post("/updateUserGamification", gamificationController.updateUserGamification);
 router.get("/GetUserGamification/:id", gamificationController.GetUserGamification);
+
 router.get("/GetUserGamificationbycompany/:companyId", gamificationController.GetUserGamificationbyCompany);
 
+//Category routes
+router.post('/createCategory',createCategory);
+router.post('/getAllCategories',getAllCategories);
+router.post('/updateCategory',updateCategory);
+router.post('/deleteCategory',deleteCategory);
+//Sub Category Routes
+router.post('/createSubCategory',createSubCategory);
+router.post('/getSubCategoryById',getSubCategoryById);
+router.post('/deleteSubCategory',deleteSubCategory);
+router.post('/updateSubCategory',updateSubCategory);
+//Game Routes 
+router.post('/createGame',createGame)
+router.post('/getGamesBySubCategory',getGamesBySubCategory);
+router.post('/updateGame',updateGame);
+router.post('/deleteGame',deleteGame);
 // function routes
 router.post("/createFunction", functionController.createFunction);
 router.post("/getCompanyFunctions", functionController.getCompanyFunctions);
@@ -97,7 +123,7 @@ router.post('/getDepartmentsyuserid',departmentController.getDepartmentsyuserid)
 router.post("/updateDepartment", departmentController.updateDepartment);
 router.delete("/deleteDepartment", departmentController.deleteDepartment);
 router.post("/getDepartmentTeamsbyLead", teamController.getDepartmentLead);
-
+router.post("/getallFunctionDepartments", departmentController.getFunctionDepartmentsall);
 // Team routes
 router.post("/createTeam", teamController.createTeam);
 router.post("/getDepartmentTeams", teamController.getDepartmentTeams);
@@ -126,6 +152,7 @@ router.post('/messages', createMessage);
 router.get('/messages/:chatId', getMessagesByConversationId);
 router.post('/messages/read/:id', markMessageAsRead);
 router.post(`/getAllUserByCompanyId`,userController.getAllUserByCompanyId);
+router.post('/updateMessageStatus',updateMessageStatus);
 // Invitation routes
 router.post('/invitations', createInvitation);
 router.post('/invitations/:id', respondToInvitation);
@@ -151,7 +178,7 @@ router.post('/getProjectsByDepartmentId',getProjectsByDepartmentId);
 router.post('/getProjectsforUser',getProjectsforUser);
 
 //Board
-
+router.post('/Board_Progress', getBoardTaskProgress);
 router.post('/create-board',createboard);
 router.post('/getAllBoardsByCompanyId',getAllBoardsByCompanyId);
 router.post('/updateTaskBoard',updateTaskBoardId);
@@ -183,4 +210,19 @@ router.post('/getteamuser',userole.getTeamWithUsers);
 router.post('/getTeamMembersbyteam',userole.getTeamMembers);
 
 
+//Articles Routes
+router.post('/createArticle',createArticle);
+router.post('/getUrlsByTitle',getUrlsByTitle)
+//Video Routes
+router.post('/createVideos',createVideos);
+router.post('/getVideoUrlsByTitle',getVideoUrlsByTitle);
+//Podcast Routes
+router.post('/createPosdcast',createPodcast);
+router.post('/getpodcastUrlsByTitle',getpodcastUrlsByTitle);
+//Webinars Routes
+router.post('/createwebinars',createWebinars);
+router.post('/getwebinarsUrlsByTitle',getWebinarsUrlsByTitle);
+//Books Routes
+router.post('/createBooks',createBooks);
+router.post('/getBooksUrlsByTitle',getBooksUrlsByTitle);
 module.exports = router;

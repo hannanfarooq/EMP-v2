@@ -5,7 +5,7 @@ import { getConversationMessages } from "src/api";
 import {  Box, Avatar } from "@mui/material";
 import { MessageList } from "react-chat-elements";
 import { MessageListWrapper } from "./App.styles";
-const CustomMessageList = ({ messages, currentUser }) => {
+const CustomMessageList = ({ messages, currentUser,usermap }) => {
   // Function to format timestamp to 12-hour format (HH:mm AM/PM)
   const formatTimestamp = (createdAt) => {
     const date = new Date(createdAt);
@@ -18,12 +18,23 @@ const CustomMessageList = ({ messages, currentUser }) => {
     return `${hours}:${formattedMinutes} ${ampm}`;
   };
 
+  // Function to determine tick marks and color
+  const getMessageStatus = (status) => {
+    if (status === 'seen') {
+      return <span style={{ color: 'blue' }}>✓✓</span>; // Blue ticks when seen
+    } else if (status === 'delivered') {
+      return <span>✓✓</span>; // Default color for delivered
+    } else {
+      return <span>✓</span>; // Single tick for sent
+    }
+  };
+
   return (
-    <div style={{ padding: '15px', maxHeight: '80vh', overflowY: 'auto' }}>
+    <div style={{ padding: '15px', maxHeight: '50vh', overflowY: 'auto' }}>
       {messages && messages.length > 0 ? (
         messages.map((msg, index) => {
           const sender = msg.senderId === currentUser.user.id;
-
+         
           return (
             <Box
               key={index}
@@ -32,7 +43,7 @@ const CustomMessageList = ({ messages, currentUser }) => {
               alignItems="center"
               marginBottom={2}
             >
-              <Avatar alt={msg.title} src={sender ? currentUser.user.pro : msg.senderAvatar} />
+              <Avatar alt={msg.title} src={sender ? currentUser.user.profilePic : usermap[msg.senderId].profilePic} />
               
               <Box
                 sx={{
@@ -45,9 +56,19 @@ const CustomMessageList = ({ messages, currentUser }) => {
                 }}
               >
                 <Typography variant="body1" dangerouslySetInnerHTML={{ __html: msg.content }} />
-                <Typography variant="caption" color="textSecondary" sx={{ textAlign: "right", display: "block" }}>
-                  {formatTimestamp(msg.createdAt)} {/* Format the time here */}
-                </Typography>
+                
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Typography variant="caption" color="textSecondary" sx={{ textAlign: "right", display: "block" }}>
+                    {formatTimestamp(msg.createdAt)}
+                  </Typography>
+
+                  {/* Tick marks */}
+                  {sender && (
+                    <Typography variant="caption" sx={{ marginLeft: 1 }}>
+                      {getMessageStatus(msg.status)}
+                    </Typography>
+                  )}
+                </Box>
               </Box>
             </Box>
           );
@@ -60,7 +81,6 @@ const CustomMessageList = ({ messages, currentUser }) => {
     </div>
   );
 };
-
 const getMessages = async (id) => await getConversationMessages(id);
 
 export default function MessageListComponent({ conversation, blockeduser }) {
@@ -118,7 +138,7 @@ export default function MessageListComponent({ conversation, blockeduser }) {
     const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
     return `${hours}:${formattedMinutes} ${ampm}`;
   };
-
+console.log("DATA : ",conversation)
   // Map over the data to prepare the chat list
   const chatList = data?.map((msg) => {
     const sender = msg.senderId === currentUser.user.id;
@@ -129,6 +149,7 @@ export default function MessageListComponent({ conversation, blockeduser }) {
         title: sender ? 'You' : msg?.senderName,
         text: msg?.content,  // No need to manually add line breaks, CSS will handle it
         date: msg?.createdAt, // Format and display the timestamp
+        usermap:conversation.usermap,
       };
     }
   });
@@ -161,7 +182,7 @@ export default function MessageListComponent({ conversation, blockeduser }) {
               No messages in this conversation.
             </Typography>
           ) : (
-            <CustomMessageList messages={data} currentUser={currentUser} />
+            <CustomMessageList messages={data} currentUser={currentUser}  usermap={conversation.userMap}/>
           )}
         </div>
       )}

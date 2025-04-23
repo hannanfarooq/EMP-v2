@@ -298,3 +298,69 @@ export const ClearBoardAndAssociations = async (req, res) => {
     res.status(500).json({ message: 'An error occurred while deleting the board and its associations.' });
   }
 };
+
+
+export const getBoardTaskProgress = async (req, res) => {
+  const { companyId } = req.body;
+
+  try {
+    // Step 1: Fetch all boards by companyId with tasks and subtasks
+    const boards = await Board.findAll({
+      where: { companyId },
+      include: [
+        {
+          model: Task,
+          as: 'tasks',
+          include: [
+            {
+              model: SubTask,
+              as: 'subtasks',
+            },
+          ],
+        },
+      ],
+    });
+
+    // Step 2: Group by board name and compute progress
+    const boardMap = {};
+
+    boards.forEach((board) => {
+      const boardName = board.name;
+
+      if (!boardMap[boardName]) {
+        boardMap[boardName] = {
+          boardName,
+          totalTasks: 0,
+          tasks: [],
+        };
+      }
+
+      board.tasks.forEach((task) => {
+        const subtasks = task.subtasks || [];
+        const totalSubtasks = subtasks.length;
+        const completedSubtasks = subtasks.filter(
+          (st) => st.status === 'Completed'
+        ).length;
+        const progress =
+          totalSubtasks > 0
+            ? Math.round((completedSubtasks / totalSubtasks) * 100)
+            : 0;
+
+        boardMap[boardName].tasks.push({
+          title: task.title,
+          totalSubtasks,
+          completedSubtasks,
+          progress,
+        });
+
+        boardMap[boardName].totalTasks += 1;
+      });
+    });
+
+    const responseData = Object.values(boardMap);
+    return res.status(200).json(responseData);
+  } catch (error) {
+    console.error('Error fetching board progress:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
