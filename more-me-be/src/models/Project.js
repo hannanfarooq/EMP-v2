@@ -13,33 +13,44 @@ module.exports = (sequelize, DataTypes) => {
       },
       departmentid: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
-    
       startDate: {
-        type: DataTypes.DATEONLY, // Stores only the date (YYYY-MM-DD)
+        type: DataTypes.DATEONLY,
         allowNull: false,
       },
       endDate: {
-        type: DataTypes.DATEONLY, // Stores only the date (YYYY-MM-DD)
+        type: DataTypes.DATEONLY,
         allowNull: false,
       },
       projectLead: {
-        type: DataTypes.INTEGER, // Store a single user ID for the project lead
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
       projectAdministrator: {
-        type: DataTypes.INTEGER, // Store a single user ID for the project administrator
-        allowNull: true, // Optional
+        type: DataTypes.INTEGER,
+        allowNull: true,
       },
       projectTeam: {
-        type: DataTypes.ARRAY(DataTypes.INTEGER), // Array of integers to store user IDs
-        allowNull: true, // Optional
-        defaultValue: [], // Default to an empty array
+        type: DataTypes.ARRAY(DataTypes.INTEGER),
+        allowNull: true,
+        defaultValue: [],
+      },
+      functionHead: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      teamId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      companyId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
       },
     },
     {
-      timestamps: true, // Adds createdAt and updatedAt fields
+      timestamps: true,
     }
   );
 

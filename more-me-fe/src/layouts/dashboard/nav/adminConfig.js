@@ -86,11 +86,7 @@ const adminConfig = [
     path: "/dashboard/questionnaire",
     icon: icon("ic_question"),
   },
-   {
-      title: "Dynamic questionnaire",
-      path: "/dashboard/dynamicQuestionnaire",
-      icon: <QuestionAnswerOutlinedIcon />,
-    },
+  
   {
     title: "gamification",
     path: "/dashboard/gamification",

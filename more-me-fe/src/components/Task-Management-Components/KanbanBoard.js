@@ -28,14 +28,17 @@ import {
   ListItemText,
   Avatar,
   Typography,
-  Dialog, DialogActions, DialogContent, DialogTitle,       DatePicker
+  Dialog, DialogActions, DialogContent, DialogTitle,      
+  keyframes
 } from '@mui/material';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import AddIcon from '@mui/icons-material/Add';
 import { Helmet } from 'react-helmet-async';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css"; // Include date picker styles
 
-import { ClearBoardAndAssociations, Create_SubTask, createboard, createtask, createtaskchat, deleteBoardAndAssociations, getallboards, getAllCompanyUser, getAlldepartmentuser, getProjectsBTeamid, getProjectsByDepartmentId, getProjectsforUser, gettaskchat, getTeamuser, updateSubTaskStatus, updateTaskBoardId, updateTaskBoardUser } from 'src/api';
+import { ClearBoardAndAssociations, Create_SubTask, createboard, createtask, createtaskchat, deleteBoardAndAssociations, getallboards, getAllCompanyUser, getAlldepartmentuser, getProjectsBTeamid, getProjectsByDepartmentId, getProjectsByFunctionHead, getProjectsforUser, gettaskchat, getTeamuser, updateSubTaskStatus, updateTaskBoardId, updateTaskBoardUser } from 'src/api';
 
 import { toast } from 'react-toastify';
 import { socket } from "../../App"
@@ -45,7 +48,20 @@ import ImageIcon from '@mui/icons-material/Image';
 import { uploadImageAndGetURL } from 'src/utils/uploadImageAndGetURL';
 import { uploadPDFAndGetURL } from 'src/utils/uploadPDFAndGetURL';
 import Microlink from '@microlink/react'; // For link previews
-
+const vibration = keyframes`
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-5px);
+  }
+`;
 function KanbanBoard() {
   const [data, setData] = useState([]);
   const [user, setuser] = useState([]);
@@ -74,6 +90,9 @@ const [filterProject,setFilterProject]=useState(null);
   const [taskchat,settaskchat]=useState([]);
   const [openLinkDialog, setOpenLinkDialog] = useState(false);
   const [status,setstatus]=useState(null);
+  const [errorDeadline, setErrorDeadline] = useState(false);
+
+  const today = new Date().toISOString().split('T')[0];
 const [selectedproject,setSelectedproject]=useState(null); 
   const popupRef = useRef(null);
   const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
@@ -209,6 +228,18 @@ const addNewsubTask = () => {
   useEffect(() => {
    
     fetchCompanyUser();
+    if(storedUserData.user.role=="admin")
+    {
+      getProjectsByFunctionHead(storedUserData.token,storedUserData.user.id).then((response) => {
+                  console.log("PROJECTS",response);
+                    setProjects(response);
+                })
+                .catch((error) => {
+                    toast.error("Failed to fetch teams");
+                });
+              
+
+    }
 if(storedUserData.user.role=="manager")
 {
   getProjectsByDepartmentId(storedUserData.token,storedUserData.user.departmentId).then((response) => {
@@ -220,16 +251,43 @@ if(storedUserData.user.role=="manager")
       toast.error("Failed to fetch teams");
   });
 }
-else 
+else if(storedUserData.user.role=="lead")
 {
-  getProjectsforUser(storedUserData.token,storedUserData.user.id).then((response) => {
-    console.log("PROJECTS",response);
-      setProjects(response);
+
+   getProjectsBTeamid(storedUserData.token,storedUserData.user.teamid).then((response) => {
+      console.log("PROJECTS",response);
+        setProjects(response);
+    })
+    .catch((error) => {
+        toast.error("Failed to fetch teams");
+    });
+}
+
+getProjectsforUser(storedUserData.token, storedUserData.user.id)
+  .then((response) => {
+    console.log("PROJECTS", response);
+
+    // If `projects` is not defined or null, set it to the new response
+    if (!projects) {
+      setProjects(response);  // Set the new response as the initial projects
+    } else {
+      // Ensure prevProjects is an array before merging
+      setProjects((prevProjects) => {
+        // If prevProjects is not an array, default to an empty array
+        const currentProjects = Array.isArray(prevProjects) ? prevProjects : [];
+
+        // Filter out duplicates by project.id
+        const updatedProjects = [...currentProjects, ...response].filter((value, index, self) => 
+          index === self.findIndex((project) => project.id === value.id)
+        );
+
+        return updatedProjects;  // Return the unique list of projects
+      });
+    }
   })
   .catch((error) => {
-      toast.error("Failed to fetch teams");
+    toast.error("Failed to fetch projects");
   });
-}
 
  
 
@@ -585,6 +643,7 @@ const rep = await Create_SubTask(storedUserData.token,taskTitle,assignee,descrip
         let matchesAssignee;
 
         if(storedUserData.user.role === "manager" || 
+          storedUserData.user.role === "admin" || 
           selectedproject?.projectLead === storedUserData.user.id || 
           selectedproject?.projectAdministrator === storedUserData.user.id)
 
@@ -794,17 +853,43 @@ const handleProjectSelect = (e) => {
           </Select>
         </FormControl>
 
-        <TextField
-          label="Deadline"
-          type="date"
-          value={deadline}
-          onChange={(e) => setDeadline(e.target.value)}
-          fullWidth
-          margin="normal"
-          InputLabelProps={{
-            shrink: true,
-          }}
-        />
+        <FormControl fullWidth margin="normal">
+  <InputLabel htmlFor="deadline"></InputLabel>
+  <DatePicker
+    selected={deadline}
+    onChange={(date) => {
+      setDeadline(date);
+      setErrorDeadline(false); // Reset error on valid date change
+    }}
+    dateFormat="dd/MM/yyyy"
+    minDate={new Date(today)} // Ensure the date is not in the future
+    customInput={
+      <TextField
+        id="deadline"
+        label="Deadline"
+        value={deadline ? deadline.toLocaleDateString("en-GB") : ''}
+        error={errorDeadline && !deadline}
+        helperText={errorDeadline && !deadline ? "Deadline is required" : ""}
+        sx={errorDeadline && !deadline ? { animation: `${vibration} 0.3s ease` } : {}}
+        placeholder="dd/mm/yyyy"
+        InputProps={{
+          endAdornment: <span>📅</span>,
+        }}
+        InputLabelProps={{
+          shrink: true,
+        }}
+      />
+    }
+    isClearable={false}
+    placeholderText="dd/mm/yyyy"
+    inline={false}
+    popperModifiers={{
+      preventOverflow: { enabled: true, boundariesElement: 'viewport' },
+      hide: { enabled: true },
+    }}
+  />
+</FormControl>
+
 
        
 
@@ -875,17 +960,43 @@ const handleProjectSelect = (e) => {
       </Select>
     </FormControl>
 
-    <TextField
-      label="Deadline"
-      type="date"
-      value={deadline}
-      onChange={(e) => setDeadline(e.target.value)}
-      fullWidth
-      margin="normal"
-      InputLabelProps={{
-        shrink: true,
-      }}
-    />
+    <FormControl fullWidth margin="normal">
+  <InputLabel htmlFor="deadline"></InputLabel>
+  <DatePicker
+    selected={deadline}
+    onChange={(date) => {
+      setDeadline(date);
+      setErrorDeadline(false); // Reset error on valid date change
+    }}
+    dateFormat="dd/MM/yyyy"
+    minDate={new Date(today)} // Ensure the date is not in the future
+    customInput={
+      <TextField
+        id="deadline"
+        label="Deadline"
+        value={deadline ? deadline.toLocaleDateString("en-GB") : ''}
+        error={errorDeadline && !deadline}
+        helperText={errorDeadline && !deadline ? "Deadline is required" : ""}
+        sx={errorDeadline && !deadline ? { animation: `${vibration} 0.3s ease` } : {}}
+        placeholder="dd/mm/yyyy"
+        InputProps={{
+          endAdornment: <span>📅</span>,
+        }}
+        InputLabelProps={{
+          shrink: true,
+        }}
+      />
+    }
+    isClearable={false}
+    placeholderText="dd/mm/yyyy"
+    inline={false}
+    popperModifiers={{
+      preventOverflow: { enabled: true, boundariesElement: 'viewport' },
+      hide: { enabled: true },
+    }}
+  />
+</FormControl>
+
 
     <FormControl fullWidth margin="normal">
       <InputLabel>Tags</InputLabel>
@@ -960,6 +1071,7 @@ const handleProjectSelect = (e) => {
     {/* Role-based conditional rendering */}
     {(storedUserData.user.role === "manager" || 
   selectedproject?.projectLead === storedUserData.user.id || 
+  storedUserData.user.role === "admin"||
   selectedproject?.projectAdministrator === storedUserData.user.id) && (
     <>
       {/* Search Tasks */}
@@ -1030,6 +1142,7 @@ const handleProjectSelect = (e) => {
 
   {
       (storedUserData.user.role === "manager" || 
+        storedUserData.user.role === "admin"||
         selectedproject?.projectLead === storedUserData.user.id || 
         selectedproject?.projectAdministrator === storedUserData.user.id) &&(filterProject) &&(
       <Grid container alignItems="center" justifyContent="flex-end" sx={{ mb: 5 }}>
@@ -1082,6 +1195,7 @@ const handleProjectSelect = (e) => {
 
 (storedUserData.user.role === "manager" || 
   selectedproject?.projectLead === storedUserData.user.id || 
+  storedUserData.user.role === "admin"||
   selectedproject?.projectAdministrator === storedUserData.user.id) &&
 
             <button
@@ -1221,13 +1335,23 @@ const handleProjectSelect = (e) => {
 
               {/* Deadline */}
               <Typography variant="body1" sx={{ mt: 1 }}>
-                <strong>Due Date:</strong>{' '}
-                {new Date(item.deadline).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </Typography>
+  <strong>Due Date:</strong>{' '}
+  {(() => {
+    const date = new Date(item.deadline);
+
+    // Format the date parts
+    const day = date.getDate(); // Get the day (e.g., 29)
+    const month = date.toLocaleString('en-US', { month: 'long' }); // Get the month name (e.g., "April")
+    const year = date.getFullYear(); // Get the full year (e.g., 2025)
+    const hours = date.getHours().toString().padStart(2, '0'); // Get the hours and pad if necessary (e.g., "02")
+    const minutes = date.getMinutes().toString().padStart(2, '0'); // Get the minutes and pad if necessary (e.g., "32")
+
+    // Return the formatted string
+    return `${day}, ${month} ${year} ${hours}:${minutes}`;
+  })()}
+</Typography>
+
+
 
               {/* Update Options */}
               <div style={{ marginTop: '16px' }}>
@@ -1236,6 +1360,7 @@ const handleProjectSelect = (e) => {
                   {
 
 (storedUserData.user.role === "manager" || 
+  storedUserData.user.role === "admin"||
   selectedproject?.projectLead === storedUserData.user.id || 
   selectedproject?.projectAdministrator === storedUserData.user.id)&&
 
@@ -1389,6 +1514,7 @@ const handleProjectSelect = (e) => {
     {/* Add Sub Task */}
 
     {(storedUserData.user.role === "manager" || 
+    storedUserData.user.role === "admin" || 
   selectedproject?.projectLead === storedUserData.user.id || 
   selectedproject?.projectAdministrator === storedUserData.user.id)&&
 
@@ -1486,12 +1612,25 @@ const handleProjectSelect = (e) => {
       Due Date:
     </Typography>
     <Typography variant="body1" sx={{ mb: 3 }}>
-      {new Date(selectedCard.deadline).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })}
+      
+
+{(() => {
+    const date = new Date(selectedCard.deadline);
+
+    // Format the date parts
+    const day = date.getDate(); // Get the day (e.g., 29)
+    const month = date.toLocaleString('en-US', { month: 'long' }); // Get the month name (e.g., "April")
+    const year = date.getFullYear(); // Get the full year (e.g., 2025)
+    const hours = date.getHours().toString().padStart(2, '0'); // Get the hours and pad if necessary (e.g., "02")
+    const minutes = date.getMinutes().toString().padStart(2, '0'); // Get the minutes and pad if necessary (e.g., "32")
+
+    // Return the formatted string
+    return `${day}, ${month} ${year} ${hours}:${minutes}`;
+  })()}
     </Typography>
+    
+   
+
 
     {/* Tag */}
     {selectedCard.tag && (
@@ -1529,16 +1668,23 @@ const handleProjectSelect = (e) => {
       Last Modified Date:
     </Typography>
     <Typography variant="body1" sx={{ mb: 3 }}>
-      {new Date(selectedCard.updatedAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })}{' '}
-      {new Date(selectedCard.updatedAt).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      })}
+    
+
+{(() => {
+    const date = new Date(selectedCard.updatedAt);
+
+    // Format the date parts
+    const day = date.getDate(); // Get the day (e.g., 29)
+    const month = date.toLocaleString('en-US', { month: 'long' }); // Get the month name (e.g., "April")
+    const year = date.getFullYear(); // Get the full year (e.g., 2025)
+    const hours = date.getHours().toString().padStart(2, '0'); // Get the hours and pad if necessary (e.g., "02")
+    const minutes = date.getMinutes().toString().padStart(2, '0'); // Get the minutes and pad if necessary (e.g., "32")
+
+    // Return the formatted string
+    return `${day}, ${month} ${year} ${hours}:${minutes}`;
+  })()}
+
+
     </Typography>
 
     {/* Change History */}
@@ -1679,6 +1825,53 @@ const handleProjectSelect = (e) => {
         );
       })}
     </Box>
+
+
+      {/* Due Date */}
+      <Typography variant="subtitle1" sx={{ fontWeight: 'medium', mb: 1 }}>
+      Due Date:
+    </Typography>
+    <Typography variant="body1" sx={{ mb: 3 }}>
+      
+
+{(() => {
+    const date = new Date(selectedCard.subtasks[activeTab - 1].deadline);
+
+    // Format the date parts
+    const day = date.getDate(); // Get the day (e.g., 29)
+    const month = date.toLocaleString('en-US', { month: 'long' }); // Get the month name (e.g., "April")
+    const year = date.getFullYear(); // Get the full year (e.g., 2025)
+    const hours = date.getHours().toString().padStart(2, '0'); // Get the hours and pad if necessary (e.g., "02")
+    const minutes = date.getMinutes().toString().padStart(2, '0'); // Get the minutes and pad if necessary (e.g., "32")
+
+    // Return the formatted string
+    return `${day}, ${month} ${year} ${hours}:${minutes}`;
+  })()}
+    </Typography>
+
+     {/* Last Modified */}
+     <Typography variant="subtitle1" sx={{ fontWeight: 'medium', mb: 1 }}>
+      Last Modified Date:
+    </Typography>
+    <Typography variant="body1" sx={{ mb: 3 }}>
+    
+
+{(() => {
+    const date = new Date(selectedCard.subtasks[activeTab - 1].updatedAt);
+
+    // Format the date parts
+    const day = date.getDate(); // Get the day (e.g., 29)
+    const month = date.toLocaleString('en-US', { month: 'long' }); // Get the month name (e.g., "April")
+    const year = date.getFullYear(); // Get the full year (e.g., 2025)
+    const hours = date.getHours().toString().padStart(2, '0'); // Get the hours and pad if necessary (e.g., "02")
+    const minutes = date.getMinutes().toString().padStart(2, '0'); // Get the minutes and pad if necessary (e.g., "32")
+
+    // Return the formatted string
+    return `${day}, ${month} ${year} ${hours}:${minutes}`;
+  })()}
+
+
+    </Typography>
 
     {/* Subtask Change History */}
     <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>

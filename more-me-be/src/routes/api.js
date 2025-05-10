@@ -20,7 +20,7 @@ import {createMessage,getMessagesByConversationId,markMessageAsRead, updateMessa
 import {createInvitation,respondToInvitation,getInvitationsByUserId}  from '../controllers/invitation/invitation';
 import { GetBlockUser, GetBlockedByUsers, blockUsers, unblockUsers } from "../controllers/chat/block";
 import { de } from "@faker-js/faker";
-import { createProject, getProjectsByDepartmentId, getProjectsforUser } from "../controllers/Project/project.controller";
+import { createProject, getProjectsBTeamid, getProjectsByDepartmentId, getProjectsByFunctionHead, getProjectsforUser } from "../controllers/Project/project.controller";
 import { ClearBoardAndAssociations, createboard, deleteBoardAndAssociations, getAllBoardsByCompanyId, getBoardTaskProgress } from "../controllers/Task_Management/Board.controller";
 import { Create_Task, updateTaskBoardId } from "../controllers/Task_Management/task.controller";
 import { CreateTaskChat, gettaskchat } from "../controllers/Task_Management/taskchat.controller";
@@ -34,6 +34,7 @@ import { createVideos, getVideoUrlsByTitle } from "../controllers/Articles/Video
 import { createPodcast, getpodcastUrlsByTitle } from "../controllers/Articles/Podcasts.controller";
 import { createWebinars, getWebinarsUrlsByTitle } from "../controllers/Articles/Webinars.controller";
 import { createBooks, getBooksUrlsByTitle } from "../controllers/Articles/Books.controller";
+import { updateDailyFeedback } from "../controllers/Task_Management/task.controller";
 
 const router = express.Router();
 
@@ -175,6 +176,10 @@ router.post('/getAnnouncementStats',getAnnouncementStats);
 //Project 
 router.post('/create-project',createProject);
 router.post('/getProjectsByDepartmentId',getProjectsByDepartmentId);
+
+router.post('/getProjectsBTeamid',getProjectsBTeamid);
+
+router.post('/getProjectsByFunctionHead',getProjectsByFunctionHead);
 router.post('/getProjectsforUser',getProjectsforUser);
 
 //Board
@@ -204,8 +209,12 @@ router.post('/markAllNotificationsAsRead',markAllNotificationsAsRead);
 
 
 //ROLE BASE USER GET
+router.post('/getUsersByFunctionStructure',userole.getUsersByFunctionStructure);
 router.post('/getdepartmentuser',userole.getTeamsWithUsers);
 
+
+
+router.post('/getcompanydetails',userole.getCompanyDetails);
 router.post('/getteamuser',userole.getTeamWithUsers);
 router.post('/getTeamMembersbyteam',userole.getTeamMembers);
 
@@ -225,4 +234,6 @@ router.post('/getwebinarsUrlsByTitle',getWebinarsUrlsByTitle);
 //Books Routes
 router.post('/createBooks',createBooks);
 router.post('/getBooksUrlsByTitle',getBooksUrlsByTitle);
+//
+router.post('/updateDailyFeedback', updateDailyFeedback);
 module.exports = router;

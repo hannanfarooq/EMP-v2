@@ -479,14 +479,17 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: true
       },
-      departmentId:{
-        type: DataTypes.INTEGER,
+      // New Fields
+      todayDate: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,  // Default to current date
         allowNull: true
       },
-      teamid:{
-        type: DataTypes.INTEGER,
+      dailyFeedback: {
+        type: DataTypes.TEXT,
         allowNull: true
-      }
+      },
+     
     },
     {
       defaultScope: {

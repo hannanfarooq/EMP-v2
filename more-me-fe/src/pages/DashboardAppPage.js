@@ -50,7 +50,7 @@ import {
   getAllCompanyUser,
   allgetFunctionDepartments,
   GetCompaniesAllThread,
-  Board_Progress
+  Board_Progress,
 } from 'src/api';
 import { toast } from 'react-toastify';
 import Chip from '@mui/material/Chip';
@@ -58,6 +58,8 @@ import { margin, styled, width } from '@mui/system';
 import StarIcon from '@mui/icons-material/Star';
 import LocalDrinkIcon from '@mui/icons-material/LocalDrink';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 
 // components
@@ -169,6 +171,8 @@ export default function DashboardAppPage() {
   const [visiblepodcast, setvisiblepodcast] = useState(10);
   const [visiblewebinars, setVisiblewebinars] = useState(10);
   const [visibleBooks, setVisibleBooks] = useState(10);
+  const [feedbackToShow, setFeedbackToShow] = useState(''); // State to store feedback text
+
 
   const [chartLabels, setChartLabels] = useState([]);
   const [chartData, setChartData] = useState([]);
@@ -176,7 +180,7 @@ export default function DashboardAppPage() {
   const [companyThread, setCompanyThread] = useState([]);
   const [groupedThreads, setGroupedThreads] = useState([]);
   const [BoardProgess, setBoardProgess] = useState([]);
-  const [isLoading, setIsLoading] = useState(false); // Add state to manage loading state
+  const [isLoading, setIsLoading] = useState(false);
 
   const AnimatedAvatar = styled(Avatar)`
   cursor: pointer;
@@ -221,6 +225,15 @@ export default function DashboardAppPage() {
     setUser(userObj.user);
 
   }, []);
+  
+  
+  // useEffect(() => {
+  //   // Simulate a data fetch or some loading action
+  //   setTimeout(() => {
+  //     setIsLoading(false); // After the loading is done, set isLoading to false
+  //     toast.success('Daily Tips are available successfully'); // Show the success toast once
+  //   }, 3000); // Simulate 3 seconds of loading time
+  // }, []);
 
   const theme = useTheme();
   const navigate = useNavigate();
@@ -236,7 +249,6 @@ export default function DashboardAppPage() {
     const sortedData = companyData.data
       ?.filter(
         (user) =>
-
           user.role != "company-super-admin"
       ) // Filter out the logged-in user
       .sort((a, b) => {
@@ -276,6 +288,7 @@ export default function DashboardAppPage() {
           userObj?.user?.id,
           userObj.token
         );
+        //console.log("user Data ==>>>>>", UserData);
 
         const announcements = UserData?.data?.user?.readAnnouncements || [];
 
@@ -443,7 +456,6 @@ export default function DashboardAppPage() {
             userObj?.token,
             userObj?.company?.id,
             userObj?.user?.id,
-
           ).then((res) => res.data);
 
           console.log("questionData:", questionData);
@@ -517,7 +529,6 @@ export default function DashboardAppPage() {
             localStorage.setItem('userInterestTopics', JSON.stringify(interestsData));
             localStorage.setItem('userContentPreferences', JSON.stringify(contentPreferencesData));
             localStorage.setItem('userLifePrinciples', JSON.stringify(lifePrincipleData));
-
             // Profile setup check
             if (questionData.length > 0) {
               setProfileSetUp(true);
@@ -545,29 +556,132 @@ export default function DashboardAppPage() {
     fetchData2();
   }, [navigate, setProfileSetUp, preferences]);
 
-  useEffect(() => {
-    const userObj = JSON.parse(localStorage.getItem('currentUser') ?? '{}');
-    console.log("userObj?.user?.role", userObj?.user?.role);
-    // Check if user object and role are defined
-    if (userObj?.user?.role === 'user' || userObj?.user?.role === 'manager' || userObj?.user?.role === 'lead' || userObj?.user?.role === 'admin') {
-      // Show daily questionnaire if it hasn't been shown today
-      const lastShownTimestamp = localStorage.getItem('snackbarLastShown');
-      const today = new Date().toLocaleDateString();
+  // useEffect(() => {
+  //   const userObj = JSON.parse(localStorage.getItem('currentUser') ?? '{}');
+  //   console.log("userObj?.user?.role", userObj?.user?.role);
+  //   // Check if user object and role are defined
+  //   if (userObj?.user?.role === 'user' || userObj?.user?.role === 'manager' || userObj?.user?.role === 'lead' || userObj?.user?.role === 'admin') {
+  //     // Show daily questionnaire if it hasn't been shown today
+  //     const lastShownTimestamp = localStorage.getItem('snackbarLastShown');
+  //     const today = new Date().toLocaleDateString();
 
-      console.log("lastShownTimestamp", lastShownTimestamp);
-      console.log("today", today);
-      if (lastShownTimestamp !== today || lastShownTimestamp === null) {
-        //if (lastShownTimestamp !== today) {
-        //if (true) {
-        console.log("Daily Questions active");
-        setOpenQuestionare(true);
-        setProfileSetUp(true);
-        localStorage.setItem('snackbarLastShown', today);
-      } else {
-        setOpenQuestionare(false);
+  //     console.log("lastShownTimestamp", lastShownTimestamp);
+  //     console.log("today", today);
+  //     if (lastShownTimestamp !== today || lastShownTimestamp === null) {
+  //       //if (lastShownTimestamp !== today) {
+  //       //if (true) {
+  //       console.log("Daily Questions active");
+  //       setOpenQuestionare(true);
+  //       setProfileSetUp(true);
+  //       localStorage.setItem('snackbarLastShown', today);
+  //     } else {
+  //       setOpenQuestionare(false);
+  //     }
+  //   }
+  // }, []);
+
+  // useEffect(() => {
+  //   // Get the user data from localStorage, or use an empty object if not present
+  //   const userObj = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  //   const userRole = userObj?.user?.role;
+
+  //   if (['user', 'manager', 'lead', 'admin'].includes(userRole)) {
+  //     const todayDate = new Date(userObj?.user?.todayDate);; 
+  //     const formattedDate = todayDate.toLocaleDateString();
+
+  //     //const lastShownTimestamp = localStorage.getItem('snackbarLastShown');
+  //     const today = new Date().toLocaleDateString();
+
+  //     console.log("formattedDate:", formattedDate);
+  //     console.log("today:", today);
+
+  //     // Only proceed if the questionnaire hasn't been shown today
+  //     if (today !== formattedDate || userObj?.user?.dailyFeedback === null) {
+  //       console.log("Daily Questions active");
+
+  //       // Show the questionnaire and update the profile
+  //       setOpenQuestionare(true);
+  //       setProfileSetUp(true);
+  //       await updateTaskBoardUser(
+  //                 storedUserData.token,
+  //                 id,
+  //                 formattedDate,
+  //                 storedUserData.user.id
+  //               );
+
+  //       // Store the timestamp of when the questionnaire was shown
+  //       //localStorage.setItem('snackbarLastShown', today);
+
+  //     } else {
+  //       console.log("Date is matched");
+  //       setOpenQuestionare(false);
+  //     }
+  //   }
+  // }, []); // Empty dependency array ensures it runs only once
+  useEffect(() => {
+    const fetchData = async () => {
+      // Get the user data from localStorage, or use an empty object if not present
+      const userObj = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      const userRole = userObj?.user?.role;
+      console.log("userOBJ in daily feedback", userObj);
+      const UserDataForFeedback = await getUserProfile(
+        userObj?.user?.id,
+        userObj.token
+      );
+      if (['user', 'manager', 'lead', 'admin'].includes(userRole)) {
+        const todayDate = new Date(UserDataForFeedback.data.user.todayDate);
+        const formattedDate = todayDate.toLocaleDateString();
+
+        const today = new Date().toLocaleDateString();
+
+        console.log("formattedDate:", formattedDate);
+        console.log("today:", today);
+        //console.log("userObj?.user?.dailyFeedback", userObj?.user?.dailyFeedback);
+        console.log("UserDataForFeedback", UserDataForFeedback.data.user.dailyFeedback);
+        // Only proceed if the questionnaire hasn't been shown today
+
+        if (today !== formattedDate || UserDataForFeedback.data.user.dailyFeedback === null) {
+          console.log("Daily Questions active");
+          // Show the questionnaire and update the profile
+          setOpenQuestionare(true);
+          setProfileSetUp(true);
+
+          // Assuming updateTaskBoardUser is an async function
+
+
+          // You could also store the timestamp if you need to track when the questionnaire was shown
+          // localStorage.setItem('snackbarLastShown', today);
+        } else {
+          console.log("Date is matched");
+          const formatResponse = (responseString) => {
+            // Split the string into sections based on double newlines (assumes content is divided this way)
+            const sections = responseString.split('\n\n');
+
+            return sections.map((section) => {
+              // Check if it's a heading (starts with a number followed by a period)
+              if (section.match(/^\d+\./)) {
+                // Clean up the heading (remove the number and period and any bold markdown)
+                const cleanHeading = section.replace(/^\d+\.\s*/, '').replace(/\*\*/g, ''); // Remove ** for bold
+                return `<br><span style="font-weight: bold; color: green;">${cleanHeading}</span><br>`;
+              } else {
+                // For non-heading sections, just remove any ** for bold text
+                return section.replace(/\*\*/g, ''); // Remove ** around bold text
+              }
+            }).join('\n\n'); // Join back with two newlines
+          };
+          setFeedbackToShow(UserDataForFeedback.data.user.dailyFeedback);
+          //setOpenQuestionare(false);
+        }
       }
-    }
-  }, []);
+    };
+
+    // Call the asynchronous function
+    fetchData();
+
+  }, []); // Empty dependency array ensures it runs only once
+
+
+
   const handleClose = () => {
     setOpenQuestionare(false);
   };
@@ -643,7 +757,6 @@ export default function DashboardAppPage() {
           topicsToFetch.push(topic);
         }
       });
-
       // If all topics were found and up-to-date, return early
       if (topicsToFetch.length === 0) {
         shuffleArray(allResults);
@@ -663,7 +776,6 @@ export default function DashboardAppPage() {
           }).then(result => ({ topic, result }))
         )
       );
-
       // Process and store the newly fetched results
       for (const { topic, result } of fetchResults) {
         if (result && result.items && result.items.length > 0) {
@@ -674,7 +786,6 @@ export default function DashboardAppPage() {
           console.warn(`No results found for topic: ${topic}`);
         }
       }
-
       // Store final results in state
       if (allResults.length > 0) {
         shuffleArray(allResults);
@@ -756,7 +867,6 @@ export default function DashboardAppPage() {
           topicsToFetch.push(topic);
         }
       });
-
       // If all topics are up-to-date, return early
       if (topicsToFetch.length === 0) {
         shuffleArray(allResults);
@@ -784,7 +894,6 @@ export default function DashboardAppPage() {
           console.warn(`No books found for topic: ${topic}`);
         }
       }
-
       // Store final results in state
       if (allResults.length > 0) {
         shuffleArray(allResults);
@@ -839,7 +948,6 @@ export default function DashboardAppPage() {
           topicsToFetch.push(topic);
         }
       });
-
       // If all topics are already up-to-date, return early
       if (topicsToFetch.length === 0) {
         console.log('Total videos:', allResults.length);
@@ -856,7 +964,6 @@ export default function DashboardAppPage() {
           getVideos(topic).then(result => ({ topic, result }))
         )
       );
-
       // Process and store the newly fetched results
       for (const { topic, result } of fetchResults) {
         if (result && result.length > 0) {
@@ -867,7 +974,6 @@ export default function DashboardAppPage() {
           console.warn(`No videos found for topic: ${topic}`);
         }
       }
-
       // Store final results in state
       if (allResults.length > 0) {
         shuffleArray(allResults);
@@ -924,7 +1030,6 @@ export default function DashboardAppPage() {
           topicsToFetch.push(topic);
         }
       });
-
       // If all topics are already up-to-date, return early
       if (topicsToFetch.length === 0) {
         console.log("total webinars", allResults.length);
@@ -941,7 +1046,6 @@ export default function DashboardAppPage() {
           getWebinars(topic).then(result => ({ topic, result }))
         )
       );
-
       // Process and store the newly fetched results
       for (const { topic, result } of fetchResults) {
         if (result && result.length > 0) {
@@ -952,7 +1056,6 @@ export default function DashboardAppPage() {
           console.warn(`No webinars found for topic: ${topic}`);
         }
       }
-
       // Store final results in state
       if (allResults.length > 0) {
         shuffleArray(allResults);
@@ -1008,7 +1111,6 @@ export default function DashboardAppPage() {
           topicsToFetch.push(topic);
         }
       });
-
       // If all topics are already up-to-date, return early
       if (topicsToFetch.length === 0) {
         console.log("TOTAL NO OF PODCASTS", allResults.length);
@@ -1025,7 +1127,6 @@ export default function DashboardAppPage() {
           getPodcasts(topic).then(result => ({ topic, result }))
         )
       );
-
       // Process and store the newly fetched results
       for (const { topic, result } of fetchResults) {
         if (result && result.length > 0) {
@@ -1036,7 +1137,6 @@ export default function DashboardAppPage() {
           console.warn(`No podcasts found for topic: ${topic}`);
         }
       }
-
       // Store final results in state
       if (allResults.length > 0) {
         shuffleArray(allResults);
@@ -1153,18 +1253,18 @@ export default function DashboardAppPage() {
 
     if (responseString) {
       // Show the loading toast
-      setIsLoading(true);
+      // setIsLoading(true);
       // Format the response string before updating state
       const formattedResponse = formatResponse(responseString);
 
       // Update the response string state with the formatted string
       updateResponseString(formattedResponse);
 
-      setOpenToast(true);
-      setTimeout(() => {
-        setOpenToast(false); // Hide the toast after 30 seconds
-        setIsLoading(false);
-      }, 3000);
+      // setOpenToast(true);
+      //   setTimeout(() => {
+      //     setOpenToast(false); // Hide the toast after 30 seconds
+      //     setIsLoading(false);
+      //   }, 3000);
     }
 
     setQuestionnaireResponse(responseString);  // Save the original response string if necessary
@@ -1197,7 +1297,6 @@ export default function DashboardAppPage() {
 
   useEffect(() => {
     const countsByMonth = {};
-
     // Step 1: Count users by month
     data.forEach((user) => {
       const date = new Date(user.createdAt);
@@ -1874,19 +1973,11 @@ export default function DashboardAppPage() {
             />
           </Grid> */}
 
-
-
-
-
-
-
-
-
-          {['company-super-admin'].includes(user.role) && (
+          {/* {['company-super-admin'].includes(user.role) && ( */}
             <Grid item xs={12} md={6} lg={6}>
               <DashLeaderBoard data={data} />
             </Grid>
-          )}
+          {/* )} */}
           {['company-super-admin'].includes(user.role) && (
             <Grid item xs={12} md={6} lg={6}>
               <BoardProgressChart data={BoardProgess} />
@@ -1943,68 +2034,100 @@ export default function DashboardAppPage() {
           )}
         </Grid>
         {/* Display Tooltip and Avatar only if responseString has data */}
-        {questionnaireResponse && (
+        {(user.role === 'user' || user.role === 'admin' || user.role === 'manager' || user.role === 'lead') && (
           <>
-            <Tooltip title="Daily Tips!!!" arrow>
-              <Avatar
-                sx={{
-                  bgcolor: 'transparent',
-                  cursor: 'pointer',
-                  width: 50,
-                  height: 50,
-                  position: 'fixed',
-                  right: "10px",
-                  bottom: "10px"
-                }}
-                onClick={handleOpenAvatarDialog}
-              >
-                {/* <span style={{ fontSize: '1.5rem', color: 'white' }}>?</span> */}
-                <AnimatedAvatar
-                  // onClick={handleAvatarClick} 
-                  alt="Tips"
-                  src={`${process.env.PUBLIC_URL}/assets/images/avatars/avatar_14.jpg`}
-                />
-              </Avatar>
-            </Tooltip>
-            {/* Dialog to show the responseString when Avatar is clicked */}
-            <Dialog open={openAvatarDialog} onClose={handleCloseAvatarDialog}>
-              <DialogTitle>Your Daily Tips</DialogTitle>
-              <DialogContent>
-                <Typography
-                  variant="body1"
-                  dangerouslySetInnerHTML={{ __html: responseString }} // Render the formatted string as HTML
-                />
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleCloseAvatarDialog} color="primary">
-                  Close
-                </Button>
-              </DialogActions>
-            </Dialog>
-            <Snackbar
-              open={isLoading} // Show loading toast if isLoading is true
-              autoHideDuration={3000}
-              onClose={() => setIsLoading(false)}
-            >
-            </Snackbar>
-
-            {/* <Snackbar
-              open={openToast}
-              autoHideDuration={30000}
-              onClose={() => setOpenToast(false)}
-            >
-              <MuiAlert
-                severity="success"
-                sx={{ width: '100%' }}
-              >
-                Feedback submitted successfully!
-              </MuiAlert>
-            </Snackbar> */}
-
+            {questionnaireResponse ? (
+              <>
+              
+                <Tooltip title="Daily Tips!!!" arrow>
+                  <Avatar
+                    sx={{
+                      bgcolor: 'transparent',
+                      cursor: 'pointer',
+                      width: 50,
+                      height: 50,
+                      position: 'fixed',
+                      right: "10px",
+                      bottom: "10px"
+                    }}
+                    onClick={handleOpenAvatarDialog}
+                  >
+                    
+                    {/* <span style={{ fontSize: '1.5rem', color: 'white' }}>?</span> */}
+                    <AnimatedAvatar
+                      // onClick={handleAvatarClick} 
+                      alt="Tips"
+                      src={`${process.env.PUBLIC_URL}/assets/images/avatars/avatar_14.jpg`}
+                    />
+                  </Avatar>
+                </Tooltip>
+                {/* Dialog to show the responseString when Avatar is clicked */}
+                <Dialog open={openAvatarDialog} onClose={handleCloseAvatarDialog}>
+                  <DialogTitle>Your Daily Tips</DialogTitle>
+                  <DialogContent>
+                    <Typography
+                      variant="body1"
+                      dangerouslySetInnerHTML={{ __html: responseString }} // Render the formatted string as HTML
+                    />
+                  </DialogContent>
+                  <DialogActions>
+                    <Button onClick={handleCloseAvatarDialog} color="primary">
+                      Close
+                    </Button>
+                  </DialogActions>
+                </Dialog>
+                {toast.success('Daily Tips fetched successfully!!!')}
+              </>
+            ) : (
+              <>
+    <Tooltip title="Daily Tips!!!" arrow>
+      <Avatar
+        sx={{
+          bgcolor: 'transparent',
+          cursor: 'pointer',
+          width: 50,
+          height: 50,
+          position: 'fixed',
+          right: "10px",
+          bottom: "10px"
+        }}
+        onClick={handleOpenAvatarDialog}
+      >
+        {/* <span style={{ fontSize: '1.5rem', color: 'white' }}>?</span> */}
+        <AnimatedAvatar
+          alt="Tips"
+          src={`${process.env.PUBLIC_URL}/assets/images/avatars/avatar_14.jpg`}
+        />
+      </Avatar>
+    </Tooltip>
+    
+    {/* Dialog to show the formatted feedback or "No data found" */}
+    <Dialog open={openAvatarDialog} onClose={handleCloseAvatarDialog}>
+      <DialogTitle>Your Daily Tips</DialogTitle>
+      <DialogContent>
+        <Typography
+          variant="body1"
+          dangerouslySetInnerHTML={{
+            __html: feedbackToShow ? formatResponse(feedbackToShow) : 'No data found. please first answer the daily questions to get the tips.'
+          }}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleCloseAvatarDialog} color="primary">
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
+    {/* <Snackbar
+      open={isLoading} // Show loading toast if isLoading is true
+      autoHideDuration={3000}
+      onClose={() => setIsLoading(false)}
+    /> */}
+  </>
+            )}
           </>
         )}
       </Container>
-
     </>
   );
 }

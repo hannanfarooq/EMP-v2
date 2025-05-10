@@ -42,6 +42,11 @@ const functionhead = [
     path: "/dashboard/company-employee-management",
     icon: <BadgeIcon />,
   },
+   {
+      title: "Project Management",
+      path: "/dashboard/project-Management",
+      icon: <TaskIcon />,
+    },
   {
     title: "Task Management",
     path: "/dashboard/task-management",

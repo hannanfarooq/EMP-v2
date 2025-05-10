@@ -5,6 +5,7 @@ import { getConversationMessages } from "src/api";
 import {  Box, Avatar } from "@mui/material";
 import { MessageList } from "react-chat-elements";
 import { MessageListWrapper } from "./App.styles";
+import Filter from "bad-words";
 const CustomMessageList = ({ messages, currentUser,usermap }) => {
   // Function to format timestamp to 12-hour format (HH:mm AM/PM)
   const formatTimestamp = (createdAt) => {
@@ -17,7 +18,7 @@ const CustomMessageList = ({ messages, currentUser,usermap }) => {
     const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
     return `${hours}:${formattedMinutes} ${ampm}`;
   };
-
+  const filter = new Filter();
   // Function to determine tick marks and color
   const getMessageStatus = (status) => {
     if (status === 'seen') {
@@ -34,7 +35,7 @@ const CustomMessageList = ({ messages, currentUser,usermap }) => {
       {messages && messages.length > 0 ? (
         messages.map((msg, index) => {
           const sender = msg.senderId === currentUser.user.id;
-         
+          const filteredText = filter.clean(msg.content);
           return (
             <Box
               key={index}
@@ -55,7 +56,7 @@ const CustomMessageList = ({ messages, currentUser,usermap }) => {
                   maxWidth: "50%",
                 }}
               >
-                <Typography variant="body1" dangerouslySetInnerHTML={{ __html: msg.content }} />
+                <Typography className="comment-content" variant="body1" dangerouslySetInnerHTML={{ __html: filteredText }} />
                 
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                   <Typography variant="caption" color="textSecondary" sx={{ textAlign: "right", display: "block" }}>

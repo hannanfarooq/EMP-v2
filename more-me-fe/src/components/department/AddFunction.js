@@ -205,7 +205,7 @@ import {
   InputLabel,
   Button,
 } from "@mui/material";
-import { getCompanyFunctions, createFunction, updateFunction } from "src/api";
+import { getCompanyFunctions, createFunction, updateFunction, getcompanydetails } from "src/api";
 
 import { useAuth } from "src/context/AuthContext";
 import { getAllCompanyUser } from "src/api";
@@ -226,10 +226,10 @@ export default function AddFunction({ functionF, handleClose }) {
     useState(true);
   const [headIsValid, setHeadIsValid] = useState(true);
   const [isUniqueFunctionName, setIsUniqueFunctionName] = useState(true);
-
+  const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
   const { userData } = useAuth();
   const isSuperAdmin = userData.role === "super_admin";
-
+  const [companyDetails, setCompanyDetails] = useState([]);
   useEffect(() => {
     getAllCompanyUser(userData?.token, userData?.company.id, isSuperAdmin).then(
       (res) => {
@@ -238,7 +238,13 @@ export default function AddFunction({ functionF, handleClose }) {
         setHead(get(functionF, "Head.id", null));
       }
     );
+    getcompanydetails(storedUserData?.token).then((res) => {
+      console.log("COMPANY DETAILS", res);
+      setCompanyDetails(res);
+    });
   }, []);
+
+ 
 
   const handleAddFunction = async (e) => {
     e.preventDefault();
@@ -376,13 +382,29 @@ export default function AddFunction({ functionF, handleClose }) {
             value={head}
             onChange={(e) => setHead(e.target.value)}
           >
-            {companyUsers.map((user) => (
-              user.role=="user" || user.id==head
-              ?( <MenuItem key={user.id} value={user.id}>
-                {user.firstName} {user.lastName}
-              </MenuItem>):(null)
-             
-            ))}
+    {companyUsers.map((user) => {
+  // First, check if the user is the head; always include them
+  if (user.id === head) {
+    return (
+      <MenuItem key={user.id} value={user.id}>
+        {user.firstName} {user.lastName}
+      </MenuItem>
+    );
+  }
+
+  // If not the head, check if the user is "user" role and not in companyDetails
+  if (user.role === "user" && !companyDetails.includes(user.id)) {
+    return (
+      <MenuItem key={user.id} value={user.id}>
+        {user.firstName} {user.lastName}
+      </MenuItem>
+    );
+  }
+
+  // If none of the conditions match, return null (exclude this user)
+  return null;
+})}
+
           </Select>
           <FormHelperText>
             {headIsValid ? "" : "Select the head of the function"}

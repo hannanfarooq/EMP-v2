@@ -19,28 +19,40 @@ module.exports = {
       },
       departmentid: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       startDate: {
-        type: Sequelize.DATEONLY, // Stores only the date (YYYY-MM-DD)
+        type: Sequelize.DATEONLY,
         allowNull: false,
       },
       endDate: {
-        type: Sequelize.DATEONLY, // Stores only the date (YYYY-MM-DD)
+        type: Sequelize.DATEONLY,
         allowNull: false,
       },
       projectLead: {
-        type: Sequelize.INTEGER, // Store a single user ID for the project lead
+        type: Sequelize.INTEGER,
         allowNull: false,
       },
       projectAdministrator: {
-        type: Sequelize.INTEGER, // Store a single user ID for the project administrator
-        allowNull: true, // Optional
+        type: Sequelize.INTEGER,
+        allowNull: true,
       },
       projectTeam: {
-        type: Sequelize.ARRAY(Sequelize.INTEGER), // Array of integers to store user IDs
-        allowNull: true, // Optional
-        defaultValue: [], // Default to an empty array
+        type: Sequelize.ARRAY(Sequelize.INTEGER),
+        allowNull: true,
+        defaultValue: [],
+      },
+      functionHead: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+      teamId: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+      companyId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
       },
       createdAt: {
         type: Sequelize.DATE,

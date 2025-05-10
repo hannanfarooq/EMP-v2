@@ -53,6 +53,9 @@ import {
   getTeamuser,
 
  
+  getUsersByFunctionStructure,
+
+ 
   handleDeleteCompanyUser,
 } from "src/api";
 import UpdateUserDataForm from "src/components/company/UpdateUserModal";
@@ -167,6 +170,25 @@ export default function UserPage() {
     console.log("Sorted Data:", sortedData);
     setData(sortedData);
   };
+  const fetchFunctionUser = async () => {
+    const companyData = await getUsersByFunctionStructure(
+      storedUserData.token,
+      storedUserData.user.id
+    );
+    console.log("compan data b date:", companyData);
+
+    const sortedData = companyData.data
+      ?.filter((user) => user.id !== storedUserData.user.id) // Filter out the logged-in user
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        //return dateA - dateB; // For ascending order
+        return dateB - dateA; // For descending order
+      });
+    // Log the sorted data
+    console.log("Sorted Data:", sortedData);
+    setData(sortedData);
+  };
 
   const fetchDepartmentUser = async () => {
     const companyData = await getAlldepartmentuser(
@@ -260,10 +282,14 @@ export default function UserPage() {
   useEffect(() => {
     (async () => {
       if (storedUserData.company) {
-        if (storedUserData.user.role === "admin" || storedUserData.user.role === "company-super-admin" || storedUserData.user.role === "hr") {
+        if ( storedUserData.user.role === "company-super-admin" ) {
 
           fetchCompanyUser();
         }
+        else if (storedUserData.user.role === "admin")
+        {
+          fetchFunctionUser();
+                }
         else if (storedUserData.user.role === "manager") {
           fetchDepartmentUser();
         }
@@ -1076,7 +1102,8 @@ export default function UserPage() {
           },
         }}
       >
-       
+       {
+  storedUserData.user.role=="company-super-admin" &&
         <MenuItem
           onClick={() => {
             setEditingCardOpen(true);
@@ -1085,6 +1112,7 @@ export default function UserPage() {
           <EditIcon sx={{ mr: 2 }} />
           Edit
         </MenuItem>
+}
         <MenuItem
           onClick={() => {
             setShowQuestion(true);

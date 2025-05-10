@@ -76,6 +76,10 @@ export default function QuestionnaireForm({ username, onResponse  }) {
 
   // Function to handle the form submission and send data to API
   const handleSubmit = async () => {
+    toast.success('Your daily feedback data is under process, please wait', {
+      position: toast.POSITION.TOP_RIGHT,
+      autoClose: 3000,
+    });
     // Create a JSON structure of questions and answers
     const feedbackData = questions.map((question, index) => ({
       questionText: question.questionText,

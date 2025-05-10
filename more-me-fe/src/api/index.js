@@ -1681,6 +1681,28 @@ export const getAllCompanyAnnouncements = async (token, companyId) => {
   return res.json();
 };
 
+
+export const getProjectsByFunctionHead = async (token,functionHead) => {
+  const apiUrl = "/api/getProjectsByFunctionHead";
+
+  const data = {
+ 
+   
+    functionHead:functionHead
+  
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+
 export const getProjectsByDepartmentId = async (token,departmentid) => {
   const apiUrl = "/api/getProjectsByDepartmentId";
 
@@ -1702,7 +1724,7 @@ export const getProjectsByDepartmentId = async (token,departmentid) => {
 };
 
 
-export const CreateProject = async (token,name,description,departmentid,startDate,endDate,projectLead,projectAdministrator,projectTeam) => {
+export const CreateProject = async (token,name,description,departmentid,startDate,endDate,projectLead,projectAdministrator,projectTeam,functionheadid,teamId,companyId) => {
   const apiUrl = "/api/create-project";
 
   const data = {
@@ -1716,7 +1738,10 @@ export const CreateProject = async (token,name,description,departmentid,startDat
     endDate:endDate,
     projectLead:projectLead,
     projectAdministrator:projectAdministrator,
-    projectTeam:projectTeam
+    projectTeam:projectTeam,
+    functionHead:functionheadid,
+    teamId:teamId,
+    companyId:companyId,
   };
   const res = await fetch(baseURL + apiUrl, {
     method: "POST",
@@ -4341,12 +4366,6 @@ export const deleteDailyQuestionForCompany = async (token, id) => {
 //getDailyQuestionsForCompany
 export const getDailyQuestionsForCompany = async (token, parsedUserData) => {
   // Show a loading toast before making the request
-  const loadingToast = toast.info('Loading questions...', { 
-    position: "top-right", 
-    autoClose: false,  // Keep the toast open indefinitely
-    closeOnClick: false,
-    draggable: false,
-  });
 
   const apiUrl = `/api/getDailyQuestionsForCompany/${parsedUserData.company.id}`;
 
@@ -4364,11 +4383,16 @@ export const getDailyQuestionsForCompany = async (token, parsedUserData) => {
       throw new Error("Failed to fetch questions");
     }
     // Dismiss the loading toast once the response is received
-    toast.dismiss(loadingToast);
+   
     const data = await res.json();
-    
+    const loadingToast = toast.info('Loading questions...', { 
+      position: "top-right",
+      autoClose: false,  // Keep the toast open indefinitely
+      closeOnClick: false,
+      draggable: false,
+    });
+    toast.dismiss(loadingToast);
     return data; // Return the response from the API
-
   } catch (error) {
     console.error("Error fetching questions:", error);
     throw error; // Rethrow the error to be handled by the caller
@@ -4673,6 +4697,44 @@ export const getTeamuser = async (token, teamId) => {
   });
   return res.json();
 };
+export const getUsersByFunctionStructure = async (token, headId) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  let apiUrl = `/api/getUsersByFunctionStructure`;
+  
+
+  const data = {
+    headId: headId,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+
+export const getcompanydetails = async (token) => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  let apiUrl = `/api/getcompanydetails`;
+  
+
+  const data = {
+    companyId: currentUser.company.id,
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
 
 export const getAlldepartmentuser = async (token, departmentId) => {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
@@ -4692,6 +4754,7 @@ export const getAlldepartmentuser = async (token, departmentId) => {
   });
   return res.json();
 };
+
 
 
 //Notification 
@@ -4787,4 +4850,23 @@ export const Board_Progress = async (token, compnayid) => {
     body: JSON.stringify(data),
   });
   return res.json();
-}
+};
+
+export const updateDailyFeedbackUser = async (token,todayDate,dailyFeedback,userId) => {
+  const apiUrl = "/api/updateDailyFeedback";
+  console.log("todayDate", todayDate, "dailyFeedback", dailyFeedback, "userId", userId);
+  const data = {
+    todayDate: todayDate,
+    dailyFeedback: dailyFeedback,
+    userId: userId
+  };
+  const res = await fetch(baseURL + apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-token": `${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};

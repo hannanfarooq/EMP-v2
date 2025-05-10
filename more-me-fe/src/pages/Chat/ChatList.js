@@ -253,7 +253,7 @@ import { green } from "@mui/material/colors";
 import { format } from "date-fns";
 import Scrollbar from "src/components/scrollbar/Scrollbar";
 import SearchIcon from "@mui/icons-material/Search";
-
+import Filter from "bad-words";
 const getChatList = async () => await getConversations();
 
 
@@ -262,7 +262,7 @@ export default function ChatListComponent({ setCurrentConversation,blockeduser }
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedChatId, setSelectedChatId] = useState(null); // Track the selected chat
-
+const filter = new Filter();
   const { data, isLoading, error } = useQuery(
     ["conversation"],
     () => getChatList(),
@@ -344,10 +344,10 @@ console.log("CLICKED CHAT : ",chat);
         avatar: !chat.isGroupChat ? chat.avatar : "",
         alt: `${chat?.chatName}`,
         title: `${chat?.chatName}`,
-        subtitle: `${messagesender} ${recentMessage}`,
+        subtitle: `${messagesender} ${filter.clean(recentMessage)}`,
         senderId:chat.latestMessageSender,
         date: new Date(chat.updatedAt),
-        text:  (messagesender ? `${messagesender} ${recentMessage}` : ""),
+        text:  (messagesender ? `${messagesender} ${filter.clean(recentMessage)}` : ""),
         unread: parseInt(unread),
         user1Id: chat.groupAdminId,
         user2Id: chat.users,
@@ -457,4 +457,3 @@ console.log("CLICKED CHAT : ",chat);
 }
 
 // CSS in JS or external CSS file
-

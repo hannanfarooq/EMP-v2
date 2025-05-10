@@ -606,6 +606,7 @@ import {
   createTeam,
   updateTeam,
   getDepartmentTeams,
+  getcompanydetails,
 } from "src/api";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { getAllCompanyUser } from "src/api";
@@ -623,6 +624,7 @@ export default function AddDepartment({ functionF, department, handleClose }) {
   const [headIsValid, setHeadIsValid] = useState(true);
   const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
   const isSuperAdmin = storedUserData.role === "super_admin";
+  const [companyDetails, setCompanyDetails] = useState([]);
 
   useEffect(() => {
     getAllCompanyUser(storedUserData?.token, storedUserData?.company.id, isSuperAdmin).then(
@@ -631,7 +633,12 @@ export default function AddDepartment({ functionF, department, handleClose }) {
         setCompanyUsers(res.data.filter((user) => !user.is_function_head));
         setHead(get(department, "Head.id", null));
       }
+     
     );
+    getcompanydetails(storedUserData?.token).then((res) => {
+      console.log("COMPANY DETAILS", res);
+      setCompanyDetails(res);
+    });
     if (department) {
       getDepartmentTeams(storedUserData.token, department?.id).then((res) => {
         console.log("DEPARTMENT TEAMS", res.data);
@@ -823,13 +830,29 @@ export default function AddDepartment({ functionF, department, handleClose }) {
             onChange={(e) => setHead(e.target.value)}
             style={{ borderColor: !headIsValid ? 'red' : undefined }}
           >
-            {companyUsers.map((user) => (
-              user.role=="user" || user.id==head
-              ?( <MenuItem key={user.id} value={user.id}>
-                {user.firstName} {user.lastName}
-              </MenuItem>):(null)
-             
-            ))}
+          {companyUsers.map((user) => {
+  // First, check if the user is the head; always include them
+  if (user.id === head) {
+    return (
+      <MenuItem key={user.id} value={user.id}>
+        {user.firstName} {user.lastName}
+      </MenuItem>
+    );
+  }
+
+  // If not the head, check if the user is "user" role and not in companyDetails
+  if (user.role === "user" && !companyDetails.includes(user.id)) {
+    return (
+      <MenuItem key={user.id} value={user.id}>
+        {user.firstName} {user.lastName}
+      </MenuItem>
+    );
+  }
+
+  // If none of the conditions match, return null (exclude this user)
+  return null;
+})}
+
           </Select>
           <FormHelperText>
             {headIsValid ? "" : "Select the head of the department"}

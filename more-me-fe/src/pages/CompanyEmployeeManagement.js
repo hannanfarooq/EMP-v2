@@ -320,7 +320,7 @@ export default function CompanyEmployeeManagementPage() {
                               )}
                             </div>
 
-                          {storedUserData.user.role!="admin" &&  <Stack direction="row" spacing={2}>
+                          {  storedUserData.user.role=="company-super-admin" &&  <Stack direction="row" spacing={2}>
                               <span
                                 onClick={() => {
                                   setSelectedFunction(functionF);
@@ -351,6 +351,9 @@ export default function CompanyEmployeeManagementPage() {
                       <Typography variant="h6" align="left">
                         Departments
                       </Typography>
+                      {}
+                      { storedUserData.user.role=="company-super-admin" &&
+                      
                       <TransitionsModal
                         open={openDepartmentCreateModal}
                         handleClose={() => setOpenDepartmentCreateModal(false)}
@@ -370,6 +373,7 @@ export default function CompanyEmployeeManagementPage() {
                         }
                         disabled={selectedFunction === null}
                       />
+                      }
                     </Stack>
                     <Stack spacing={2}>
                       {selectedFunction === null && (
@@ -426,7 +430,8 @@ export default function CompanyEmployeeManagementPage() {
                                 </Typography>
                               )}
                             </div>
-                            <Stack direction="row" spacing={2}>
+
+                            {  storedUserData.user.role=="company-super-admin" &&  <Stack direction="row" spacing={2}>
                               <span
                                 onClick={() => {
                                   setSelectedDepartment(department);
@@ -442,7 +447,8 @@ export default function CompanyEmployeeManagementPage() {
                               >
                                 <DeleteOutlineIcon className="cursor-pointer hover:text-red-500" />
                               </span>
-                            </Stack>
+                            </Stack> }
+                          
                           </Stack>
                         ))}
                     </Stack>
@@ -461,6 +467,8 @@ export default function CompanyEmployeeManagementPage() {
                   Teams{" "}
                   {selectedDepartment?.name && `in ${selectedDepartment?.name}`}
                 </Typography>
+                {
+                   storedUserData.user.role=="company-super-admin" &&
                 <TransitionsModal
                   open={openTeamCreateModal}
                   handleClose={() => setOpenTeamCreateModal(false)}
@@ -478,6 +486,7 @@ export default function CompanyEmployeeManagementPage() {
                   }
                   disabled={selectedDepartment === null}
                 />
+                }
               </Stack>
               {selectedTeam && (
   <Grid item xs={12}>
@@ -576,6 +585,7 @@ export default function CompanyEmployeeManagementPage() {
                           </Typography>
                         )}
                       </div>
+                      { storedUserData.user.role=="company-super-admin" &&
                       <Stack direction="row" spacing={2}>
                         <span
                           onClick={() => {
@@ -591,6 +601,7 @@ export default function CompanyEmployeeManagementPage() {
                           <DeleteOutlineIcon className="cursor-pointer hover:text-red-500" />
                         </span>
                       </Stack>
+                      }
                     </Stack>
                   ))}
               </Stack>

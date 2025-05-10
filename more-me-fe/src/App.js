@@ -94,18 +94,18 @@ function AppContent() {
   const { profileSetUp } = useProfileSetUp();
   const { userData } = useAuth();
   const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
-  // if(storedUserData)
-  //   {
-  //     socket = io(process.env.REACT_APP_SERVER_URL || 'http://18.213.181.237:5000',{
-  //       query: { token: storedUserData.token }, // JWT token
-  //     });
-  //   }
   if(storedUserData)
     {
-      socket = io('http://localhost:3004', {
+      socket = io(process.env.REACT_APP_SERVER_URL || 'http://18.213.181.237:5000',{
         query: { token: storedUserData.token }, // JWT token
       });
     }
+  // if(storedUserData)
+  //   {
+  //     socket = io('http://localhost:3004', {
+  //       query: { token: storedUserData.token }, // JWT token
+  //     });
+  //   }
   
  
   return (

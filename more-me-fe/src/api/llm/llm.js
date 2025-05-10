@@ -106,9 +106,13 @@
 
 
 import axios from 'axios';
+import { updateDailyFeedbackUser } from 'src/api/index.js';
 
 const processWithLLM = async (token, feedbackData) => {
-  const token1 = "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"
+  const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
+  //const todayDate = new Date(storedUserData?.user?.todayDate); 
+  const formattedDate =  new Date().toLocaleDateString();
+  const token1 = "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"
 
   try {
     if (!Array.isArray(feedbackData)) {
@@ -145,7 +149,16 @@ const processWithLLM = async (token, feedbackData) => {
     // Process the API response
     if (response.data && response.data.choices && response.data.choices[0].message.content) {
       const modelResponse = response.data.choices[0].message.content.trim();  // Extract the response text
-
+      console.log("storedUserData.token", storedUserData.token);
+      console.log("modelResponse", modelResponse);
+      console.log("formattedDate", formattedDate);
+      console.log("storedUserData.user.id",storedUserData.user.id);
+      await updateDailyFeedbackUser(
+        storedUserData.token,
+        formattedDate,
+        modelResponse,
+        storedUserData.user.id
+      );
       return {
         code: 200,
         data: {

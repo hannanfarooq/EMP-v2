@@ -20,7 +20,8 @@ import {
   createTeam,
   updateTeam,
   getTeamMembers,
-  getDepartmentTeams
+  getDepartmentTeams,
+  getcompanydetails
 } from "src/api";
 
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -41,7 +42,7 @@ export default function AddTeam({ department, team, handleClose }) {
 
   const storedUserData = JSON.parse(localStorage.getItem("currentUser"));
   const isSuperAdmin = storedUserData.role === "super_admin";
-
+  const [companyDetails, setCompanyDetails] = useState([]);
   useEffect(() => {
     getAllCompanyUser(
       storedUserData?.token,
@@ -56,6 +57,10 @@ export default function AddTeam({ department, team, handleClose }) {
         "COMPANY USERS NON FUNCTION HEADS",
         res.data.filter((user) => !user.is_function_head)
       );
+      getcompanydetails(storedUserData?.token).then((res) => {
+        console.log("COMPANY DETAILS", res);
+        setCompanyDetails(res);
+      });
       
      
       if (team) {
@@ -201,13 +206,29 @@ export default function AddTeam({ department, team, handleClose }) {
   disabled={storedUserData.user.role === "lead"} // Disable if the user is a lead
 >
   <MenuItem value="" disabled>Select a Team Lead</MenuItem>
-  {companyUsers
-    .filter((user) => user.role === "user" || user.id === lead) // Filter users with role "user"
-    .map((user) => (
+  {companyUsers.map((user) => {
+  // First, check if the user is the head; always include them
+  if (user.id === lead) {
+    return (
       <MenuItem key={user.id} value={user.id}>
         {user.firstName} {user.lastName}
       </MenuItem>
-    ))}
+    );
+  }
+  const isNotInTeamMembers = !teamMembers.some((member) => member === user.id);
+  // If not the head, check if the user is "user" role and not in companyDetails
+  if (user.role === "user" && !companyDetails.includes(user.id) && isNotInTeamMembers) {
+    return (
+      <MenuItem key={user.id} value={user.id}>
+        {user.firstName} {user.lastName}
+      </MenuItem>
+    );
+  }
+
+  // If none of the conditions match, return null (exclude this user)
+  return null;
+})}
+
 </Select>
 
   <FormHelperText>
@@ -253,20 +274,35 @@ export default function AddTeam({ department, team, handleClose }) {
     }}
   
                 >
-       {companyUsers
+      {companyUsers
   .filter((user) => {
     const isUserRole = user.role === "user";
-    const isNotInTeamMembers = !teamMembers.some((member) => member == user.id);
-    const isCurrentTeamMember = user.id == teamMember;
+    const isNotInTeamMembers = !teamMembers.some((member) => member === user.id);
+    const isCurrentTeamMember = user.id === teamMember;
 
-    // Always include the current team member and lead (if necessary)
-    return isUserRole && (isNotInTeamMembers || isCurrentTeamMember || user.id == lead);
+   
+    // Check if the user is not in the companyDetails array
+    const isNotInCompanyDetails = companyDetails.includes(user.id);
+    if(isCurrentTeamMember)
+    {
+     return true;
+    }
+    else if (isNotInCompanyDetails) {
+      return false;
+    }
+    // Always include the current team member and lead (if necessary), and exclude if already in companyDetails
+    return (
+      isUserRole &&
+      (isNotInTeamMembers || isCurrentTeamMember ||isNotInCompanyDetails  ) &&user.id != lead
+      
+    );
   })
   .map((user) => (
     <MenuItem key={user.id} value={user.id}>
       {user.firstName} {user.lastName}
     </MenuItem>
   ))}
+
                 </Select>
               </FormControl>
               <span

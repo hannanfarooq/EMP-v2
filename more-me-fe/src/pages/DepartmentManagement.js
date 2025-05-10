@@ -277,6 +277,7 @@ export default function DepartmentManagement() {
                       <Typography variant="h6" align="left">
                         Departments
                       </Typography>
+                      {storedUserData.user.role=="company-super-admin" &&
                       <TransitionsModal
                         open={openDepartmentCreateModal}
                         handleClose={() => setOpenDepartmentCreateModal(false)}
@@ -297,6 +298,7 @@ export default function DepartmentManagement() {
                         
                       disabled={storedUserData.user.role!="admin" || storedUserData.user.role=="company-super-admin"}
                       />
+                      }
                     </Stack>
                     <Stack spacing={2}>
                      
@@ -364,6 +366,8 @@ export default function DepartmentManagement() {
                   Teams{" "}
                   {selectedDepartment?.name && `in ${selectedDepartment?.name}`}
                 </Typography>
+                {storedUserData.user.role=="company-super-admin" &&
+
                 <TransitionsModal
                   open={openTeamCreateModal}
                   handleClose={() => setOpenTeamCreateModal(false)}
@@ -381,6 +385,7 @@ export default function DepartmentManagement() {
                   }
                   disabled={selectedDepartment === null}
                 />
+}
               </Stack>
               {selectedTeam && (
   <Grid item xs={12}>
@@ -480,6 +485,7 @@ export default function DepartmentManagement() {
                         )}
                       </div>
                       <Stack direction="row" spacing={2}>
+                        {storedUserData.user.role=="company-super-admin" &&
                         <span
                           onClick={() => {
                             setSelectedTeam(team);
@@ -488,11 +494,14 @@ export default function DepartmentManagement() {
                         >
                           <EditIcon className="cursor-pointer hover:text-lime-500" />
                         </span>
+}
+{storedUserData.user.role=="company-super-admin" &&
                         <span
                           onClick={() => handleDeleteTeam(team.id)}
                         >
                           <DeleteOutlineIcon className="cursor-pointer hover:text-red-500" />
                         </span>
+}
                       </Stack>
                     </Stack>
                   ))}
